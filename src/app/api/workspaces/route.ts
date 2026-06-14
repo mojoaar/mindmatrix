@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     with: {
       members: true,
     },
-    orderBy: (ws, { desc }) => [desc(ws.createdAt)],
+    orderBy: (ws, { asc }) => [asc(ws.name)],
   });
 
   return NextResponse.json({ workspaces });
