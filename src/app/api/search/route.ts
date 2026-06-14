@@ -1,0 +1,66 @@
+import { NextResponse } from "next/server";
+import { db, note, workspaceMember } from "@/lib/db";
+import { auth } from "@/lib/auth";
+import { eq, and, or, ilike } from "drizzle-orm";
+
+export async function GET(request: Request) {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const q = searchParams.get("q");
+  const workspaceId = searchParams.get("workspaceId");
+
+  if (!q || q.trim().length === 0) {
+    return NextResponse.json({ notes: [] });
+  }
+
+  if (workspaceId) {
+    const member = await db.query.workspaceMember.findFirst({
+      where: and(eq(workspaceMember.workspaceId, workspaceId), eq(workspaceMember.userId, session.user.id)),
+    });
+
+    if (!member) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
+  const userWorkspaces = await db.query.workspaceMember.findMany({
+    where: eq(workspaceMember.userId, session.user.id),
+    columns: { workspaceId: true },
+  });
+
+  const workspaceIds = userWorkspaces.map((m) => m.workspaceId);
+
+  const notes = await db.query.note.findMany({
+    where: and(
+      or(ilike(note.title, `%${q}%`), ilike(note.content, `%${q}%`)),
+      workspaceIds.length > 0 ? eq(note.workspaceId, workspaceIds[0]) : undefined,
+    ),
+    with: {
+      workspace: { columns: { name: true, slug: true } },
+      folder: { columns: { name: true } },
+    },
+    limit: 20,
+  });
+
+  const filtered = workspaceIds.length > 0
+    ? notes.filter((n) => workspaceIds.includes(n.workspaceId))
+    : [];
+
+  return NextResponse.json({
+    notes: (workspaceIds.length > 0 ? filtered : notes).map((n) => ({
+      id: n.id,
+      title: n.title,
+      slug: n.slug,
+      workspaceId: n.workspaceId,
+      workspaceName: n.workspace?.name,
+      workspaceSlug: n.workspace?.slug,
+      folderName: n.folder?.name,
+      snippet: n.content.slice(0, 150),
+      updatedAt: n.updatedAt,
+    })),
+  });
+}

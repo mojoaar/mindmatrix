@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: mindmatrix-postgres
+    environment:
+      POSTGRES_USER: mindmatrix
+      POSTGRES_PASSWORD: CHANGE_ME_DB_PASSWORD
+      POSTGRES_DB: mindmatrix
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mindmatrix -d mindmatrix"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: mindmatrix-app
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://mindmatrix:CHANGE_ME_DB_PASSWORD@postgres:5432/mindmatrix
+      DB_MAX_CONNECTIONS: 10
+      BETTER_AUTH_SECRET: CHANGE_ME_TO_A_LONG_RANDOM_SECRET
+      BETTER_AUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

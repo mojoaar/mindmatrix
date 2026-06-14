@@ -1,0 +1,19 @@
+[Unit]
+Description=MindMatrix Knowledge Hub
+Documentation=https://github.com/mojoaar/mindmatrix
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=mindmatrix
+Group=mindmatrix
+WorkingDirectory=/opt/mindmatrix
+ExecStart=/usr/bin/npm run start
+Restart=on-failure
+RestartSec=5
+Environment=NODE_ENV=production
+EnvironmentFile=/opt/mindmatrix/.env
+
+[Install]
+WantedBy=multi-user.target
