@@ -3,7 +3,6 @@
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { BookOpen, LogOut, Search, Settings, Folders, Cloud, type LucideIcon } from "lucide-react";
-import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { SearchOverlay } from "@/components/search/search-overlay";
 import { Avatar } from "@/components/ui/avatar";
 import Link from "next/link";
@@ -188,10 +187,6 @@ export default function DashboardLayout({
             <LogOut size={14} style={{ marginRight: "0.5rem" }} />
             Sign out
           </button>
-
-          <div style={{ marginTop: "0.25rem" }}>
-            <ThemeToggle />
-          </div>
         </div>
       </aside>
 

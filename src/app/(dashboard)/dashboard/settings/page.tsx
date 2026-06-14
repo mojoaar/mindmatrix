@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useTheme, type Theme } from "@/components/theme/theme-provider";
 import { Avatar } from "@/components/ui/avatar";
 
 interface Profile {
@@ -42,6 +43,7 @@ let cachedTimezones: string[] | null = null;
 
 export default function UserSettingsPage() {
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -258,6 +260,21 @@ export default function UserSettingsPage() {
                 onClick={() => setTimeFormat(fmt)}
               >
                 {fmt === "browser" ? "Browser Default" : fmt === "12h" ? "12-hour (AM/PM)" : "24-hour"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>Theme</label>
+          <div className="flex gap-1" style={{ marginTop: "0.5rem", flexWrap: "wrap" }}>
+            {(["nord-dark", "nord-light", "dracula-dark", "dracula-light"] as Theme[]).map((t) => (
+              <button
+                key={t}
+                className={`btn ${theme === t ? "primary" : "secondary"} sm`}
+                onClick={() => setTheme(t)}
+              >
+                {t}
               </button>
             ))}
           </div>
