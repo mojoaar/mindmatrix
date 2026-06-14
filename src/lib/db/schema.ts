@@ -5,8 +5,10 @@ import {
   timestamp,
   boolean,
   integer,
+  jsonb,
   primaryKey,
   index,
+  uniqueIndex,
   pgEnum,
 } from "drizzle-orm/pg-core";
 
@@ -277,6 +279,32 @@ export const noteTemplate = pgTable(
   })
 );
 
+export const pluginConfig = pgTable(
+  "plugin_config",
+  {
+    id: text("id").primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    pluginId: text("plugin_id").notNull(),
+    enabled: boolean("enabled").default(false).notNull(),
+    config: jsonb("config").default("{}").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => ({
+    pluginWorkspaceIdx: index("plugin_workspace_idx").on(table.workspaceId),
+    pluginIdIdx: index("plugin_id_idx").on(table.pluginId),
+    uniqueWorkspacePlugin: uniqueIndex("unique_workspace_plugin").on(
+      table.workspaceId,
+      table.pluginId
+    ),
+  })
+);
+
 export const noteLink = pgTable("note_link", {
   id: text("id").primaryKey(),
   sourceNoteId: text("source_note_id")
@@ -343,6 +371,7 @@ export const workspaceRelations = relations(workspace, ({ many, one }) => ({
   notes: many(note),
   tags: many(tag),
   templates: many(noteTemplate),
+  pluginConfigs: many(pluginConfig),
   owner: one(user, {
     fields: [workspace.createdById],
     references: [user.id],
@@ -471,5 +500,12 @@ export const noteVersionRelations = relations(noteVersion, ({ one }) => ({
   creator: one(user, {
     fields: [noteVersion.createdById],
     references: [user.id],
+  }),
+}));
+
+export const pluginConfigRelations = relations(pluginConfig, ({ one }) => ({
+  workspace: one(workspace, {
+    fields: [pluginConfig.workspaceId],
+    references: [workspace.id],
   }),
 }));

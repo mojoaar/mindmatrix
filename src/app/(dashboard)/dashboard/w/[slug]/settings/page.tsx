@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Trash2, Users, FileText } from "lucide-react";
 import { IconPicker } from "@/components/ui/icon-picker";
+import { PluginCard } from "@/components/ui/plugin-card";
+import { pluginMetadata } from "@/plugins/metadata";
 
 interface Workspace {
   id: string;
@@ -282,6 +284,11 @@ export default function WorkspaceSettingsPage() {
           </div>
         ))}
       </div>
+
+      {/* Plugins */}
+      {pluginMetadata.map((plugin) => (
+        <PluginCard key={plugin.id} plugin={plugin} workspaceId={workspace.id} />
+      ))}
 
       <div className="card" style={{ borderColor: "var(--accent-red)" }}>
         <h3 style={{ color: "var(--accent-red)" }}>Danger Zone</h3>
