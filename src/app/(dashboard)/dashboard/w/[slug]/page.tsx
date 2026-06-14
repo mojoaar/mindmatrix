@@ -110,6 +110,24 @@ export default function WorkspacePage() {
   }, [loadData]);
 
   useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if ((e.metaKey || e.ctrlKey) && e.key === "n") {
+        e.preventDefault();
+        setNewNoteTitle("");
+        setNewNoteContent("");
+        setShowNewNote(true);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "f") {
+        e.preventDefault();
+        setShowNewFolder(true);
+      }
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, []);
+
+  useEffect(() => {
     if (workspace) {
       loadNotes(workspace.id);
     }

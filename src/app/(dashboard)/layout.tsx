@@ -81,6 +81,10 @@ export default function DashboardLayout({
       e.preventDefault();
       setSidebarOpen((prev) => !prev);
     }
+    if ((e.metaKey || e.ctrlKey) && e.key === ",") {
+      e.preventDefault();
+      router.push("/dashboard/settings");
+    }
   };
 
   useEffect(() => {
@@ -103,7 +107,18 @@ export default function DashboardLayout({
           flexShrink: 0,
         }}
       >
-        <div style={{ padding: "1rem", borderBottom: "1px solid var(--border-color)" }}>
+        <Link
+          href="/dashboard/settings"
+          style={{
+            padding: "1rem",
+            borderBottom: "1px solid var(--border-color)",
+            display: "block",
+            textDecoration: "none",
+            cursor: "pointer",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-tertiary)")}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+        >
           <div className="flex align-center gap-2">
             <Avatar
               name={user?.name || "User"}
@@ -122,7 +137,7 @@ export default function DashboardLayout({
               )}
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Workspace list */}
         <div style={{ padding: "0.5rem", flex: 1, overflowY: "auto" }}>

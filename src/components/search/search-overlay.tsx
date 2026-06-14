@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, FileText, X } from "lucide-react";
+import { Search, FileText, X, PlusSquare, FolderPlus, Settings, Keyboard } from "lucide-react";
 import Link from "next/link";
 
 interface SearchResult {
@@ -207,9 +207,38 @@ export function SearchOverlay() {
         )}
 
         {!query && (
-          <p className="text-muted text-xs" style={{ padding: "0.5rem" }}>
-            Start typing to search across all your notes...
-          </p>
+          <div style={{ overflow: "auto", flex: 1 }}>
+            <p className="text-muted text-xs" style={{ padding: "0.5rem" }}>
+              Search notes by title or content
+            </p>
+            {[
+              { keys: ["⌘", "N"], label: "New Note", icon: PlusSquare, action: () => { window.location.href = window.location.pathname.startsWith("/dashboard/w/") ? window.location.pathname : "/dashboard"; } },
+              { keys: ["⌘", "⇧", "F"], label: "New Folder", icon: FolderPlus, action: () => {} },
+              { keys: ["⌘", "B"], label: "Toggle Sidebar", icon: FileText, action: () => {} },
+              { keys: ["⌘", "↵"], label: "Save Note", icon: FileText, action: () => {} },
+              { keys: ["⌘", ","], label: "Settings", icon: Settings, action: () => { window.location.href = "/dashboard/settings"; } },
+            ].map((cmd, i) => (
+              <div
+                key={cmd.label}
+                className="flex align-center justify-between"
+                style={{
+                  padding: "0.5rem 0.75rem",
+                  borderRadius: "var(--border-radius)",
+                  backgroundColor: i === selectedIndex ? "var(--bg-tertiary)" : "transparent",
+                }}
+              >
+                <div className="flex align-center gap-2">
+                  <cmd.icon size={14} style={{ color: "var(--fg-muted)" }} />
+                  <span className="text-sm">{cmd.label}</span>
+                </div>
+                <div className="flex align-center gap-1 text-xs text-muted">
+                  {cmd.keys.map((k, j) => (
+                    <kbd key={j} style={{ padding: "0 4px", borderRadius: "3px", backgroundColor: "var(--bg-tertiary)", fontSize: "0.65rem", fontWeight: 600 }}>{k}</kbd>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
 
         <div
