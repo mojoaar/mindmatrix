@@ -2,6 +2,7 @@ import type { Plugin } from "./types";
 import { syncPcloudPlugin } from "./sync-pcloud";
 import { syncGoogleDrivePlugin } from "./sync-google-drive";
 import { opencodeAiPlugin } from "./opencode-ai";
+import { opencodeZenPlugin } from "./opencode-zen";
 import { proxmoxInventoryPlugin } from "./proxmox-inventory";
 import { unifiTopologyPlugin } from "./unifi-topology";
 import { db, workspaceMember, pluginConfig } from "@/lib/db";
@@ -12,6 +13,7 @@ export const plugins: Plugin[] = [
   syncPcloudPlugin,
   syncGoogleDrivePlugin,
   opencodeAiPlugin,
+  opencodeZenPlugin,
   proxmoxInventoryPlugin,
   unifiTopologyPlugin,
 ];

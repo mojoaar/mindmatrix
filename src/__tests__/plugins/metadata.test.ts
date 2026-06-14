@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { pluginMetadata } from "@/plugins/metadata";
 
 describe("plugin metadata", () => {
-  it("has 5 plugins", () => {
-    expect(pluginMetadata).toHaveLength(5);
+  it("has 6 plugins", () => {
+    expect(pluginMetadata).toHaveLength(6);
   });
 
   it("has unique IDs", () => {
@@ -22,6 +22,10 @@ describe("plugin metadata", () => {
 
   it("includes opencode-ai", () => {
     expect(pluginMetadata.find((p) => p.id === "opencode-ai")).toBeTruthy();
+  });
+
+  it("includes opencode-zen", () => {
+    expect(pluginMetadata.find((p) => p.id === "opencode-zen")).toBeTruthy();
   });
 
   it("includes sync-pcloud and sync-google-drive", () => {

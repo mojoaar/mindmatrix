@@ -18,6 +18,12 @@ export const pluginMetadata = [
     version: "0.1.0",
   },
   {
+    id: "opencode-zen",
+    name: "OpenCode Zen",
+    description: "AI gateway with 40+ models (GPT, Claude, Gemini, DeepSeek) via OpenCode Zen",
+    version: "0.1.0",
+  },
+  {
     id: "proxmox-inventory",
     name: "Proxmox Inventory",
     description: "Scan Proxmox VMs, containers, and storage into a note",
