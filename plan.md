@@ -234,3 +234,70 @@ Stored in `localStorage` key `mindmatrix-theme`. Applied via inline script befor
 - **Webhooks** — fire HTTP callbacks on note create/update/delete events
 - **AI search** — vector embeddings + semantic search across notes
 - **Realtime collaboration** — WebSocket-based live editing (Y.js / PartyKit)
+
+## v0.2 Features (Completed)
+
+### Backlinks
+- `[[note-slug]]` wiki-link detection on note save
+- `note_link` junction table — outgoing + incoming tracking
+- `GET /api/notes/[id]/links` — both directions
+- BacklinksPanel in editor — "Links from" + "Links to" sections
+- Resolves slugs to note IDs within the same workspace
+
+### Version History
+- `note_version` table — snapshot of title + content on every save
+- `GET /api/notes/[id]/versions` — list with timestamps, limit 50
+- `GET /api/notes/[id]/versions/[versionId]` — full version content
+- `POST /api/notes/[id]/versions` — restore version (creates snapshot of current first)
+- VersionPanel in editor — history list with restore button
+
+### Realtime Collaboration
+- SSE + PostgreSQL LISTEN/NOTIFY — zero new packages
+- `GET /api/notes/[id]/events` — Server-Sent Events stream
+- `POST /api/notes/[id]/presence` — 15s heartbeat, returns viewer list
+- `useRealtimeNote` hook — EventSource + presence heartbeat
+- PresenceAvatars in editor header — shows concurrent viewers
+- Toast notification when someone else updates the note
+- `sql` export from db/index.ts for direct NOTIFY
+
+### Plugin System
+- `plugin_config` DB table — per-workspace enable/disable + JSONB config
+- Client-safe `metadata.ts` — lightweight plugin registry
+- Server-side `index.ts` — full plugin implementation registry
+- `PluginCard` component — enable toggle + lazy-load settings
+- `GET/POST /api/plugins/config` — enable/disable + save config
+- `POST/GET /api/plugins/[...plugin]` — dynamic route dispatcher
+- 5 built-in plugins: OpenCode AI, Proxmox Inventory, Unifi Topology, pCloud, Google Drive
+
+### v0.2 Polish
+- 400+ workspace icons with searchable IconPicker
+- Cross-platform shortcut docs (macOS + Windows/Linux)
+- 401 handling in dashboard layout + settings (auto-redirect)
+- Profile/avatar sync to sidebar via custom events
+- Workspace icon/name sync to sidebar via custom events
+- Full IANA timezone list via Intl.supportedValuesOf
+- Back navigation on /docs and /apidocs
+- Theme selector moved from sidebar to Settings > Preferences
+- Click username → Settings page
+- Cmd+K command palette shows all shortcuts when empty
+- Workspaces sorted alphabetically
+- Port 5434 for PostgreSQL (coexists with FleetOps)
+
+## v0.3 Roadmap
+
+### Sync Plugins (pCloud + Google Drive)
+- OAuth 2.0 flows for both providers
+- Folder-based sync: upload/download .md files
+- Token refresh for Google (access tokens expire)
+- Settings UI: Connect/Disconnect, status, Sync Now button
+
+### Test Coverage
+- Plugin metadata, OpenCode client, event-bus, proxy, config API
+- Target: 39 → ~70 tests across 12 test files
+
+### Future (v0.4+)
+- **CLI** — `mindmatrix` terminal command: create notes, search, manage
+- **Webhooks** — HTTP callbacks on note create/update/delete events
+- **Git sync** — Push/pull workspace notes to a configured Git repo
+- **AI search** — Vector embeddings + semantic search across notes
+- **Realtime CRDT** — Y.js-based collaborative editing (upgrade from last-write-wins)

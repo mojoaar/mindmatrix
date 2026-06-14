@@ -2,7 +2,7 @@
 
 ## Project Overview
 MindMatrix is a markdown-first, self-hosted, multi-user knowledge hub for teams and thinkers.
-- **Version**: 0.1.0
+- **Version**: 0.2.0
 - **License**: AGPL-3.0
 - **Repo**: git@github.com:mojoaar/mindmatrix.git
 
@@ -50,22 +50,73 @@ src/
 │   └── globals.scss                 # Theme CSS vars + global styles
 ├── components/
 │   ├── theme/                       # ThemeProvider, ThemeToggle
-│   └── search/                      # SearchOverlay (Cmd+K)
+│   ├── search/                      # SearchOverlay (Cmd+K)
+│   ├── editor/                      # BacklinksPanel, VersionPanel, PresenceAvatars
+│   └── ui/                          # Avatar, Toast, IconPicker, PluginCard, etc.
+├── plugins/
+│   ├── metadata.ts                  # Client-safe plugin registry (names, IDs)
+│   ├── index.ts                     # Server-side plugin registry
+│   ├── opencode-ai/                 # OpenCode Go AI plugin
+│   ├── proxmox-inventory/           # Proxmox VE scanner plugin
+│   ├── unifi-topology/              # Unifi network scanner plugin
+│   ├── sync-pcloud/                 # pCloud sync plugin
+│   └── sync-google-drive/           # Google Drive sync plugin
 ├── lib/
 │   ├── auth.ts                      # Better Auth server config
 │   ├── auth-client.ts              # Better Auth client config
-│   └── db/
-│       ├── schema.ts                # All Drizzle table definitions
-│       └── index.ts                 # Drizzle client + postgres pool
+│   ├── db/
+│   │   ├── schema.ts                # All Drizzle table definitions
+│   │   └── index.ts                 # Drizzle client + postgres pool
+│   ├── realtime/
+│   │   └── event-bus.ts             # PG NOTIFY/LISTEN pub/sub singleton
+│   ├── icons.ts                     # 400+ Lucide icon registry
+│   ├── slug.ts                      # Slug generation utilities
+│   ├── email.ts                     # Nodemailer transport
+│   └── validations.ts               # Zod schemas for all API routes
+├── hooks/
+│   └── use-realtime-note.ts         # SSE + presence heartbeat hook
 ├── middleware.ts                    # Route protection via cookie check
 └── __tests__/                       # Vitest tests
+```
+
+## Plugin System
+
+Plugins are built-in feature modules toggled per workspace in Settings. Each plugin has:
+- `id` + `name` + `description` in `src/plugins/metadata.ts` (client-safe)
+- Server-side implementation in `src/plugins/{id}/index.ts`
+- Optional settings component in `src/plugins/{id}/components/settings.tsx`
+- API routes registered via `src/plugins/index.ts`
+
+Plugin configs stored in `plugin_config` PostgreSQL table (JSONB config, enabled flag).
+PluginCard component handles enable/disable and mounts settings component via React.lazy.
+
+## Realtime Architecture
+
+MindMatrix uses **SSE + PostgreSQL LISTEN/NOTIFY** for realtime features — zero new packages:
+
+```
+Note save → PATCH handler:
+  1. Save note to DB
+  2. Create version entry
+  3. Parse & store backlinks
+  4. sql.notify('note:<id>', { type: 'note_updated', ... })
+
+SSE endpoint (GET /api/notes/[id]/events):
+  1. Auth check
+  2. Subscribe to PG channel 'note:<noteId>' via event-bus
+  3. Stream events to browser via ReadableStream + text/event-stream
+
+Client hook (useRealtimeNote):
+  1. EventSource → /api/notes/[id]/events
+  2. 15s heartbeat → POST /api/notes/[id]/presence
+  3. Returns: viewers[], lastUpdate?, connected
 ```
 
 ## Database
 - PostgreSQL via Docker Compose (`deploy/docker-compose.yml`)
 - Drizzle ORM with `postgres` driver (not `pg`)
-- Schema in `src/lib/db/schema.ts` — auth tables + app tables
-- Migrations via `npx drizzle-kit push` (dev) or `drizzle-kit generate && migrate` (prod)
+- Schema in `src/lib/db/schema.ts` — auth tables + app tables + plugin tables
+- Migrations via `npm run db:push` (dev) or `drizzle-kit generate && migrate` (prod)
 - Connection pooling: hot-reload-safe singleton on `globalThis`
 
 ## API Routes
@@ -78,6 +129,16 @@ All routes under `/api/` require auth (except `/api/auth/*`). Auth checked via `
 - `/api/search` — Full-text search
 - `/api/export` — Export as markdown
 - `/api/import` — Import markdown
+- `/api/templates` — CRUD note templates
+- `/api/profile` — User profile (name, avatar, timezone)
+- `/api/profile/avatar` — Avatar upload (2MB, JPEG/PNG/WebP)
+- `/api/notes/[id]/links` — Backlinks (incoming + outgoing)
+- `/api/notes/[id]/versions` — Version history (list + restore)
+- `/api/notes/[id]/versions/[versionId]` — Single version content
+- `/api/notes/[id]/events` — SSE stream for realtime collaboration
+- `/api/notes/[id]/presence` — Presence heartbeat (POST) + viewers (GET)
+- `/api/plugins/[...plugin]` — Dynamic plugin API route dispatcher
+- `/api/plugins/config` — Plugin enable/disable + config CRUD
 - `/api/sync/pcloud`, `/api/sync/google-drive` — Cloud sync
 
 ## Keyboard Shortcuts
@@ -121,3 +182,5 @@ NODE_ENV=development
 - Permission checks occur in every API route
 - Theme cookie/key: `mindmatrix-theme`
 - Editor layout stored in `localStorage` as `mindmatrix-editor-layout`
+- Plugins toggled per workspace, configs in JSONB `plugin_config` table
+- Zero new dependencies policy for realtime (SSE + PG NOTIFY)
