@@ -88,10 +88,10 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
                   justifyContent: "center",
                 }}
               >
-                {(() => {
-                  const I = ICONS[name];
-                  return I ? <I size={16} /> : null;
-                })()}
+              {(() => {
+                const I = ICONS[name];
+                return I ? <I size={16} style={{ color: "var(--fg-primary)" }} /> : null;
+              })()}
               </button>
             ))}
           </div>
