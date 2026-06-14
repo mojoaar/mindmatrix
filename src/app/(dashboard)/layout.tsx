@@ -69,8 +69,20 @@ export default function DashboardLayout({
       const detail = (e as CustomEvent).detail;
       setUser((prev) => (prev ? { ...prev, ...detail } : prev));
     };
+    const handleWorkspaceUpdate = () => {
+      fetch("/api/workspaces")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.workspaces) setWorkspaces(data.workspaces);
+        })
+        .catch(() => {});
+    };
     window.addEventListener("mindmatrix:profile-updated", handleProfileUpdate);
-    return () => window.removeEventListener("mindmatrix:profile-updated", handleProfileUpdate);
+    window.addEventListener("mindmatrix:workspace-updated", handleWorkspaceUpdate);
+    return () => {
+      window.removeEventListener("mindmatrix:profile-updated", handleProfileUpdate);
+      window.removeEventListener("mindmatrix:workspace-updated", handleWorkspaceUpdate);
+    };
   }, []);
 
   const handleLogout = async () => {

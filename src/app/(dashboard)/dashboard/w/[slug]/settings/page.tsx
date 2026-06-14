@@ -108,6 +108,7 @@ export default function WorkspaceSettingsPage() {
 
     if (res.ok) {
       setSuccess("Settings saved");
+      window.dispatchEvent(new CustomEvent("mindmatrix:workspace-updated"));
     } else {
       const data = await res.json();
       setError(data.error || "Failed to save");
