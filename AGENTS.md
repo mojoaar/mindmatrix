@@ -84,8 +84,11 @@ All routes under `/api/` require auth (except `/api/auth/*`). Auth checked via `
 | Shortcut      | Action                |
 | ------------- | --------------------- |
 | Cmd+K         | Global search overlay |
+| Cmd+N         | New note              |
+| Cmd+Shift+F   | New folder            |
 | Cmd+Enter     | Save current note     |
 | Cmd+B         | Toggle sidebar        |
+| Cmd+,         | Settings page         |
 | Escape        | Close dialogs         |
 
 ## Commands
@@ -94,12 +97,14 @@ All routes under `/api/` require auth (except `/api/auth/*`). Auth checked via `
 - `npm run start` — Start production server
 - `npm run test` — Run vitest tests
 - `npm run lint` — Run ESLint
-- `npm run db:push` — Push schema to database
+- `npm run db:push` — Push schema to database (uses drizzle-kit)
 - `npm run db:migrate` — Generate and run migrations
+
+> **Note**: `drizzle-kit` is a local dev dependency. Always use `npm run db:push` or `npx drizzle-kit push` — not `drizzle-kit` directly.
 
 ## Environment Variables
 ```
-DATABASE_URL=postgres://mindmatrix:password@localhost:5432/mindmatrix
+DATABASE_URL=postgres://mindmatrix:password@localhost:5434/mindmatrix
 DB_MAX_CONNECTIONS=10
 BETTER_AUTH_SECRET=<32+ char secret>
 BETTER_AUTH_URL=http://localhost:3000
