@@ -1,19 +1,14 @@
 import type { Plugin } from "@/plugins/types";
-import { NextResponse } from "next/server";
+import { requirePluginAccess } from "@/plugins";
 
 const PCLOUD_AUTH = "https://e.pcloud.com/oauth2/authorize";
 const PCLOUD_TOKEN = "https://api.pcloud.com/oauth2_token";
 const PCLOUD_API = "https://api.pcloud.com";
 
-async function getAccessToken(workspaceId: string): Promise<string | null> {
-  const { db } = await import("@/lib/db");
-  const { pluginConfig } = await import("@/lib/db");
-  const { and, eq } = await import("drizzle-orm");
-  const config = await db.query.pluginConfig.findFirst({
-    where: and(eq(pluginConfig.workspaceId, workspaceId), eq(pluginConfig.pluginId, "sync-pcloud")),
-  });
-  if (!config?.enabled) return null;
-  return (config.config as any)?.accessToken || null;
+async function getAccessToken(req: Request, workspaceId: string): Promise<string | Response> {
+  const access = await requirePluginAccess(req, workspaceId, "sync-pcloud");
+  if (access instanceof Response) return access;
+  return access.config?.accessToken || "not_connected";
 }
 
 export const syncPcloudPlugin: Plugin = {
@@ -23,9 +18,7 @@ export const syncPcloudPlugin: Plugin = {
   version: "0.1.0",
   apiRoutes: {
     "GET /api/plugins/sync-pcloud/auth": async () => {
-      const url = new URL(PCLOUD_AUTH);
-      // clientId passed via query param from settings
-      return NextResponse.json({ url: PCLOUD_AUTH });
+      return Response.json({ url: PCLOUD_AUTH });
     },
 
     "GET /api/plugins/sync-pcloud/callback": async (req) => {
@@ -35,27 +28,34 @@ export const syncPcloudPlugin: Plugin = {
       const clientSecret = url.searchParams.get("clientSecret");
       const workspaceId = url.searchParams.get("workspaceId");
       if (!code || !clientId || !clientSecret || !workspaceId) {
-        return NextResponse.json({ error: "Missing params" }, { status: 400 });
+        return Response.json({ error: "Missing params" }, { status: 400 });
       }
+
+      // Verify workspace membership before exchanging tokens
+      const access = await requirePluginAccess(req, workspaceId, "sync-pcloud");
+      if (access instanceof Response) return access;
 
       const tokenUrl = `${PCLOUD_TOKEN}?client_id=${clientId}&client_secret=${clientSecret}&code=${code}`;
       const res = await fetch(tokenUrl);
       const data = await res.json();
 
       if (data.access_token) {
-        return NextResponse.json({ connected: true, accessToken: data.access_token });
+        return Response.json({ connected: true, accessToken: data.access_token });
       }
-      return NextResponse.json({ error: "Token exchange failed" }, { status: 400 });
+      return Response.json({ error: "Token exchange failed" }, { status: 400 });
     },
 
     "POST /api/plugins/sync-pcloud/sync": async (req) => {
       const { workspaceId } = await req.json();
-      const token = await getAccessToken(workspaceId);
-      if (!token) return NextResponse.json({ error: "Not connected" }, { status: 400 });
+      const access = await requirePluginAccess(req, workspaceId, "sync-pcloud");
+      if (access instanceof Response) return access;
 
-      const { db, note } = await import("@/lib/db");
+      const token = access.config?.accessToken;
+      if (!token) return Response.json({ error: "Not connected" }, { status: 400 });
+
+      const db = await import("@/lib/db");
       const { eq } = await import("drizzle-orm");
-      const notes = await db.query.note.findMany({ where: eq(note.workspaceId, workspaceId) });
+      const notes = await db.db.query.note.findMany({ where: eq(db.note.workspaceId, workspaceId) });
 
       const folderPath = "/MindMatrix";
       let synced = 0;
@@ -65,22 +65,21 @@ export const syncPcloudPlugin: Plugin = {
           const filename = `${n.slug || n.id}.md`;
           const path = `${folderPath}/${filename}`;
           const uploadUrl = `${PCLOUD_API}/uploadfile?path=${encodeURIComponent(path)}&access_token=${token}`;
-          await fetch(uploadUrl, {
-            method: "PUT",
-            body: n.content,
-          });
+          await fetch(uploadUrl, { method: "PUT", body: n.content });
           synced++;
         } catch { /* skip */ }
       }
 
-      return NextResponse.json({ synced });
+      return Response.json({ synced });
     },
 
     "GET /api/plugins/sync-pcloud/status": async (req) => {
       const { searchParams } = new URL(req.url);
       const workspaceId = searchParams.get("workspaceId");
-      const token = workspaceId ? await getAccessToken(workspaceId) : null;
-      return NextResponse.json({ connected: !!token });
+      if (!workspaceId) return Response.json({ connected: false });
+      const access = await requirePluginAccess(req, workspaceId, "sync-pcloud");
+      if (access instanceof Response) return access;
+      return Response.json({ connected: !!access.config?.accessToken });
     },
   },
 };

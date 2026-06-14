@@ -1,6 +1,7 @@
 import type { Plugin } from "@/plugins/types";
 import { OpenCodeSettings } from "./components/ai-settings";
 import { OpenCodeClient } from "./opencode-client";
+import { requirePluginAccess } from "@/plugins";
 
 const client = new OpenCodeClient();
 
@@ -14,25 +15,16 @@ export const opencodeAiPlugin: Plugin = {
     "POST /api/plugins/opencode-ai/chat": async (req: Request) => {
       try {
         const { noteContent, messages, workspaceId } = await req.json();
-        const auth = await import("@/lib/auth");
-        const db = await import("@/lib/db");
-        const session = await auth.auth.api.getSession({ headers: req.headers });
-        if (!session?.user) return Response.json({ error: "Unauthorized" }, { status: 401 });
+        const access = await requirePluginAccess(req, workspaceId, "opencode-ai");
+        if (access instanceof Response) return access;
 
-        const config = await db.db.query.pluginConfig.findFirst({
-          where: (pc, { and, eq }) =>
-            and(eq(pc.workspaceId, workspaceId), eq(pc.pluginId, "opencode-ai")),
-        });
-        if (!config?.enabled) return Response.json({ error: "Plugin not enabled" }, { status: 400 });
-
-        const cfg = config.config as any;
-        const apiKey = cfg?.apiKey;
+        const apiKey = access.config?.apiKey;
         if (!apiKey) return Response.json({ error: "API key not configured" }, { status: 400 });
 
         const result = await client.chat({
           apiKey,
-          model: cfg?.model || "deepseek-v4-pro",
-          systemPrompt: cfg?.systemPrompt || "You are a helpful assistant.",
+          model: access.config?.model || "deepseek-v4-pro",
+          systemPrompt: access.config?.systemPrompt || "You are a helpful assistant.",
           messages: messages || [{ role: "user", content: noteContent || "Help me with this note." }],
         });
 

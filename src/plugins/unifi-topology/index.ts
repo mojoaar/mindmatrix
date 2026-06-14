@@ -1,4 +1,5 @@
 import type { Plugin } from "@/plugins/types";
+import { requirePluginAccess } from "@/plugins";
 
 export const unifiTopologyPlugin: Plugin = {
   id: "unifi-topology",
@@ -9,18 +10,10 @@ export const unifiTopologyPlugin: Plugin = {
     "POST /api/plugins/unifi-topology/scan": async (req: Request) => {
       try {
         const { workspaceId } = await req.json();
-        const auth = await import("@/lib/auth");
-        const db = await import("@/lib/db");
-        const session = await auth.auth.api.getSession({ headers: req.headers });
-        if (!session?.user) return Response.json({ error: "Unauthorized" }, { status: 401 });
+        const access = await requirePluginAccess(req, workspaceId, "unifi-topology");
+        if (access instanceof Response) return access;
 
-        const config = await db.db.query.pluginConfig.findFirst({
-          where: (pc: any, { and, eq }: any) =>
-            and(eq(pc.workspaceId, workspaceId), eq(pc.pluginId, "unifi-topology")),
-        });
-        if (!config?.enabled) return Response.json({ error: "Plugin not enabled" }, { status: 400 });
-
-        const cfg = config.config as any;
+        const cfg = access.config;
         const host = cfg?.host;
         const port = cfg?.port || 443;
         const username = cfg?.username;
@@ -33,7 +26,6 @@ export const unifiTopologyPlugin: Plugin = {
 
         const base = `https://${host}:${port}`;
 
-        // Login
         const loginRes = await fetch(`${base}/api/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -45,7 +37,6 @@ export const unifiTopologyPlugin: Plugin = {
 
         let md = `# Unifi Network Topology — ${new Date().toISOString().slice(0, 16).replace("T", " ")}\n\n`;
 
-        // Devices
         try {
           const devRes = await fetch(`${base}/api/s/${site}/stat/device`, fetchOpts);
           const devData = await devRes.json();
@@ -59,7 +50,6 @@ export const unifiTopologyPlugin: Plugin = {
           }
         } catch { /* skip */ }
 
-        // WiFi networks
         try {
           const wlanRes = await fetch(`${base}/api/s/${site}/rest/wlanconf`, fetchOpts);
           const wlanData = await wlanRes.json();
@@ -73,7 +63,6 @@ export const unifiTopologyPlugin: Plugin = {
           }
         } catch { /* skip */ }
 
-        // Clients
         try {
           const staRes = await fetch(`${base}/api/s/${site}/stat/sta`, fetchOpts);
           const staData = await staRes.json();
@@ -88,6 +77,7 @@ export const unifiTopologyPlugin: Plugin = {
           }
         } catch { /* skip */ }
 
+        const db = await import("@/lib/db");
         const noteId = crypto.randomUUID();
         const now = new Date();
         await db.db.insert(db.note).values({
@@ -96,8 +86,8 @@ export const unifiTopologyPlugin: Plugin = {
           title: `Unifi Topology — ${now.toISOString().slice(0, 10)}`,
           slug: `unifi-topology-${now.toISOString().slice(0, 10)}`,
           content: md,
-          createdById: session.user.id,
-          updatedById: session.user.id,
+          createdById: access.userId,
+          updatedById: access.userId,
         });
 
         return Response.json({ noteId });

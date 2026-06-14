@@ -1,5 +1,5 @@
 import type { Plugin } from "@/plugins/types";
-import { NextResponse } from "next/server";
+import { requirePluginAccess } from "@/plugins";
 
 export const proxmoxInventoryPlugin: Plugin = {
   id: "proxmox-inventory",
@@ -10,18 +10,10 @@ export const proxmoxInventoryPlugin: Plugin = {
     "POST /api/plugins/proxmox-inventory/scan": async (req: Request) => {
       try {
         const { workspaceId } = await req.json();
-        const auth = await import("@/lib/auth");
-        const db = await import("@/lib/db");
-        const session = await auth.auth.api.getSession({ headers: req.headers });
-        if (!session?.user) return Response.json({ error: "Unauthorized" }, { status: 401 });
+        const access = await requirePluginAccess(req, workspaceId, "proxmox-inventory");
+        if (access instanceof Response) return access;
 
-        const config = await db.db.query.pluginConfig.findFirst({
-          where: (pc: any, { and, eq }: any) =>
-            and(eq(pc.workspaceId, workspaceId), eq(pc.pluginId, "proxmox-inventory")),
-        });
-        if (!config?.enabled) return Response.json({ error: "Plugin not enabled" }, { status: 400 });
-
-        const cfg = config.config as any;
+        const cfg = access.config;
         const host = cfg?.host;
         const port = cfg?.port || 8006;
         const tokenId = cfg?.tokenId;
@@ -36,17 +28,13 @@ export const proxmoxInventoryPlugin: Plugin = {
         const headers = {
           Authorization: `PVEAPIToken=${tokenId}=${secret}`,
         };
-        const fetchOpts = {
-          headers,
-        } as RequestInit;
+        const fetchOpts = { headers } as RequestInit;
 
-        // Get cluster status
         const clusterRes = await fetch(`${base}/cluster/status`, fetchOpts);
         const clusterData = await clusterRes.json();
         const isCluster = clusterData.data && clusterData.data.length > 0;
         const clusterInfo = isCluster ? clusterData.data[0] : null;
 
-        // Get nodes
         const nodesRes = await fetch(`${base}/nodes`, fetchOpts);
         const nodesData = await nodesRes.json();
         const nodes = nodesData.data || [];
@@ -63,7 +51,6 @@ export const proxmoxInventoryPlugin: Plugin = {
         for (const node of nodes) {
           md += `## Node: ${node.node}\n\n`;
 
-          // Node status
           try {
             const statusRes = await fetch(`${base}/nodes/${node.node}/status`, fetchOpts);
             const status = await statusRes.json();
@@ -74,7 +61,6 @@ export const proxmoxInventoryPlugin: Plugin = {
             }
           } catch { /* skip */ }
 
-          // VMs
           try {
             const vmRes = await fetch(`${base}/nodes/${node.node}/qemu`, fetchOpts);
             const vmData = await vmRes.json();
@@ -89,7 +75,6 @@ export const proxmoxInventoryPlugin: Plugin = {
             }
           } catch { /* skip */ }
 
-          // Containers
           try {
             const ctRes = await fetch(`${base}/nodes/${node.node}/lxc`, fetchOpts);
             const ctData = await ctRes.json();
@@ -104,7 +89,6 @@ export const proxmoxInventoryPlugin: Plugin = {
             }
           } catch { /* skip */ }
 
-          // Storage
           try {
             const storageRes = await fetch(`${base}/nodes/${node.node}/storage`, fetchOpts);
             const storageData = await storageRes.json();
@@ -120,7 +104,7 @@ export const proxmoxInventoryPlugin: Plugin = {
           } catch { /* skip */ }
         }
 
-        // Save as note
+        const db = await import("@/lib/db");
         const noteId = crypto.randomUUID();
         const now = new Date();
         await db.db.insert(db.note).values({
@@ -129,8 +113,8 @@ export const proxmoxInventoryPlugin: Plugin = {
           title: `Proxmox Inventory — ${now.toISOString().slice(0, 10)}`,
           slug: `proxmox-inventory-${now.toISOString().slice(0, 10)}`,
           content: md,
-          createdById: session.user.id,
-          updatedById: session.user.id,
+          createdById: access.userId,
+          updatedById: access.userId,
         });
 
         return Response.json({ noteId });

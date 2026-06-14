@@ -301,3 +301,22 @@ Stored in `localStorage` key `mindmatrix-theme`. Applied via inline script befor
 - **Git sync** — Push/pull workspace notes to a configured Git repo
 - **AI search** — Vector embeddings + semantic search across notes
 - **Realtime CRDT** — Y.js-based collaborative editing (upgrade from last-write-wins)
+
+## Security Hardening Plan (In Progress)
+
+### 1. Database At-Rest Encryption (`src/lib/crypto.ts`)
+- Symmetric AES-256-GCM encryption using `ENCRYPTION_KEY` from `.env`.
+- `encryptConfig(config)` / `decryptConfig(config)` utilities transparently encrypt sensitive JSONB columns in `plugin_config`.
+- `maskConfig(config)` replaces sensitive values (keys, tokens, passwords) with `"••••••••"` before sending to client.
+- Sensitive keys identified: `apiKey`, `secret`, `password`, `accessToken`, `refreshToken`, `clientSecret`, `tokenId`, `token`.
+
+### 2. Broken Object-Level Authorization (BOLA) Fixes
+- **Plugin Config Endpoint** (`/api/plugins/config`):
+  - **GET**: Guard with workspace membership check (403 if not a member). Mask config values so plaintext secrets never leak to browser.
+  - **POST**: Guard with role check (only "owner" or "admin" can write). Support partial updates if `"••••••••"` is sent back to preserve existing encrypted credentials.
+- **5 Plugin Route Handlers** (`src/plugins/{id}/index.ts`):
+  - Add workspace membership validation guard to every route handler.
+  - Decrypt database credentials transparently on server before integration calls.
+
+### 3. UI Zero-Secrets-Leak Handlers
+- Support masked password/token state fields in settings components.

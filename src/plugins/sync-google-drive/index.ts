@@ -1,22 +1,19 @@
 import type { Plugin } from "@/plugins/types";
-import { NextResponse } from "next/server";
+import { requirePluginAccess } from "@/plugins";
 
 const GOOGLE_AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN = "https://oauth2.googleapis.com/token";
 const DRIVE_API = "https://www.googleapis.com/drive/v3";
 
-async function getAccessToken(workspaceId: string): Promise<string | null> {
-  const { db } = await import("@/lib/db");
-  const { pluginConfig } = await import("@/lib/db");
-  const { and, eq } = await import("drizzle-orm");
-  const config = await db.query.pluginConfig.findFirst({
-    where: and(eq(pluginConfig.workspaceId, workspaceId), eq(pluginConfig.pluginId, "sync-google-drive")),
-  });
-  if (!config?.enabled) return null;
-  const cfg = config.config as any;
-  if (!cfg?.accessToken) return null;
+async function getAccessToken(
+  req: Request,
+  workspaceId: string
+): Promise<string | Response> {
+  const access = await requirePluginAccess(req, workspaceId, "sync-google-drive");
+  if (access instanceof Response) return access;
+  const cfg = access.config;
+  if (!cfg?.accessToken) return Response.json({ error: "Not connected" }, { status: 400 });
 
-  // Check expiry and refresh if needed
   if (cfg.expiresAt && Date.now() > cfg.expiresAt) {
     const refreshRes = await fetch(GOOGLE_TOKEN, {
       method: "POST",
@@ -34,7 +31,7 @@ async function getAccessToken(workspaceId: string): Promise<string | null> {
       cfg.expiresAt = Date.now() + (refreshData.expires_in || 3600) * 1000;
     }
   }
-  return cfg.accessToken || null;
+  return cfg.accessToken || "not_connected";
 }
 
 async function findOrCreateFolder(token: string): Promise<string> {
@@ -61,7 +58,7 @@ export const syncGoogleDrivePlugin: Plugin = {
   version: "0.1.0",
   apiRoutes: {
     "GET /api/plugins/sync-google-drive/auth": async () => {
-      return NextResponse.json({ url: GOOGLE_AUTH });
+      return Response.json({ url: GOOGLE_AUTH });
     },
 
     "GET /api/plugins/sync-google-drive/callback": async (req) => {
@@ -72,8 +69,11 @@ export const syncGoogleDrivePlugin: Plugin = {
       const workspaceId = url.searchParams.get("workspaceId");
       const redirectUri = url.searchParams.get("redirectUri");
       if (!code || !clientId || !clientSecret || !workspaceId) {
-        return NextResponse.json({ error: "Missing params" }, { status: 400 });
+        return Response.json({ error: "Missing params" }, { status: 400 });
       }
+
+      const access = await requirePluginAccess(req, workspaceId, "sync-google-drive");
+      if (access instanceof Response) return access;
 
       const tokenRes = await fetch(GOOGLE_TOKEN, {
         method: "POST",
@@ -89,24 +89,28 @@ export const syncGoogleDrivePlugin: Plugin = {
       const data: any = await tokenRes.json();
 
       if (data.access_token) {
-        return NextResponse.json({
+        return Response.json({
           connected: true,
           accessToken: data.access_token,
           refreshToken: data.refresh_token,
           expiresAt: Date.now() + (data.expires_in || 3600) * 1000,
         });
       }
-      return NextResponse.json({ error: "Token exchange failed" }, { status: 400 });
+      return Response.json({ error: "Token exchange failed" }, { status: 400 });
     },
 
     "POST /api/plugins/sync-google-drive/sync": async (req) => {
       const { workspaceId } = await req.json();
-      const token = await getAccessToken(workspaceId);
-      if (!token) return NextResponse.json({ error: "Not connected" }, { status: 400 });
+      const tokenOrResp = await getAccessToken(req, workspaceId);
+      if (tokenOrResp instanceof Response) return tokenOrResp;
+      if (typeof tokenOrResp !== "string") {
+        return Response.json({ error: "Token not available" }, { status: 400 });
+      }
+      const token = tokenOrResp;
 
-      const { db, note } = await import("@/lib/db");
+      const db = await import("@/lib/db");
       const { eq } = await import("drizzle-orm");
-      const notes = await db.query.note.findMany({ where: eq(note.workspaceId, workspaceId) });
+      const notes = await db.db.query.note.findMany({ where: eq(db.note.workspaceId, workspaceId) });
 
       const folderId = await findOrCreateFolder(token);
       let synced = 0;
@@ -130,14 +134,16 @@ export const syncGoogleDrivePlugin: Plugin = {
         } catch { /* skip */ }
       }
 
-      return NextResponse.json({ synced });
+      return Response.json({ synced });
     },
 
     "GET /api/plugins/sync-google-drive/status": async (req) => {
       const { searchParams } = new URL(req.url);
       const workspaceId = searchParams.get("workspaceId");
-      const token = workspaceId ? await getAccessToken(workspaceId) : null;
-      return NextResponse.json({ connected: !!token });
+      if (!workspaceId) return Response.json({ connected: false });
+      const access = await requirePluginAccess(req, workspaceId, "sync-google-drive");
+      if (access instanceof Response) return access;
+      return Response.json({ connected: !!access.config?.accessToken });
     },
   },
 };
