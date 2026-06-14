@@ -38,20 +38,30 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     fetch("/api/workspaces")
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) { router.push("/login"); return; }
+        return res.json();
+      })
       .then((data) => {
-        if (data.workspaces) setWorkspaces(data.workspaces);
+        if (data?.workspaces && !cancelled) setWorkspaces(data.workspaces);
       })
       .catch(() => {});
 
     fetch("/api/profile")
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) { router.push("/login"); return; }
+        return res.json();
+      })
       .then((data) => {
-        if (data.profile) setUser(data.profile);
+        if (data?.profile && !cancelled) setUser(data.profile);
       })
       .catch(() => {});
-  }, []);
+
+    return () => { cancelled = true; };
+  }, [router]);
 
   const handleLogout = async () => {
     await authClient.signOut();

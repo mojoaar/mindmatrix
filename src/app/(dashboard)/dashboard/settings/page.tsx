@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/ui/avatar";
 
 interface Profile {
@@ -31,6 +32,7 @@ const TIMEZONES = [
 ];
 
 export default function UserSettingsPage() {
+  const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -50,7 +52,10 @@ export default function UserSettingsPage() {
 
   useEffect(() => {
     fetch("/api/profile")
-      .then((r) => r.json())
+      .then((r) => {
+        if (r.status === 401) { router.push("/login"); return; }
+        return r.json();
+      })
       .then((data) => {
         if (data.profile) {
           setProfile(data.profile);
