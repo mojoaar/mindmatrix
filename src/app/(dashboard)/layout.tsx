@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { BookOpen, LogOut, Search, Settings, Folders, Cloud, type LucideIcon } from "lucide-react";
 import { SearchOverlay } from "@/components/search/search-overlay";
 import { Avatar } from "@/components/ui/avatar";
+import { getIcon } from "@/lib/icons";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -12,6 +13,7 @@ interface Workspace {
   id: string;
   name: string;
   slug: string;
+  icon?: string;
 }
 
 interface UserInfo {
@@ -161,7 +163,7 @@ export default function DashboardLayout({
                 (e.currentTarget.style.backgroundColor = "transparent")
               }
             >
-              <BookOpen size={14} />
+              {(() => { const I = getIcon(ws.icon || "BookOpen"); return <I size={14} />; })()}
               <span className="truncate">{ws.name}</span>
             </Link>
           ))}
@@ -223,7 +225,7 @@ export default function DashboardLayout({
                 className="btn ghost sm"
                 onClick={() => setSidebarOpen(true)}
               >
-                <BookOpen size={14} />
+              <BookOpen size={14} />
               </button>
             )}
             <button

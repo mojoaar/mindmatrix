@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
 import Link from "next/link";
 import { Plus, BookOpen, Users } from "lucide-react";
+import { IconPicker } from "@/components/ui/icon-picker";
+import { getIcon } from "@/lib/icons";
 
 interface Workspace {
   id: string;
   name: string;
   slug: string;
   description: string | null;
+  icon?: string;
 }
 
 export default function DashboardPage() {
@@ -21,6 +24,7 @@ export default function DashboardPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [icon, setIcon] = useState("BookOpen");
   const [creating, setCreating] = useState(false);
 
   async function loadWorkspaces() {
@@ -47,7 +51,7 @@ export default function DashboardPage() {
       const res = await fetch("/api/workspaces", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), description: description.trim() || null }),
+        body: JSON.stringify({ name: name.trim(), description: description.trim() || null, icon }),
       });
       const data = await res.json();
       if (data.workspace) {
@@ -86,6 +90,10 @@ export default function DashboardPage() {
                 required
                 autoFocus
               />
+            </div>
+            <div className="form-group">
+              <label>Icon</label>
+              <IconPicker value={icon} onChange={setIcon} />
             </div>
             <div className="form-group">
               <label htmlFor="ws-desc">Description (optional)</label>
@@ -144,7 +152,7 @@ export default function DashboardPage() {
                       className="flex align-center gap-1"
                       style={{ color: "var(--fg-primary)", fontWeight: 500 }}
                     >
-                      <BookOpen size={14} />
+                      {(() => { const I = getIcon(ws.icon || "BookOpen"); return <I size={14} />; })()}
                       {ws.name}
                     </Link>
                   </td>

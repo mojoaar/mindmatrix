@@ -113,6 +113,7 @@ export const workspace = pgTable("workspace", {
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   description: text("description"),
+  icon: text("icon").default("BookOpen").notNull(),
   createdById: text("created_by_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),

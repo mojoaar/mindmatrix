@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Trash2, Users, FileText } from "lucide-react";
+import { IconPicker } from "@/components/ui/icon-picker";
 
 interface Workspace {
   id: string;
   name: string;
   slug: string;
   description: string;
+  icon?: string;
   createdAt: string;
 }
 
@@ -33,6 +35,7 @@ export default function WorkspaceSettingsPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [icon, setIcon] = useState("BookOpen");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("member");
   const [error, setError] = useState("");
@@ -51,6 +54,7 @@ export default function WorkspaceSettingsPage() {
           setWorkspace(ws);
           setName(ws.name);
           setDescription(ws.description || "");
+          setIcon(ws.icon || "BookOpen");
 
           const memRes = await fetch(`/api/workspaces/${ws.id}/members`);
           const memData = await memRes.json();
@@ -99,7 +103,7 @@ export default function WorkspaceSettingsPage() {
     const res = await fetch(`/api/workspaces/${workspace.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, description }),
+      body: JSON.stringify({ name, description, icon }),
     });
 
     if (res.ok) {
@@ -157,6 +161,10 @@ export default function WorkspaceSettingsPage() {
           <div className="form-group">
             <label htmlFor="name">Name</label>
             <input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>Icon</label>
+            <IconPicker value={icon} onChange={setIcon} />
           </div>
           <div className="form-group">
             <label htmlFor="description">Description</label>

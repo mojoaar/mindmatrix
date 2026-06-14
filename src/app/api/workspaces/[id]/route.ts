@@ -47,7 +47,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { name, description } = await request.json();
+  const { name, description, icon } = await request.json();
   const update: Record<string, unknown> = {};
   if (name && typeof name === "string") {
     update.name = name;
@@ -58,6 +58,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     update.slug = existing ? `${slug}-${crypto.randomUUID().split("-")[0]}` : slug;
   }
   if (description !== undefined) update.description = description;
+  if (icon !== undefined) update.icon = icon;
 
   const [updated] = await db.update(workspace).set(update).where(eq(workspace.id, id)).returning();
 
