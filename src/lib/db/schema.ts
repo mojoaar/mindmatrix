@@ -253,6 +253,29 @@ export const syncConnection = pgTable("sync_connection", {
     .notNull(),
 });
 
+export const noteTemplate = pgTable(
+  "note_template",
+  {
+    id: text("id").primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    content: text("content").default("").notNull(),
+    createdById: text("created_by_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => ({
+    templateWorkspaceIdx: index("template_workspace_idx").on(table.workspaceId),
+  })
+);
+
 // ---- Relations ----
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -264,6 +287,7 @@ export const userRelations = relations(user, ({ many }) => ({
   updatedNotes: many(note, { relationName: "updatedNotes" }),
   createdFolders: many(folder, { relationName: "createdFolders" }),
   createdTags: many(tag, { relationName: "createdTags" }),
+  createdTemplates: many(noteTemplate, { relationName: "createdTemplates" }),
   syncConnections: many(syncConnection),
 }));
 
@@ -286,6 +310,7 @@ export const workspaceRelations = relations(workspace, ({ many, one }) => ({
   folders: many(folder),
   notes: many(note),
   tags: many(tag),
+  templates: many(noteTemplate),
   owner: one(user, {
     fields: [workspace.createdById],
     references: [user.id],
@@ -375,5 +400,17 @@ export const syncConnectionRelations = relations(syncConnection, ({ one }) => ({
   user: one(user, {
     fields: [syncConnection.userId],
     references: [user.id],
+  }),
+}));
+
+export const noteTemplateRelations = relations(noteTemplate, ({ one }) => ({
+  workspace: one(workspace, {
+    fields: [noteTemplate.workspaceId],
+    references: [workspace.id],
+  }),
+  creator: one(user, {
+    fields: [noteTemplate.createdById],
+    references: [user.id],
+    relationName: "createdTemplates",
   }),
 }));

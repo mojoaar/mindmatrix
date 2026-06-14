@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/toast";
 import Link from "next/link";
 import { Plus, BookOpen, Users } from "lucide-react";
 
@@ -14,13 +15,13 @@ interface Workspace {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { error: toastError } = useToast();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [creating, setCreating] = useState(false);
-  const [error, setError] = useState("");
 
   async function loadWorkspaces() {
     setLoading(true);
@@ -41,7 +42,6 @@ export default function DashboardPage() {
   async function createWorkspace(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
-    setError("");
     setCreating(true);
     try {
       const res = await fetch("/api/workspaces", {
@@ -53,10 +53,10 @@ export default function DashboardPage() {
       if (data.workspace) {
         router.push(`/dashboard/w/${data.workspace.slug}`);
       } else {
-        setError(data.error || "Failed to create workspace");
+        toastError(data.error || "Failed to create workspace");
       }
     } catch {
-      setError("Failed to create workspace");
+      toastError("Failed to create workspace");
     }
     setCreating(false);
   }
@@ -70,12 +70,6 @@ export default function DashboardPage() {
           New Workspace
         </button>
       </div>
-
-      {error && (
-        <div className="card" style={{ padding: "0.75rem", borderColor: "var(--accent-red)", color: "var(--accent-red)", marginBottom: "1rem" }}>
-          {error}
-        </div>
-      )}
 
       {showCreate && (
         <div className="card" style={{ marginBottom: "1.5rem" }}>

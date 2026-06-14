@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2, Users } from "lucide-react";
+import { Trash2, Users, FileText } from "lucide-react";
 
 interface Workspace {
   id: string;
@@ -18,18 +18,28 @@ interface Member {
   user: { id: string; name: string; email: string };
 }
 
+interface Template {
+  id: string;
+  name: string;
+  content: string;
+}
+
 export default function WorkspaceSettingsPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("member");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [newTemplateName, setNewTemplateName] = useState("");
+  const [newTemplateContent, setNewTemplateContent] = useState("");
+  const [showNewTemplate, setShowNewTemplate] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -45,11 +55,40 @@ export default function WorkspaceSettingsPage() {
           const memRes = await fetch(`/api/workspaces/${ws.id}/members`);
           const memData = await memRes.json();
           if (memData.members) setMembers(memData.members);
+
+          const tplRes = await fetch(`/api/templates?workspaceId=${ws.id}`);
+          const tplData = await tplRes.json();
+          if (tplData.templates) setTemplates(tplData.templates);
         }
       }
     }
     load();
   }, [slug]);
+
+  async function createTemplate() {
+    if (!workspace || !newTemplateName.trim()) return;
+    const res = await fetch("/api/templates", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workspaceId: workspace.id, name: newTemplateName.trim(), content: newTemplateContent }),
+    });
+    const data = await res.json();
+    if (data.template) {
+      setTemplates((prev) => [...prev, data.template]);
+      setNewTemplateName("");
+      setNewTemplateContent("");
+      setShowNewTemplate(false);
+      setSuccess("Template created");
+    } else {
+      setError(data.error || "Failed to create template");
+    }
+  }
+
+  async function deleteTemplate(id: string) {
+    if (!workspace) return;
+    await fetch(`/api/templates/${id}`, { method: "DELETE" });
+    setTemplates((prev) => prev.filter((t) => t.id !== id));
+  }
 
   async function saveSettings(e: React.FormEvent) {
     e.preventDefault();
@@ -177,6 +216,62 @@ export default function WorkspaceSettingsPage() {
           </select>
           <button type="submit" className="btn primary sm">Invite</button>
         </form>
+      </div>
+
+      <div className="card">
+        <div className="flex align-center justify-between" style={{ marginBottom: "1rem" }}>
+          <h3 style={{ marginBottom: 0 }}>
+            <FileText size={16} style={{ marginRight: "0.5rem", verticalAlign: "middle" }} />
+            Note Templates
+          </h3>
+          <button className="btn primary sm" onClick={() => setShowNewTemplate(true)}>New Template</button>
+        </div>
+
+        {templates.length === 0 && !showNewTemplate && (
+          <p className="text-muted text-sm">No templates yet. Create one to use as a starting point for new notes.</p>
+        )}
+
+        {showNewTemplate && (
+          <div className="card" style={{ marginBottom: "1rem", backgroundColor: "var(--bg-tertiary)" }}>
+            <div className="form-group">
+              <label>Template Name</label>
+              <input
+                value={newTemplateName}
+                onChange={(e) => setNewTemplateName(e.target.value)}
+                placeholder="e.g., ADR, Runbook, Meeting Notes"
+                autoFocus
+              />
+            </div>
+            <div className="form-group">
+              <label>Content (Markdown)</label>
+              <textarea
+                value={newTemplateContent}
+                onChange={(e) => setNewTemplateContent(e.target.value)}
+                rows={6}
+                style={{ width: "100%", fontFamily: "var(--font-mono)", fontSize: "0.75rem" }}
+                placeholder="# Template title&#10;&#10;Start writing..."
+              />
+            </div>
+            <div className="flex gap-1">
+              <button className="btn primary sm" onClick={createTemplate}>Create</button>
+              <button className="btn secondary sm" onClick={() => setShowNewTemplate(false)}>Cancel</button>
+            </div>
+          </div>
+        )}
+
+        {templates.map((t) => (
+          <div key={t.id} className="flex align-center justify-between" style={{ padding: "0.5rem 0", borderBottom: "1px solid var(--border-color)" }}>
+            <div>
+              <span className="text-sm" style={{ fontWeight: 500 }}>{t.name}</span>
+              <span className="text-muted text-xs" style={{ marginLeft: "0.5rem" }}>
+                {t.content.slice(0, 80)}{t.content.length > 80 ? "..." : ""}
+              </span>
+            </div>
+            <button className="btn danger sm" onClick={() => deleteTemplate(t.id)}>
+              <Trash2 size={12} />
+            </button>
+          </div>
+        ))}
       </div>
 
       <div className="card" style={{ borderColor: "var(--accent-red)" }}>

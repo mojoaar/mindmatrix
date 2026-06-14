@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/toast";
 import Link from "next/link";
 import { Plus, FileText, FolderPlus, Search, Tag } from "lucide-react";
 
@@ -29,24 +30,32 @@ interface Tag {
   color: string;
 }
 
+interface Template {
+  id: string;
+  name: string;
+  content: string;
+}
+
 export default function WorkspacePage() {
   const params = useParams();
   const router = useRouter();
+  const { error: toastError } = useToast();
   const slug = params.slug as string;
   const [workspace, setWorkspace] = useState<{ id: string; name: string } | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [showNewNote, setShowNewNote] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState("");
+  const [newNoteContent, setNewNoteContent] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState("#88c0d0");
   const [showNewTag, setShowNewTag] = useState(false);
-  const [error, setError] = useState("");
 
   async function loadNotes(workspaceId: string) {
     const params = new URLSearchParams({ workspaceId });
@@ -69,6 +78,12 @@ export default function WorkspacePage() {
     if (data.tags) setTags(data.tags);
   }
 
+  async function loadTemplates(workspaceId: string) {
+    const res = await fetch(`/api/templates?workspaceId=${workspaceId}`);
+    const data = await res.json();
+    if (data.templates) setTemplates(data.templates);
+  }
+
   const loadData = useCallback(async () => {
     try {
       const wsRes = await fetch("/api/workspaces");
@@ -80,12 +95,13 @@ export default function WorkspacePage() {
           loadNotes(ws.id);
           loadFolders(ws.id);
           loadTags(ws.id);
+          loadTemplates(ws.id);
         } else {
-          setError("Workspace not found");
+          toastError("Workspace not found");
         }
       }
     } catch {
-      setError("Failed to load workspace");
+      toastError("Failed to load workspace");
     }
   }, [slug]);
 
@@ -107,15 +123,22 @@ export default function WorkspacePage() {
       body: JSON.stringify({
         workspaceId: workspace.id,
         title: newNoteTitle,
-        content: "",
+        content: newNoteContent || "",
       }),
     });
     const data = await res.json();
     if (data.note) {
       setShowNewNote(false);
       setNewNoteTitle("");
+      setNewNoteContent("");
       router.push(`/dashboard/w/${slug}/notes/${data.note.id}`);
     }
+  }
+
+  function createFromTemplate(tmpl: Template) {
+    setNewNoteTitle(tmpl.name);
+    setNewNoteContent(tmpl.content);
+    setShowNewNote(true);
   }
 
   async function createFolder() {
@@ -147,16 +170,6 @@ export default function WorkspacePage() {
     setShowNewTag(false);
     setNewTagName("");
     if (workspace) loadTags(workspace.id);
-  }
-
-  if (error) {
-    return (
-      <div className="container">
-        <div className="card" style={{ borderColor: "var(--accent-red)", color: "var(--accent-red)" }}>
-          {error}
-        </div>
-      </div>
-    );
   }
 
   if (!workspace) {
@@ -191,10 +204,32 @@ export default function WorkspacePage() {
           />
         </div>
 
-        <button className="btn secondary sm flex align-center gap-1" onClick={() => setShowNewNote(true)}>
-          <Plus size={14} />
-          New Note
-        </button>
+        <div style={{ position: "relative" }}>
+          <button className="btn secondary sm flex align-center gap-1" onClick={() => { setNewNoteTitle(""); setNewNoteContent(""); setShowNewNote(true); }}>
+            <Plus size={14} />
+            New Note
+          </button>
+          {templates.length > 0 && (
+            <select
+              value=""
+              className="btn secondary sm"
+              style={{ marginLeft: "0.25rem", padding: "0.25rem 0.5rem" }}
+              onChange={(e) => {
+                const id = e.target.value;
+                if (id) {
+                  const tmpl = templates.find((t) => t.id === id);
+                  if (tmpl) createFromTemplate(tmpl);
+                  e.target.value = "";
+                }
+              }}
+            >
+              <option value="">From template</option>
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
         <button className="btn secondary sm flex align-center gap-1" onClick={() => setShowNewFolder(true)}>
           <FolderPlus size={14} />
           New Folder
@@ -239,6 +274,14 @@ export default function WorkspacePage() {
             autoFocus
             style={{ width: "100%", marginBottom: "0.5rem" }}
           />
+          {newNoteContent && (
+            <textarea
+              value={newNoteContent}
+              onChange={(e) => setNewNoteContent(e.target.value)}
+              rows={8}
+              style={{ width: "100%", marginBottom: "0.5rem", fontFamily: "var(--font-mono)", fontSize: "0.75rem" }}
+            />
+          )}
           <div className="flex gap-1">
             <button className="btn primary sm" onClick={createNote}>
               Create

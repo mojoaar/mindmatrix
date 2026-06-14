@@ -4,7 +4,7 @@ import * as schema from "./schema";
 
 const connectionString =
   process.env.DATABASE_URL ||
-  "postgres://mindmatrix:CHANGE_ME_DB_PASSWORD@localhost:5432/mindmatrix";
+  "postgres://mindmatrix:CHANGE_ME_DB_PASSWORD@localhost:5434/mindmatrix";
 
 const globalForDb = globalThis as unknown as {
   conn: postgres.Sql | undefined;

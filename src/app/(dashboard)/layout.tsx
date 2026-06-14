@@ -6,7 +6,6 @@ import { BookOpen, LogOut, Search, Settings, Folders, Cloud, type LucideIcon } f
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { SearchOverlay } from "@/components/search/search-overlay";
 import { Avatar } from "@/components/ui/avatar";
-import { ToastProvider } from "@/components/ui/toast";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -72,8 +71,7 @@ export default function DashboardLayout({
   }, []);
 
   return (
-    <ToastProvider>
-      <div style={{ display: "flex", height: "100vh" }}>
+    <div style={{ display: "flex", height: "100vh" }}>
       {/* Sidebar */}
       <aside
         style={{
@@ -237,6 +235,5 @@ export default function DashboardLayout({
       </main>
       <SearchOverlay />
     </div>
-    </ToastProvider>
   );
 }

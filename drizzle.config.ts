@@ -7,6 +7,6 @@ export default defineConfig({
   dbCredentials: {
     url:
       process.env.DATABASE_URL ||
-      "postgres://mindmatrix:CHANGE_ME_DB_PASSWORD@localhost:5432/mindmatrix",
+      "postgres://mindmatrix:CHANGE_ME_DB_PASSWORD@localhost:5434/mindmatrix",
   },
 });
