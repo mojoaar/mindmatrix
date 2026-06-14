@@ -118,6 +118,15 @@ export function DriveSettings({ workspaceId }: { workspaceId: string }) {
             <label>Client Secret</label>
             <input type="password" value={clientSecret} onChange={(e) => setClientSecret(e.target.value)} placeholder="Google OAuth client secret" />
           </div>
+          <p className="text-xs text-muted" style={{ marginBottom: "0.75rem" }}>
+            Create an OAuth 2.0 client ID at{" "}
+            <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">
+              Google Cloud Console
+            </a>
+            {" "}and add{" "}
+            <code>{typeof window !== "undefined" ? `${window.location.origin}/api/oauth/google-drive` : ""}</code>
+            {" "}as an authorized redirect URI.
+          </p>
           <button className="btn primary sm" onClick={saveAndLink} disabled={saving || !clientId || !clientSecret}>
             {saving ? "Connecting..." : "Link Google Drive"}
           </button>

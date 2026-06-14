@@ -116,6 +116,13 @@ export function PCloudSettings({ workspaceId }: { workspaceId: string }) {
             <label>Client Secret</label>
             <input type="password" value={clientSecret} onChange={(e) => setClientSecret(e.target.value)} placeholder="pCloud app client secret" />
           </div>
+          <p className="text-xs text-muted" style={{ marginBottom: "0.75rem" }}>
+            Create an OAuth app at{" "}
+            <a href="https://docs.pcloud.com/my_apps/" target="_blank" rel="noopener">
+              pCloud Developer Console
+            </a>{" "}
+            and set the redirect URI to <code>{typeof window !== "undefined" ? `${window.location.origin}/api/oauth/pcloud` : ""}</code>
+          </p>
           <button className="btn primary sm" onClick={saveAndLink} disabled={saving || !clientId || !clientSecret}>
             {saving ? "Connecting..." : "Link pCloud Account"}
           </button>
