@@ -2,12 +2,32 @@
 
 import { useState, useEffect, Suspense, lazy, ComponentType } from "react";
 
-const OpenCodeSettings = lazy(() =>
+  const OpenCodeSettings = lazy(() =>
   import("@/plugins/opencode-ai/components/ai-settings").then((m) => ({ default: m.OpenCodeSettings }))
+);
+const ZenSettings = lazy(() =>
+  import("@/plugins/opencode-zen/components/zen-settings").then((m) => ({ default: m.ZenSettings }))
+);
+const PCloudSettings = lazy(() =>
+  import("@/plugins/sync-pcloud/components/pcloud-settings").then((m) => ({ default: m.PCloudSettings }))
+);
+const DriveSettings = lazy(() =>
+  import("@/plugins/sync-google-drive/components/drive-settings").then((m) => ({ default: m.DriveSettings }))
+);
+const ProxmoxSettings = lazy(() =>
+  import("@/plugins/proxmox-inventory/components/proxmox-settings").then((m) => ({ default: m.ProxmoxSettings }))
+);
+const UnifiSettings = lazy(() =>
+  import("@/plugins/unifi-topology/components/unifi-settings").then((m) => ({ default: m.UnifiSettings }))
 );
 
 const settingsMap: Record<string, ComponentType<{ workspaceId: string }>> = {
   "opencode-ai": OpenCodeSettings,
+  "opencode-zen": ZenSettings,
+  "sync-pcloud": PCloudSettings,
+  "sync-google-drive": DriveSettings,
+  "proxmox-inventory": ProxmoxSettings,
+  "unifi-topology": UnifiSettings,
 };
 
 interface PluginMeta {
