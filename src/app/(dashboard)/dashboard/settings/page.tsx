@@ -80,6 +80,7 @@ export default function UserSettingsPage() {
       const data = await res.json();
       if (data.profile) {
         setProfile(data.profile);
+        window.dispatchEvent(new CustomEvent("mindmatrix:profile-updated", { detail: data.profile }));
         setMessage({ type: "success", text: "Profile saved" });
       } else {
         setMessage({ type: "error", text: data.error || "Failed to save" });
@@ -103,6 +104,7 @@ export default function UserSettingsPage() {
       const data = await res.json();
       if (data.image) {
         setProfile((prev) => (prev ? { ...prev, image: data.image } : prev));
+        window.dispatchEvent(new CustomEvent("mindmatrix:profile-updated", { detail: { image: data.image } }));
         setMessage({ type: "success", text: "Avatar updated" });
       } else {
         setMessage({ type: "error", text: data.error || "Upload failed" });
@@ -121,6 +123,7 @@ export default function UserSettingsPage() {
       const data = await res.json();
       if (data.image === null) {
         setProfile((prev) => (prev ? { ...prev, image: null } : prev));
+        window.dispatchEvent(new CustomEvent("mindmatrix:profile-updated", { detail: { image: null } }));
         setMessage({ type: "success", text: "Avatar removed" });
       } else {
         setMessage({ type: "error", text: data.error || "Failed to remove" });

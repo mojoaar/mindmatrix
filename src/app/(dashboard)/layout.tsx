@@ -63,6 +63,15 @@ export default function DashboardLayout({
     return () => { cancelled = true; };
   }, [router]);
 
+  useEffect(() => {
+    const handleProfileUpdate = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setUser((prev) => (prev ? { ...prev, ...detail } : prev));
+    };
+    window.addEventListener("mindmatrix:profile-updated", handleProfileUpdate);
+    return () => window.removeEventListener("mindmatrix:profile-updated", handleProfileUpdate);
+  }, []);
+
   const handleLogout = async () => {
     await authClient.signOut();
     router.push("/login");
