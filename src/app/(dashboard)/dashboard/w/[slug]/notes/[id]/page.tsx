@@ -8,6 +8,11 @@ import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useRealtimeNote } from "@/hooks/use-realtime-note";
+import { BacklinksPanel } from "@/components/editor/backlinks-panel";
+import { VersionPanel } from "@/components/editor/version-panel";
+import { PresenceAvatars } from "@/components/editor/presence-avatars";
+import { useToast } from "@/components/ui/toast";
 
 interface Note {
   id: string;
@@ -51,6 +56,14 @@ export default function NoteEditorPage() {
   const [showTagPicker, setShowTagPicker] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const { success: toastSuccess } = useToast();
+
+  const { viewers, lastUpdate, clearUpdate } = useRealtimeNote(noteId);
+  useEffect(() => {
+    if (lastUpdate) {
+      toastSuccess(`${lastUpdate.updatedBy} updated this note`);
+    }
+  }, [lastUpdate, toastSuccess, clearUpdate]);
 
   useEffect(() => {
     const savedLayout = localStorage.getItem("mindmatrix-editor-layout") as EditorLayout;
@@ -189,6 +202,7 @@ export default function NoteEditorPage() {
           <span>Created by {note.creator.name}</span>
           <span>·</span>
           <span>Updated {new Date(note.updatedAt).toLocaleString()}</span>
+          <PresenceAvatars viewers={viewers} />
         </div>
         <div className="flex align-center gap-2">
           <select
@@ -261,6 +275,8 @@ export default function NoteEditorPage() {
           </div>
         )}
       </div>
+      <BacklinksPanel noteId={note.id} workspaceSlug={slug} />
+      <VersionPanel noteId={note.id} />
     </div>
   );
 }

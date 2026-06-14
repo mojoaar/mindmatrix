@@ -25,5 +25,6 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export const db = drizzle(conn, { schema });
+export const sql = conn;
 export type DbClient = typeof db;
 export * from "./schema";

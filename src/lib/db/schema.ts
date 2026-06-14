@@ -277,6 +277,37 @@ export const noteTemplate = pgTable(
   })
 );
 
+export const noteLink = pgTable("note_link", {
+  id: text("id").primaryKey(),
+  sourceNoteId: text("source_note_id")
+    .notNull()
+    .references(() => note.id, { onDelete: "cascade" }),
+  targetNoteId: text("target_note_id")
+    .notNull()
+    .references(() => note.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const noteVersion = pgTable(
+  "note_version",
+  {
+    id: text("id").primaryKey(),
+    noteId: text("note_id")
+      .notNull()
+      .references(() => note.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    content: text("content").notNull(),
+    changeSummary: text("change_summary"),
+    createdById: text("created_by_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    versionNoteIdx: index("version_note_idx").on(table.noteId),
+  })
+);
+
 // ---- Relations ----
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -371,6 +402,9 @@ export const noteRelations = relations(note, ({ one, many }) => ({
     relationName: "updatedNotes",
   }),
   noteTags: many(noteTag),
+  outgoingLinks: many(noteLink, { relationName: "outgoingLinks" }),
+  incomingLinks: many(noteLink, { relationName: "incomingLinks" }),
+  versions: many(noteVersion),
 }));
 
 export const tagRelations = relations(tag, ({ one, many }) => ({
@@ -413,5 +447,29 @@ export const noteTemplateRelations = relations(noteTemplate, ({ one }) => ({
     fields: [noteTemplate.createdById],
     references: [user.id],
     relationName: "createdTemplates",
+  }),
+}));
+
+export const noteLinkRelations = relations(noteLink, ({ one }) => ({
+  source: one(note, {
+    fields: [noteLink.sourceNoteId],
+    references: [note.id],
+    relationName: "outgoingLinks",
+  }),
+  target: one(note, {
+    fields: [noteLink.targetNoteId],
+    references: [note.id],
+    relationName: "incomingLinks",
+  }),
+}));
+
+export const noteVersionRelations = relations(noteVersion, ({ one }) => ({
+  note: one(note, {
+    fields: [noteVersion.noteId],
+    references: [note.id],
+  }),
+  creator: one(user, {
+    fields: [noteVersion.createdById],
+    references: [user.id],
   }),
 }));

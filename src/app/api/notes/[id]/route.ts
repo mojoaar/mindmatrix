@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { db, note, noteTag, workspaceMember } from "@/lib/db";
+import { db, note, noteTag, workspaceMember, noteVersion, noteLink } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
+import { getEventBus } from "@/lib/realtime/event-bus";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -66,12 +67,57 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   await db.update(note).set(update).where(eq(note.id, id));
 
+  if (content !== undefined && content !== found.content) {
+    await db.insert(noteVersion).values({
+      id: crypto.randomUUID(),
+      noteId: id,
+      title: found.title,
+      content: found.content,
+      createdById: session.user.id,
+    });
+  }
+
   if (tagIds !== undefined) {
     await db.delete(noteTag).where(eq(noteTag.noteId, id));
     if (tagIds.length > 0) {
       await db.insert(noteTag).values(tagIds.map((tagId: string) => ({ noteId: id, tagId })));
     }
   }
+
+  // Parse backlinks from content
+  if (content !== undefined) {
+    const linkPattern = /\[\[([^\]]+)\]\]/g;
+    const refs = [...content.matchAll(linkPattern)].map((m) => m[1]);
+    if (refs.length > 0) {
+      const linkedNotes = await db.query.note.findMany({
+        where: and(
+          eq(note.workspaceId, found.workspaceId),
+        ),
+        columns: { id: true, slug: true },
+      });
+      const slugMap = new Map(linkedNotes.map((n) => [n.slug, n.id]));
+
+      await db.delete(noteLink).where(eq(noteLink.sourceNoteId, id));
+      for (const ref of refs) {
+        const targetId = slugMap.get(ref);
+        if (targetId && targetId !== id) {
+          await db.insert(noteLink).values({
+            id: crypto.randomUUID(),
+            sourceNoteId: id,
+            targetNoteId: targetId,
+          });
+        }
+      }
+    }
+  }
+
+  // Notify realtime listeners
+  getEventBus().notify(`note:${id}`, {
+    type: "note_updated",
+    noteId: id,
+    updatedBy: session.user.name,
+    updatedAt: new Date().toISOString(),
+  });
 
   const updated = await db.query.note.findFirst({
     where: eq(note.id, id),
