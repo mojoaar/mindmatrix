@@ -67,9 +67,12 @@ export default function WorkspacePage() {
   }
 
   async function loadFolders(workspaceId: string) {
-    const res = await fetch(`/api/folders?workspaceId=${workspaceId}`);
-    const data = await res.json();
-    if (data.folders) setFolders(data.folders);
+    try {
+      const res = await fetch(`/api/folders?workspaceId=${workspaceId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.folders) setFolders(data.folders);
+    } catch { /* API may be unavailable */ }
   }
 
   async function loadTags(workspaceId: string) {

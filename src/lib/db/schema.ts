@@ -401,6 +401,7 @@ export const folderRelations = relations(folder, ({ one, many }) => ({
   parent: one(folder, {
     fields: [folder.parentId],
     references: [folder.id],
+    relationName: "children",
   }),
   children: many(folder, { relationName: "children" }),
   notes: many(note),
