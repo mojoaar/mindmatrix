@@ -1,16 +1,10 @@
 import { SearchOverlay } from "@/components/search/search-overlay";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 
-export default async function DocsLayout({
+export default function DocsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
   return (
     <>
       <div style={{ display: "flex", height: "100vh" }}>
@@ -50,13 +44,11 @@ export default async function DocsLayout({
             </a>
           </nav>
 
-          {session && (
-            <div style={{ marginTop: "2rem" }}>
-              <a href="/dashboard" className="btn secondary sm" style={{ width: "100%", display: "flex" }}>
-                Back to Dashboard
-              </a>
-            </div>
-          )}
+          <div style={{ marginTop: "2rem" }}>
+            <a href="/dashboard" className="btn secondary sm" style={{ width: "100%", display: "flex" }}>
+              ← Back to Dashboard
+            </a>
+          </div>
         </aside>
         <main style={{ flex: 1, overflow: "auto", padding: "2rem 3rem" }}>
           {children}

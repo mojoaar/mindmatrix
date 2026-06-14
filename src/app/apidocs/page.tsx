@@ -1,8 +1,17 @@
 "use client";
 
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+
 export default function ApiDocsPage() {
   return (
     <div className="container">
+      <div style={{ marginBottom: "1.5rem" }}>
+        <Link href="/dashboard" className="btn ghost sm flex align-center gap-1" style={{ display: "inline-flex" }}>
+          <ArrowLeft size={14} />
+          Back to Dashboard
+        </Link>
+      </div>
       <h1>API Reference</h1>
       <p className="text-muted" style={{ marginBottom: "2rem" }}>
         Full API documentation for MindMatrix. All endpoints require authentication

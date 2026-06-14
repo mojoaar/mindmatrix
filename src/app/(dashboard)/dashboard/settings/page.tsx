@@ -14,22 +14,31 @@ interface Profile {
   createdAt: string;
 }
 
-const TIMEZONES = [
-  "browser",
+function getTimezones(): string[] {
+  try {
+    return (Intl as any).supportedValuesOf?.("timeZone") || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+const fallback = [
   "UTC",
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "Europe/London",
-  "Europe/Berlin",
-  "Europe/Paris",
-  "Asia/Tokyo",
-  "Asia/Shanghai",
-  "Asia/Kolkata",
-  "Australia/Sydney",
-  "Pacific/Auckland",
+  "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
+  "Europe/London", "Europe/Berlin", "Europe/Paris", "Europe/Copenhagen",
+  "Europe/Stockholm", "Europe/Oslo", "Europe/Helsinki", "Europe/Madrid",
+  "Europe/Rome", "Europe/Amsterdam", "Europe/Brussels", "Europe/Vienna",
+  "Europe/Zurich", "Europe/Warsaw", "Europe/Prague", "Europe/Budapest",
+  "Europe/Bucharest", "Europe/Athens", "Europe/Istanbul", "Europe/Moscow",
+  "Asia/Tokyo", "Asia/Shanghai", "Asia/Hong_Kong", "Asia/Singapore",
+  "Asia/Kolkata", "Asia/Dubai", "Asia/Seoul", "Asia/Bangkok", "Asia/Jakarta",
+  "Australia/Sydney", "Australia/Melbourne", "Australia/Perth",
+  "Pacific/Auckland", "Pacific/Fiji",
+  "Africa/Cairo", "Africa/Johannesburg", "Africa/Lagos", "Africa/Nairobi",
+  "America/Mexico_City", "America/Sao_Paulo", "America/Argentina/Buenos_Aires",
+  "America/Toronto", "America/Vancouver",
 ];
+let cachedTimezones: string[] | null = null;
 
 export default function UserSettingsPage() {
   const router = useRouter();
@@ -231,7 +240,7 @@ export default function UserSettingsPage() {
             value={timezone}
             onChange={(e) => setTimezone(e.target.value)}
           >
-            {TIMEZONES.map((tz) => (
+            {["browser", ...getTimezones()].map((tz) => (
               <option key={tz} value={tz}>
                 {tz === "browser" ? "Browser Default" : tz}
               </option>
