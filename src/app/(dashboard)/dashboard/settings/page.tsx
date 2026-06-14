@@ -308,18 +308,19 @@ export default function UserSettingsPage() {
           <table>
             <thead>
               <tr>
-                <th>Shortcut</th>
                 <th>Action</th>
+                <th>macOS</th>
+                <th>Windows / Linux</th>
               </tr>
             </thead>
             <tbody>
-              <tr><td><kbd>Cmd+K</kbd></td><td>Global search overlay</td></tr>
-              <tr><td><kbd>Cmd+N</kbd></td><td>New note</td></tr>
-              <tr><td><kbd>Cmd+Shift+F</kbd></td><td>New folder</td></tr>
-              <tr><td><kbd>Cmd+Enter</kbd></td><td>Save current note</td></tr>
-              <tr><td><kbd>Cmd+B</kbd></td><td>Toggle sidebar</td></tr>
-              <tr><td><kbd>Cmd+,</kbd></td><td>Settings page</td></tr>
-              <tr><td><kbd>Escape</kbd></td><td>Close dialogs</td></tr>
+              <tr><td>Search</td><td><kbd>Cmd+K</kbd></td><td><kbd>Ctrl+K</kbd></td></tr>
+              <tr><td>New Note</td><td><kbd>Cmd+N</kbd></td><td><kbd>Ctrl+N</kbd></td></tr>
+              <tr><td>New Folder</td><td><kbd>Cmd+Shift+F</kbd></td><td><kbd>Ctrl+Shift+F</kbd></td></tr>
+              <tr><td>Save Note</td><td><kbd>Cmd+Enter</kbd></td><td><kbd>Ctrl+Enter</kbd></td></tr>
+              <tr><td>Toggle Sidebar</td><td><kbd>Cmd+B</kbd></td><td><kbd>Ctrl+B</kbd></td></tr>
+              <tr><td>Settings</td><td><kbd>Cmd+,</kbd></td><td><kbd>Ctrl+,</kbd></td></tr>
+              <tr><td>Close Dialog</td><td><kbd>Escape</kbd></td><td><kbd>Escape</kbd></td></tr>
             </tbody>
           </table>
         </div>

@@ -81,15 +81,15 @@ All routes under `/api/` require auth (except `/api/auth/*`). Auth checked via `
 - `/api/sync/pcloud`, `/api/sync/google-drive` — Cloud sync
 
 ## Keyboard Shortcuts
-| Shortcut      | Action                |
-| ------------- | --------------------- |
-| Cmd+K         | Global search overlay |
-| Cmd+N         | New note              |
-| Cmd+Shift+F   | New folder            |
-| Cmd+Enter     | Save current note     |
-| Cmd+B         | Toggle sidebar        |
-| Cmd+,         | Settings page         |
-| Escape        | Close dialogs         |
+| Shortcut         | macOS              | Windows / Linux       |
+| ---------------- | ------------------ | --------------------- |
+| Search           | Cmd+K              | Ctrl+K                |
+| New Note         | Cmd+N              | Ctrl+N                |
+| New Folder       | Cmd+Shift+F        | Ctrl+Shift+F          |
+| Save Note        | Cmd+Enter          | Ctrl+Enter            |
+| Toggle Sidebar   | Cmd+B              | Ctrl+B                |
+| Settings         | Cmd+,              | Ctrl+,                |
+| Close Dialogs    | Escape             | Escape                |
 
 ## Commands
 - `npm run dev` — Start development server

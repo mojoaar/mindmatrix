@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, FileText, X, PlusSquare, FolderPlus, Settings, Keyboard } from "lucide-react";
+import { Search, FileText, X, PlusSquare, FolderPlus, Settings } from "lucide-react";
 import Link from "next/link";
 
 interface SearchResult {
@@ -212,11 +212,11 @@ export function SearchOverlay() {
               Search notes by title or content
             </p>
             {[
-              { keys: ["⌘", "N"], label: "New Note", icon: PlusSquare, action: () => { window.location.href = window.location.pathname.startsWith("/dashboard/w/") ? window.location.pathname : "/dashboard"; } },
-              { keys: ["⌘", "⇧", "F"], label: "New Folder", icon: FolderPlus, action: () => {} },
-              { keys: ["⌘", "B"], label: "Toggle Sidebar", icon: FileText, action: () => {} },
-              { keys: ["⌘", "↵"], label: "Save Note", icon: FileText, action: () => {} },
-              { keys: ["⌘", ","], label: "Settings", icon: Settings, action: () => { window.location.href = "/dashboard/settings"; } },
+              { keys: ["⌘", "N"], winKeys: ["Ctrl", "N"], label: "New Note", icon: PlusSquare },
+              { keys: ["⌘", "⇧", "F"], winKeys: ["Ctrl", "Shift", "F"], label: "New Folder", icon: FolderPlus },
+              { keys: ["⌘", "B"], winKeys: ["Ctrl", "B"], label: "Toggle Sidebar", icon: FileText },
+              { keys: ["⌘", "↵"], winKeys: ["Ctrl", "Enter"], label: "Save Note", icon: FileText },
+              { keys: ["⌘", ","], winKeys: ["Ctrl", ","], label: "Settings", icon: Settings },
             ].map((cmd, i) => (
               <div
                 key={cmd.label}
