@@ -34,6 +34,7 @@ export const user = pgTable("user", {
   image: text("image"),
   timezone: text("timezone").default("browser").notNull(),
   timeFormat: text("time_format").default("browser").notNull(),
+  role: text("role").default("user").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -197,6 +198,7 @@ export const note = pgTable(
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
+    isPublic: boolean("is_public").default(false).notNull(),
   },
   (table) => ({
     noteWorkspaceIdx: index("note_workspace_idx").on(table.workspaceId),
@@ -336,6 +338,29 @@ export const noteVersion = pgTable(
   })
 );
 
+export const webhook = pgTable(
+  "webhook",
+  {
+    id: text("id").primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    url: text("url").notNull(),
+    secret: text("secret"),
+    events: jsonb("events").default("[]").notNull(),
+    active: boolean("active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => ({
+    webhookWorkspaceIdx: index("webhook_workspace_idx").on(table.workspaceId),
+  })
+);
+
 // ---- Relations ----
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -372,6 +397,7 @@ export const workspaceRelations = relations(workspace, ({ many, one }) => ({
   tags: many(tag),
   templates: many(noteTemplate),
   pluginConfigs: many(pluginConfig),
+  webhooks: many(webhook),
   owner: one(user, {
     fields: [workspace.createdById],
     references: [user.id],
@@ -507,6 +533,37 @@ export const noteVersionRelations = relations(noteVersion, ({ one }) => ({
 export const pluginConfigRelations = relations(pluginConfig, ({ one }) => ({
   workspace: one(workspace, {
     fields: [pluginConfig.workspaceId],
+    references: [workspace.id],
+  }),
+}));
+
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+    action: text("action").notNull(),
+    details: text("details"),
+    ipAddress: text("ip_address"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    auditUserIdIdx: index("audit_userId_idx").on(table.userId),
+    auditActionIdx: index("audit_action_idx").on(table.action),
+    auditCreatedAtIdx: index("audit_createdAt_idx").on(table.createdAt),
+  })
+);
+
+export const auditLogRelations = relations(auditLog, ({ one }) => ({
+  user: one(user, {
+    fields: [auditLog.userId],
+    references: [user.id],
+  }),
+}));
+
+export const webhookRelations = relations(webhook, ({ one }) => ({
+  workspace: one(workspace, {
+    fields: [webhook.workspaceId],
     references: [workspace.id],
   }),
 }));

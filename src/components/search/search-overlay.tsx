@@ -212,8 +212,8 @@ export function SearchOverlay() {
               Search notes by title or content
             </p>
             {[
-              { keys: ["⌘", "N"], winKeys: ["Ctrl", "N"], label: "New Note", icon: PlusSquare },
-              { keys: ["⌘", "⇧", "F"], winKeys: ["Ctrl", "Shift", "F"], label: "New Folder", icon: FolderPlus },
+              { keys: ["⌥", "N"], winKeys: ["Alt", "N"], label: "New Note", icon: PlusSquare },
+              { keys: ["⌥", "⇧", "F"], winKeys: ["Alt", "Shift", "F"], label: "New Folder", icon: FolderPlus },
               { keys: ["⌘", "B"], winKeys: ["Ctrl", "B"], label: "Toggle Sidebar", icon: FileText },
               { keys: ["⌘", "↵"], winKeys: ["Ctrl", "Enter"], label: "Save Note", icon: FileText },
               { keys: ["⌘", ","], winKeys: ["Ctrl", ","], label: "Settings", icon: Settings },

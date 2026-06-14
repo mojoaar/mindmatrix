@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { db, tag, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
+import { logAction } from "@/lib/audit";
+import { triggerWebhooks } from "@/lib/webhooks";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -61,6 +63,24 @@ export async function POST(request: Request) {
       createdById: session.user.id,
     })
     .returning();
+
+  await logAction(
+    session.user.id,
+    "TAG_CREATE",
+    `Created tag "${name}" (${newTag.id}) in workspace ${workspaceId}`,
+    request
+  );
+
+  await triggerWebhooks(
+    workspaceId,
+    "tag.created",
+    {
+      id: newTag.id,
+      name: newTag.name,
+      color: newTag.color,
+    },
+    { id: session.user.id, name: session.user.name, email: session.user.email }
+  );
 
   return NextResponse.json({ tag: newTag }, { status: 201 });
 }

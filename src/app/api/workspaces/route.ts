@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { workspace, workspaceMember } from "@/lib/db";
 import { inArray, eq } from "drizzle-orm";
 import { toSlug, ensureUniqueSlug } from "@/lib/slug";
+import { logAction } from "@/lib/audit";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({
@@ -29,6 +30,14 @@ export async function GET(request: Request) {
     where: inArray(workspace.id, workspaceIds),
     with: {
       members: true,
+      folders: true,
+      tags: true,
+      notes: {
+        columns: {
+          id: true,
+          folderId: true,
+        },
+      },
     },
     orderBy: (ws, { asc }) => [asc(ws.name)],
   });
@@ -75,6 +84,13 @@ export async function POST(request: Request) {
     userId: session.user.id,
     role: "owner",
   });
+
+  await logAction(
+    session.user.id,
+    "WORKSPACE_CREATE",
+    `Created workspace "${name}" (${slug})`,
+    request
+  );
 
   return NextResponse.json({ workspace: ws }, { status: 201 });
 }

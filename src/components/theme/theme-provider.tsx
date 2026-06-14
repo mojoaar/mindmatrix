@@ -2,7 +2,19 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-export type Theme = "nord-dark" | "nord-light" | "dracula-dark" | "dracula-light";
+export type Theme =
+  | "nord-dark"
+  | "nord-light"
+  | "dracula-dark"
+  | "dracula-light"
+  | "github-dark"
+  | "github-light"
+  | "catppuccin-dark"
+  | "catppuccin-light"
+  | "cyberpunk-dark"
+  | "cyberpunk-light"
+  | "one-dark"
+  | "one-light";
 
 interface ThemeContextType {
   theme: Theme;

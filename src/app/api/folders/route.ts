@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { db, folder, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and, isNull } from "drizzle-orm";
+import { logAction } from "@/lib/audit";
+import { triggerWebhooks } from "@/lib/webhooks";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -73,6 +75,25 @@ export async function POST(request: Request) {
       position: 0,
     })
     .returning();
+
+  await logAction(
+    session.user.id,
+    "FOLDER_CREATE",
+    `Created folder "${name}" (${id}) in workspace ${workspaceId}`,
+    request
+  );
+
+  await triggerWebhooks(
+    workspaceId,
+    "folder.created",
+    {
+      id: newFolder.id,
+      name: newFolder.name,
+      slug: newFolder.slug,
+      parentId: newFolder.parentId,
+    },
+    { id: session.user.id, name: session.user.name, email: session.user.email }
+  );
 
   return NextResponse.json({ folder: newFolder }, { status: 201 });
 }

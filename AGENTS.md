@@ -19,6 +19,7 @@ MindMatrix is a markdown-first, self-hosted, multi-user knowledge hub for teams 
 | drizzle-kit       | 0.31.10 | Migrations                |
 | postgres          | ^3.4.4  | PostgreSQL driver (not pg) |
 | @uiw/react-codemirror | 4.25.10 | Markdown editor          |
+| prismjs            | 1.29.0  | Syntax highlighting (297 langs) |
 | react-markdown    | 10.1.0  | Markdown rendering        |
 | @radix-ui/react-* | —       | UI primitives             |
 | lucide-react      | 1.18.0  | Icons                     |
@@ -28,10 +29,11 @@ MindMatrix is a markdown-first, self-hosted, multi-user knowledge hub for teams 
 
 ## Styling
 - **No Tailwind CSS** — uses Sass/SCSS with CSS custom properties (design tokens)
-- 4 themes via `data-theme` attribute: `nord-dark`, `nord-light`, `dracula-dark`, `dracula-light`
+- 12 themes via `data-theme` attribute: `nord-dark`, `nord-light`, `dracula-dark`, `dracula-light`, `github-dark`, `github-light`, `catppuccin-dark`, `catppuccin-light`, `cyberpunk-dark`, `cyberpunk-light`, `one-dark`, `one-light`
 - Theme persistence: `localStorage` key `mindmatrix-theme`, applied via inline `<script>` before first paint
+- 8 developer fonts selectable in Settings > Preferences: JetBrains Mono (default), Fira Code, Source Code Pro, IBM Plex Mono, Ubuntu Mono, Inconsolata, Roboto Mono, DM Mono — stored via `localStorage` key `mindmatrix-font`, applied via `data-font` attribute
 - Global utility classes: `.btn`, `.card`, `.form-group`, `.badge`, `.table-wrapper`, etc.
-- Font: JetBrains Mono via `next/font/google`, applied as `--font-jetbrains-mono`
+- Syntax highlighting via PrismJS autoloader (297 languages), CSS tokens mapped to design variables
 - CSS variables defined in `src/app/globals.scss`
 
 ## Project Structure
@@ -42,7 +44,7 @@ src/
 │   ├── (dashboard)/dashboard/       # Authenticated routes
 │   │   ├── w/[slug]/                # Workspace views
 │   │   ├── settings/                # User settings
-│   │   └── sync/                    # Cloud sync management
+│   │   └── admin/                   # Super admin dashboard
 │   ├── api/                         # REST API routes
 │   ├── docs/                        # User documentation
 │   ├── apidocs/                     # API reference
@@ -145,8 +147,8 @@ All routes under `/api/` require auth (except `/api/auth/*`). Auth checked via `
 | Shortcut         | macOS              | Windows / Linux       |
 | ---------------- | ------------------ | --------------------- |
 | Search           | Cmd+K              | Ctrl+K                |
-| New Note         | Cmd+N              | Ctrl+N                |
-| New Folder       | Cmd+Shift+F        | Ctrl+Shift+F          |
+| New Note         | Opt+N              | Alt+N                |
+| New Folder       | Opt+Shift+F        | Alt+Shift+F          |
 | Save Note        | Cmd+Enter          | Ctrl+Enter            |
 | Toggle Sidebar   | Cmd+B              | Ctrl+B                |
 | Settings         | Cmd+,              | Ctrl+,                |
@@ -184,3 +186,6 @@ NODE_ENV=development
 - Editor layout stored in `localStorage` as `mindmatrix-editor-layout`
 - Plugins toggled per workspace, configs in JSONB `plugin_config` table
 - Zero new dependencies policy for realtime (SSE + PG NOTIFY)
+- When asked "is docs updated?", "update docs", or similar — always check and update these files together: `/docs` pages, `/apidocs` page, `README.md`, `AGENTS.md`, `plan.md`
+- Version bump checklist (must update all): `package.json` → `AGENTS.md` → settings About section → `README.md` → `plan.md`
+- Always mark todos as `completed` when done — never leave tasks dangling in the todo panel. The todo list in the sidebar must reflect reality.

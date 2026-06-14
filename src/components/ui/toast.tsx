@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
 import * as ToastPrimitive from "@radix-ui/react-toast";
 import { X } from "lucide-react";
 import styles from "./toast.module.scss";
@@ -47,11 +47,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const value: ToastContextType = {
-    toast: addToast,
-    success: (title, description) => addToast(title, "success", description),
-    error: (title, description) => addToast(title, "error", description),
-  };
+  const value = useMemo<ToastContextType>(
+    () => ({
+      toast: addToast,
+      success: (title, description) => addToast(title, "success", description),
+      error: (title, description) => addToast(title, "error", description),
+    }),
+    [addToast]
+  );
 
   const colorMap: Record<ToastType, string> = {
     success: "var(--accent-green)",

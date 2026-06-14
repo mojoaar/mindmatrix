@@ -12,6 +12,8 @@ const SENSITIVE_KEYS = [
   "clientSecret",
   "tokenId",
   "token",
+  "privateKey",
+  "passphrase",
 ];
 
 function getKey(): Buffer | null {

@@ -35,4 +35,10 @@ export const pluginMetadata = [
     description: "Scan Unifi network devices, clients, and WiFi into a note",
     version: "0.1.0",
   },
+  {
+    id: "git-sync",
+    name: "Git Sync",
+    description: "Push and pull notes to any remote Git repository (GitHub, GitLab, etc.)",
+    version: "0.1.0",
+  },
 ];

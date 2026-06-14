@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2, Users, FileText } from "lucide-react";
+import { Trash2, Users, FileText, Webhook } from "lucide-react";
 import { IconPicker } from "@/components/ui/icon-picker";
 import { PluginCard } from "@/components/ui/plugin-card";
 import { pluginMetadata } from "@/plugins/metadata";
@@ -28,6 +28,12 @@ interface Template {
   content: string;
 }
 
+interface NonMember {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export default function WorkspaceSettingsPage() {
   const params = useParams();
   const router = useRouter();
@@ -45,6 +51,14 @@ export default function WorkspaceSettingsPage() {
   const [newTemplateName, setNewTemplateName] = useState("");
   const [newTemplateContent, setNewTemplateContent] = useState("");
   const [showNewTemplate, setShowNewTemplate] = useState(false);
+  const [nonMembers, setNonMembers] = useState<NonMember[]>([]);
+  const [webhooks, setWebhooks] = useState<any[]>([]);
+  const [showNewWebhook, setShowNewWebhook] = useState(false);
+  const [webhookName, setWebhookName] = useState("");
+  const [webhookUrl, setWebhookUrl] = useState("");
+  const [webhookSecret, setWebhookSecret] = useState("");
+  const [webhookEvents, setWebhookEvents] = useState<string[]>(["note.created", "note.updated", "note.deleted"]);
+  const [webhookActive, setWebhookActive] = useState(true);
 
   useEffect(() => {
     async function load() {
@@ -65,6 +79,14 @@ export default function WorkspaceSettingsPage() {
           const tplRes = await fetch(`/api/templates?workspaceId=${ws.id}`);
           const tplData = await tplRes.json();
           if (tplData.templates) setTemplates(tplData.templates);
+
+          const nmRes = await fetch(`/api/workspaces/${ws.id}/non-members`);
+          const nmData = await nmRes.json();
+          if (nmData.users) setNonMembers(nmData.users);
+
+          const whRes = await fetch(`/api/workspaces/${ws.id}/webhooks`);
+          const whData = await whRes.json();
+          if (whData.webhooks) setWebhooks(whData.webhooks);
         }
       }
     }
@@ -94,6 +116,71 @@ export default function WorkspaceSettingsPage() {
     if (!workspace) return;
     await fetch(`/api/templates/${id}`, { method: "DELETE" });
     setTemplates((prev) => prev.filter((t) => t.id !== id));
+  }
+
+  async function createWebhook() {
+    if (!workspace || !webhookName.trim() || !webhookUrl.trim()) return;
+    setError("");
+    setSuccess("");
+    const res = await fetch(`/api/workspaces/${workspace.id}/webhooks`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: webhookName.trim(),
+        url: webhookUrl.trim(),
+        secret: webhookSecret.trim() || null,
+        events: webhookEvents,
+        active: webhookActive,
+      }),
+    });
+    const data = await res.json();
+    if (data.webhook) {
+      setWebhooks((prev) => [data.webhook, ...prev]);
+      setWebhookName("");
+      setWebhookUrl("");
+      setWebhookSecret("");
+      setWebhookEvents(["note.created", "note.updated", "note.deleted"]);
+      setWebhookActive(true);
+      setShowNewWebhook(false);
+      setSuccess("Webhook created successfully");
+    } else {
+      setError(data.error || "Failed to create webhook");
+    }
+  }
+
+  async function deleteWebhook(id: string) {
+    if (!workspace) return;
+    if (!confirm("Delete this webhook?")) return;
+    setError("");
+    setSuccess("");
+    const res = await fetch(`/api/workspaces/${workspace.id}/webhooks/${id}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      setWebhooks((prev) => prev.filter((w) => w.id !== id));
+      setSuccess("Webhook deleted successfully");
+    } else {
+      setError("Failed to delete webhook");
+    }
+  }
+
+  async function toggleWebhookActive(wh: any) {
+    if (!workspace) return;
+    setError("");
+    setSuccess("");
+    const res = await fetch(`/api/workspaces/${workspace.id}/webhooks/${wh.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active: !wh.active }),
+    });
+    if (res.ok) {
+      setWebhooks((prev) =>
+        prev.map((w) => (w.id === wh.id ? { ...w, active: !wh.active } : w))
+      );
+      setSuccess("Webhook status updated");
+    } else {
+      setError("Failed to update webhook status");
+    }
   }
 
   async function saveSettings(e: React.FormEvent) {
@@ -215,17 +302,25 @@ export default function WorkspaceSettingsPage() {
         <form onSubmit={inviteMember} className="flex align-center gap-2">
           <input
             type="email"
-            placeholder="Email to invite"
+            placeholder="Add by email..."
             value={inviteEmail}
             onChange={(e) => setInviteEmail(e.target.value)}
+            list="eligible-users"
             style={{ flex: 1 }}
           />
+          <datalist id="eligible-users">
+            {nonMembers.map((u) => (
+              <option key={u.id} value={u.email}>
+                {u.name}
+              </option>
+            ))}
+          </datalist>
           <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>
             <option value="member">Member</option>
             <option value="admin">Admin</option>
             <option value="viewer">Viewer</option>
           </select>
-          <button type="submit" className="btn primary sm">Invite</button>
+          <button type="submit" className="btn primary sm">Add</button>
         </form>
       </div>
 
@@ -281,6 +376,111 @@ export default function WorkspaceSettingsPage() {
             <button className="btn danger sm" onClick={() => deleteTemplate(t.id)}>
               <Trash2 size={12} />
             </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Webhooks */}
+      <div className="card">
+        <div className="flex align-center justify-between" style={{ marginBottom: "1rem" }}>
+          <h3 style={{ marginBottom: 0 }}>
+            <Webhook size={16} style={{ marginRight: "0.5rem", verticalAlign: "middle" }} />
+            Webhooks
+          </h3>
+          <button className="btn primary sm" onClick={() => setShowNewWebhook(true)}>Add Webhook</button>
+        </div>
+
+        {webhooks.length === 0 && !showNewWebhook && (
+          <p className="text-muted text-sm">No webhooks yet. Add a webhook to send real-time event payloads to external servers.</p>
+        )}
+
+        {showNewWebhook && (
+          <div className="card" style={{ marginBottom: "1rem", backgroundColor: "var(--bg-tertiary)" }}>
+            <div className="form-group">
+              <label>Name</label>
+              <input
+                value={webhookName}
+                onChange={(e) => setWebhookName(e.target.value)}
+                placeholder="e.g., Slack Integration, Custom Server"
+                autoFocus
+              />
+            </div>
+            <div className="form-group">
+              <label>Payload URL</label>
+              <input
+                value={webhookUrl}
+                onChange={(e) => setWebhookUrl(e.target.value)}
+                placeholder="https://example.com/webhook"
+              />
+            </div>
+            <div className="form-group">
+              <label>Secret (Optional signing key)</label>
+              <input
+                type="password"
+                value={webhookSecret}
+                onChange={(e) => setWebhookSecret(e.target.value)}
+                placeholder="Secure signing token"
+              />
+            </div>
+            <div className="form-group">
+              <label>Triggers</label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "0.5rem" }}>
+                {["note.created", "note.updated", "note.deleted", "folder.created", "tag.created"].map((ev) => (
+                  <label key={ev} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={webhookEvents.includes(ev)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setWebhookEvents((prev) => [...prev, ev]);
+                        } else {
+                          setWebhookEvents((prev) => prev.filter((item) => item !== ev));
+                        }
+                      }}
+                      style={{ width: "auto" }}
+                    />
+                    {ev}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="form-group" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <input
+                id="wh-active"
+                type="checkbox"
+                checked={webhookActive}
+                onChange={(e) => setWebhookActive(e.target.checked)}
+                style={{ width: "auto" }}
+              />
+              <label htmlFor="wh-active" style={{ marginBottom: 0, cursor: "pointer" }}>Active</label>
+            </div>
+            <div className="flex gap-1">
+              <button className="btn primary sm" onClick={createWebhook}>Create</button>
+              <button className="btn secondary sm" onClick={() => setShowNewWebhook(false)}>Cancel</button>
+            </div>
+          </div>
+        )}
+
+        {webhooks.map((wh) => (
+          <div key={wh.id} className="flex align-center justify-between" style={{ padding: "0.75rem 0", borderBottom: "1px solid var(--border-color)" }}>
+            <div style={{ overflow: "hidden", marginRight: "1rem" }}>
+              <div className="flex align-center gap-1">
+                <span className="text-sm" style={{ fontWeight: 500 }}>{wh.name}</span>
+                <span className={`badge ${wh.active ? "success" : ""}`} style={{ fontSize: "0.65rem", padding: "0.1rem 0.25rem", backgroundColor: wh.active ? "var(--accent-green)" : "var(--bg-accent)", color: "#fff" }}>
+                  {wh.active ? "Active" : "Disabled"}
+                </span>
+              </div>
+              <div className="text-muted text-xs truncate" style={{ marginTop: "0.25rem" }}>{wh.url}</div>
+              <div className="text-muted text-xs" style={{ marginTop: "0.1rem" }}>Events: {wh.events?.join(", ")}</div>
+            </div>
+            <div className="flex gap-1">
+              <button className="btn secondary sm" onClick={() => toggleWebhookActive(wh)}>
+                {wh.active ? "Disable" : "Enable"}
+              </button>
+              <button className="btn danger sm" onClick={() => deleteWebhook(wh.id)}>
+                <Trash2 size={12} />
+              </button>
+            </div>
           </div>
         ))}
       </div>

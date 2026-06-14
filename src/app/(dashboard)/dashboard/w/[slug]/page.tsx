@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
 import Link from "next/link";
-import { Plus, FileText, FolderPlus, Search, Tag } from "lucide-react";
+import { Plus, FileText, FolderPlus, Search, Tag, Pencil, Trash } from "lucide-react";
 
 interface Note {
   id: string;
@@ -12,6 +12,7 @@ interface Note {
   slug: string;
   updatedAt: string;
   folderId: string | null;
+  folder?: { id: string; name: string } | null;
   noteTags: { tag: { id: string; name: string; color: string } }[];
   creator: { name: string };
 }
@@ -36,6 +37,17 @@ interface Template {
   content: string;
 }
 
+const PALETTE_COLORS = [
+  "#88c0d0", // Cyan
+  "#a3be8c", // Green
+  "#b48ead", // Purple
+  "#ebcb8b", // Yellow
+  "#d08770", // Orange
+  "#bf616a", // Red
+  "#81a1c1", // Blue-grey
+  "#8fbcbb", // Blue-green
+] as const;
+
 export default function WorkspacePage() {
   const params = useParams();
   const router = useRouter();
@@ -47,20 +59,42 @@ export default function WorkspacePage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).get("tagId");
+    }
+    return null;
+  });
   const [showNewNote, setShowNewNote] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState("");
   const [newNoteContent, setNewNoteContent] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [showNewFolder, setShowNewFolder] = useState(false);
+  const [showRenameFolder, setShowRenameFolder] = useState<Folder | null>(null);
+  const [renameFolderName, setRenameFolderName] = useState("");
+  const [editMode, setEditMode] = useState(false);
+  const [showRenameTag, setShowRenameTag] = useState<Tag | null>(null);
+  const [renameTagName, setRenameTagName] = useState("");
+  const [renameTagColor, setRenameTagColor] = useState("#88c0d0");
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState("#88c0d0");
   const [showNewTag, setShowNewTag] = useState(false);
+  const [activeFolderId, setActiveFolderId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).get("folderId");
+    }
+    return null;
+  });
 
-  async function loadNotes(workspaceId: string) {
+  async function loadNotes(workspaceId: string, customFolderId?: string | null) {
     const params = new URLSearchParams({ workspaceId });
     if (selectedTag) params.set("tagId", selectedTag);
     if (searchQuery) params.set("q", searchQuery);
+    
+    // Use custom passed folderId or the state variable
+    const folderToUse = customFolderId !== undefined ? customFolderId : activeFolderId;
+    if (folderToUse) params.set("folderId", folderToUse);
+
     const res = await fetch(`/api/notes?${params}`);
     const data = await res.json();
     if (data.notes) setNotes(data.notes);
@@ -95,7 +129,6 @@ export default function WorkspacePage() {
         const ws = wsData.workspaces.find((w: { slug: string }) => w.slug === slug);
         if (ws) {
           setWorkspace(ws);
-          loadNotes(ws.id);
           loadFolders(ws.id);
           loadTags(ws.id);
           loadTemplates(ws.id);
@@ -113,28 +146,50 @@ export default function WorkspacePage() {
   }, [loadData]);
 
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if ((e.metaKey || e.ctrlKey) && e.key === "n") {
-        e.preventDefault();
-        setNewNoteTitle("");
-        setNewNoteContent("");
-        setShowNewNote(true);
-      }
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "f") {
-        e.preventDefault();
-        setShowNewFolder(true);
-      }
+    if (tags && tags.length > 0) {
+      setNewTagColor(PALETTE_COLORS[tags.length % PALETTE_COLORS.length]);
+    }
+  }, [tags]);
+
+  useEffect(() => {
+    const handleNewNote = () => {
+      setNewNoteTitle("");
+      setNewNoteContent("");
+      setShowNewNote(true);
     };
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
+    const handleNewFolder = () => setShowNewFolder(true);
+    window.addEventListener("mindmatrix:new-note", handleNewNote);
+    window.addEventListener("mindmatrix:new-folder", handleNewFolder);
+    return () => {
+      window.removeEventListener("mindmatrix:new-note", handleNewNote);
+      window.removeEventListener("mindmatrix:new-folder", handleNewFolder);
+    };
   }, []);
+
+  useEffect(() => {
+    const handleFilterFolder = (e: Event) => {
+      const folderId = (e as CustomEvent).detail;
+      setActiveFolderId(folderId);
+    };
+    const handleFilterTag = (e: Event) => {
+      const tagId = (e as CustomEvent).detail;
+      setSelectedTag(tagId);
+    };
+    
+    window.addEventListener(`mindmatrix:filter-folder:${slug}`, handleFilterFolder);
+    window.addEventListener(`mindmatrix:filter-tag:${slug}`, handleFilterTag);
+    
+    return () => {
+      window.removeEventListener(`mindmatrix:filter-folder:${slug}`, handleFilterFolder);
+      window.removeEventListener(`mindmatrix:filter-tag:${slug}`, handleFilterTag);
+    };
+  }, [slug]);
 
   useEffect(() => {
     if (workspace) {
       loadNotes(workspace.id);
     }
-  }, [searchQuery, selectedTag, workspace]);
+  }, [searchQuery, selectedTag, activeFolderId, workspace]);
 
   async function createNote() {
     if (!newNoteTitle.trim() || !workspace) return;
@@ -177,6 +232,33 @@ export default function WorkspacePage() {
     if (workspace) loadFolders(workspace.id);
   }
 
+  async function updateFolder() {
+    if (!renameFolderName.trim() || !showRenameFolder || !workspace) return;
+    await fetch(`/api/folders/${showRenameFolder.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: renameFolderName,
+      }),
+    });
+    setShowRenameFolder(null);
+    setRenameFolderName("");
+    loadFolders(workspace.id);
+    window.dispatchEvent(new CustomEvent("mindmatrix:workspace-updated"));
+  }
+
+  async function deleteFolder(folderId: string) {
+    if (!confirm("Are you sure you want to delete this folder? Notes inside this folder will not be deleted.")) return;
+    await fetch(`/api/folders/${folderId}`, {
+      method: "DELETE",
+    });
+    if (activeFolderId === folderId) {
+      setActiveFolderId(null);
+    }
+    if (workspace) loadFolders(workspace.id);
+    window.dispatchEvent(new CustomEvent("mindmatrix:workspace-updated"));
+  }
+
   async function createTag() {
     if (!newTagName.trim() || !workspace) return;
     await fetch("/api/tags", {
@@ -191,6 +273,34 @@ export default function WorkspacePage() {
     setShowNewTag(false);
     setNewTagName("");
     if (workspace) loadTags(workspace.id);
+  }
+
+  async function updateTag() {
+    if (!renameTagName.trim() || !showRenameTag || !workspace) return;
+    await fetch(`/api/tags/${showRenameTag.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: renameTagName,
+        color: renameTagColor,
+      }),
+    });
+    setShowRenameTag(null);
+    setRenameTagName("");
+    loadTags(workspace.id);
+    window.dispatchEvent(new CustomEvent("mindmatrix:workspace-updated"));
+  }
+
+  async function deleteTag(tagId: string) {
+    if (!confirm("Are you sure you want to delete this tag? This will remove the tag from all notes.")) return;
+    await fetch(`/api/tags/${tagId}`, {
+      method: "DELETE",
+    });
+    if (selectedTag === tagId) {
+      setSelectedTag(null);
+    }
+    if (workspace) loadTags(workspace.id);
+    window.dispatchEvent(new CustomEvent("mindmatrix:workspace-updated"));
   }
 
   if (!workspace) {
@@ -270,16 +380,87 @@ export default function WorkspacePage() {
           >
             All
           </button>
-          {tags.map((tag) => (
-            <button
-              key={tag.id}
-              className={`btn sm ${selectedTag === tag.id ? "primary" : "secondary"}`}
-              onClick={() => setSelectedTag(tag.id)}
-              style={selectedTag === tag.id ? { backgroundColor: tag.color } : {}}
-            >
-              {tag.name}
-            </button>
-          ))}
+          {tags.map((tag) => {
+            const isSelected = selectedTag === tag.id;
+            return (
+              <div
+                key={tag.id}
+                className={`btn sm ${isSelected ? "primary" : "secondary"} flex align-center gap-1`}
+                style={{
+                  paddingRight: editMode ? "0.25rem" : "0.75rem",
+                  ...(isSelected ? { backgroundColor: tag.color, borderColor: tag.color, color: "#fff" } : {})
+                }}
+              >
+                <div
+                  className="flex align-center gap-1"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setSelectedTag(isSelected ? null : tag.id)}
+                >
+                  <span 
+                    style={{ 
+                      display: "inline-block", 
+                      width: "8px", 
+                      height: "8px", 
+                      borderRadius: "50%", 
+                      backgroundColor: isSelected ? "#fff" : tag.color,
+                      flexShrink: 0
+                    }} 
+                  />
+                  <span>{tag.name}</span>
+                </div>
+                {editMode && (
+                  <div className="flex align-center" style={{ marginLeft: "0.25rem", gap: "0.15rem" }}>
+                    <button
+                      className="btn ghost sm"
+                      style={{
+                        padding: "0.1rem",
+                        minHeight: "auto",
+                        display: "inline-flex",
+                        alignSelf: "center",
+                        color: "inherit",
+                        opacity: 0.6,
+                        border: "none",
+                        backgroundColor: "transparent",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+                      onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowRenameTag(tag);
+                        setRenameTagName(tag.name);
+                        setRenameTagColor(tag.color);
+                      }}
+                      title="Rename tag"
+                    >
+                      <Pencil size={10} />
+                    </button>
+                    <button
+                      className="btn ghost sm"
+                      style={{
+                        padding: "0.1rem",
+                        minHeight: "auto",
+                        display: "inline-flex",
+                        alignSelf: "center",
+                        color: "inherit",
+                        opacity: 0.6,
+                        border: "none",
+                        backgroundColor: "transparent",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+                      onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteTag(tag.id);
+                      }}
+                      title="Delete tag"
+                    >
+                      <Trash size={10} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -337,6 +518,29 @@ export default function WorkspacePage() {
         </div>
       )}
 
+      {/* Rename folder dialog */}
+      {showRenameFolder && (
+        <div className="card" style={{ marginBottom: "1rem" }}>
+          <input
+            type="text"
+            placeholder="Folder name"
+            value={renameFolderName}
+            onChange={(e) => setRenameFolderName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && updateFolder()}
+            autoFocus
+            style={{ width: "100%", marginBottom: "0.5rem" }}
+          />
+          <div className="flex gap-1">
+            <button className="btn primary sm" onClick={updateFolder}>
+              Rename
+            </button>
+            <button className="btn secondary sm" onClick={() => { setShowRenameFolder(null); setRenameFolderName(""); }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* New tag dialog */}
       {showNewTag && (
         <div className="card" style={{ marginBottom: "1rem" }}>
@@ -368,22 +572,129 @@ export default function WorkspacePage() {
         </div>
       )}
 
+      {/* Rename tag dialog */}
+      {showRenameTag && (
+        <div className="card" style={{ marginBottom: "1rem" }}>
+          <div className="flex align-center gap-2" style={{ marginBottom: "0.5rem" }}>
+            <input
+              type="text"
+              placeholder="Tag name"
+              value={renameTagName}
+              onChange={(e) => setRenameTagName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && updateTag()}
+              autoFocus
+              style={{ flex: 1 }}
+            />
+            <input
+              type="color"
+              value={renameTagColor}
+              onChange={(e) => setRenameTagColor(e.target.value)}
+              style={{ width: "40px", height: "32px", padding: "2px", border: "none", cursor: "pointer" }}
+            />
+          </div>
+          <div className="flex gap-1">
+            <button className="btn primary sm" onClick={updateTag}>
+              Rename
+            </button>
+            <button className="btn secondary sm" onClick={() => { setShowRenameTag(null); setRenameTagName(""); }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Folders list */}
       {folders.length > 0 && (
-        <div style={{ marginBottom: "1.5rem" }}>
-          {folders.map((folder) => (
-            <div
-              key={folder.id}
-              className="flex align-center gap-2"
-              style={{ padding: "0.5rem 0" }}
-            >
-              <FolderPlus size={14} style={{ color: "var(--accent-yellow)" }} />
-              <span className="text-sm">{folder.name}</span>
-              <span className="text-muted text-xs">
-                ({folder.notes?.length || 0} notes)
-              </span>
-            </div>
-          ))}
+        <div style={{ marginBottom: "1.5rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <button
+            className={`btn sm ${!activeFolderId ? "primary" : "secondary"}`}
+            onClick={() => setActiveFolderId(null)}
+          >
+            All Folders
+          </button>
+          {folders.map((folder) => {
+            const isActive = activeFolderId === folder.id;
+            return (
+              <div
+                key={folder.id}
+                className={`btn sm ${isActive ? "primary" : "secondary"} flex align-center gap-1`}
+                style={{
+                  paddingRight: editMode ? "0.25rem" : "0.75rem",
+                  ...(isActive ? { backgroundColor: "var(--accent-orange)", borderColor: "var(--accent-orange)", color: "#fff" } : {})
+                }}
+              >
+                <div
+                  className="flex align-center gap-1"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setActiveFolderId(isActive ? null : folder.id)}
+                >
+                  <FolderPlus size={12} style={{ color: isActive ? "#fff" : "var(--accent-yellow)", flexShrink: 0 }} />
+                  <span>{folder.name}</span>
+                  <span style={{ opacity: 0.7, fontSize: "0.75rem" }}>
+                    ({folder.notes?.length || 0})
+                  </span>
+                </div>
+                {editMode && (
+                  <div className="flex align-center" style={{ marginLeft: "0.25rem", gap: "0.15rem" }}>
+                    <button
+                      className="btn ghost sm"
+                      style={{
+                        padding: "0.1rem",
+                        minHeight: "auto",
+                        display: "inline-flex",
+                        alignSelf: "center",
+                        color: "inherit",
+                        opacity: 0.6,
+                        border: "none",
+                        backgroundColor: "transparent",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+                      onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowRenameFolder(folder);
+                        setRenameFolderName(folder.name);
+                      }}
+                      title="Rename folder"
+                    >
+                      <Pencil size={10} />
+                    </button>
+                    <button
+                      className="btn ghost sm"
+                      style={{
+                        padding: "0.1rem",
+                        minHeight: "auto",
+                        display: "inline-flex",
+                        alignSelf: "center",
+                        color: "inherit",
+                        opacity: 0.6,
+                        border: "none",
+                        backgroundColor: "transparent",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+                      onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteFolder(folder.id);
+                      }}
+                      title="Delete folder"
+                    >
+                      <Trash size={10} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          <button
+            className={`btn sm ${editMode ? "primary" : "secondary"}`}
+            style={editMode ? { backgroundColor: "var(--accent-red)", borderColor: "var(--accent-red)", color: "#fff", marginLeft: "auto" } : { marginLeft: "auto" }}
+            onClick={() => setEditMode(!editMode)}
+            title="Toggle Edit mode"
+          >
+            <Pencil size={12} style={{ marginRight: "0.25rem" }} />
+            {editMode ? "Done Editing" : "Edit"}
+          </button>
         </div>
       )}
 
@@ -408,13 +719,32 @@ export default function WorkspacePage() {
             {notes.map((note) => (
               <tr key={note.id}>
                 <td>
-                  <Link
-                    href={`/dashboard/w/${slug}/notes/${note.id}`}
-                    style={{ color: "var(--fg-primary)", fontWeight: 500 }}
-                  >
-                    <FileText size={14} style={{ marginRight: "0.5rem", verticalAlign: "middle" }} />
-                    {note.title}
-                  </Link>
+                  <div className="flex align-center" style={{ gap: "0.25rem", flexWrap: "wrap" }}>
+                    <Link
+                      href={`/dashboard/w/${slug}/notes/${note.id}`}
+                      style={{ color: "var(--fg-primary)", fontWeight: 500, display: "inline-flex", alignItems: "center" }}
+                    >
+                      <FileText size={14} style={{ marginRight: "0.5rem" }} />
+                      {note.title}
+                    </Link>
+                    {note.folder && (
+                      <span 
+                        className="badge" 
+                        style={{ 
+                          marginLeft: "0.25rem", 
+                          backgroundColor: "rgba(208, 135, 112, 0.12)", 
+                          color: "var(--accent-orange)",
+                          borderColor: "rgba(208, 135, 112, 0.3)",
+                          borderWidth: "1px",
+                          borderStyle: "solid",
+                          fontSize: "0.65rem",
+                          padding: "0.05rem 0.25rem"
+                        }}
+                      >
+                        {note.folder.name}
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td>
                   <div className="flex gap-1">

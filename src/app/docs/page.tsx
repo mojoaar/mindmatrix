@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Documentation",
+  description: "Learn how to deploy, configure, and get the most out of MindMatrix.",
+};
+
 export default function DocsPage() {
   return (
     <div>
@@ -18,14 +25,21 @@ export default function DocsPage() {
       <div className="card">
         <h2>Core Features</h2>
         <ul style={{ paddingLeft: "1.5rem" }}>
-          <li>Markdown-native editing with live preview</li>
-          <li>Workspaces for teams with role-based permissions</li>
-          <li>Folders and tags for organization</li>
-          <li>Global search (Cmd+K)</li>
+          <li>Markdown-native editing with live preview and syntax highlighting (297 languages)</li>
+          <li>Workspaces for teams with role-based permissions (owner, admin, member, viewer)</li>
+          <li>Folders and tags for hierarchical and flexible organization</li>
+          <li>Backlinks — <code>[[note-slug]]</code> wiki-style linking with incoming/outgoing panel</li>
+          <li>Version history — automatic snapshots on save, restore any version</li>
+          <li>Note templates — create from ADR, runbook, meeting notes, or custom templates</li>
+          <li>Realtime collaboration — see who's viewing, get notified of remote saves</li>
+          <li>Plugin system — toggle per-workspace: OpenCode AI, Proxmox, Unifi, pCloud, Google Drive</li>
+          <li>Global search with command palette (Cmd+K)</li>
           <li>Import/export markdown notes</li>
-          <li>Cloud sync to pCloud and Google Drive</li>
+          <li>Cloud sync to pCloud and Google Drive (per-workspace plugin)</li>
           <li>Full REST API for all operations</li>
-          <li>Light/dark themes (Nord and Dracula)</li>
+          <li>12 themes: Nord, Dracula, GitHub, Catppuccin, Cyberpunk, One (light/dark each)</li>
+          <li>8 developer fonts: JetBrains Mono, Fira Code, Source Code Pro, IBM Plex Mono, Ubuntu Mono, Inconsolata, Roboto Mono, DM Mono</li>
+          <li>Super admin dashboard — stats, workspaces, users, audit logs</li>
           <li>Self-hosted with Docker Compose or systemd</li>
         </ul>
       </div>

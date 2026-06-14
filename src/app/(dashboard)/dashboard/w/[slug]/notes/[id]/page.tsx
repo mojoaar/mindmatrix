@@ -1,29 +1,35 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Save, Trash2, Tag } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Tag, Heading1, Heading2, Heading3, Bold, Italic, Code, Link2, List, CheckSquare, Table, Image as ImageIcon, Share2, Globe } from "lucide-react";
 import Link from "next/link";
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeSanitize from "rehype-sanitize";
 import { useRealtimeNote } from "@/hooks/use-realtime-note";
 import { BacklinksPanel } from "@/components/editor/backlinks-panel";
 import { VersionPanel } from "@/components/editor/version-panel";
 import { PresenceAvatars } from "@/components/editor/presence-avatars";
 import { useToast } from "@/components/ui/toast";
+import { usePrism } from "@/hooks/use-prism";
+import { Avatar } from "@/components/ui/avatar";
+import { useTheme } from "@/components/theme/theme-provider";
 
 interface Note {
   id: string;
+  workspaceId: string;
   title: string;
   content: string;
   folderId: string | null;
   noteTags: { tag: { id: string; name: string; color: string } }[];
-  creator: { name: string };
+  creator: { name: string; email: string; image: string | null; role: string };
   updater: { name: string } | null;
   createdAt: string;
   updatedAt: string;
+  isPublic: boolean;
 }
 
 interface Tag {
@@ -37,11 +43,23 @@ interface Folder {
   name: string;
 }
 
+const PALETTE_COLORS = [
+  "#88c0d0", // Cyan
+  "#a3be8c", // Green
+  "#b48ead", // Purple
+  "#ebcb8b", // Yellow
+  "#d08770", // Orange
+  "#bf616a", // Red
+  "#81a1c1", // Blue-grey
+  "#8fbcbb", // Blue-green
+] as const;
+
 type EditorLayout = "split" | "edit" | "preview";
 
 export default function NoteEditorPage() {
   const params = useParams();
   const router = useRouter();
+  const { theme } = useTheme();
   const slug = params.slug as string;
   const noteId = params.id as string;
 
@@ -54,16 +72,53 @@ export default function NoteEditorPage() {
   const [selectedFolder, setSelectedFolder] = useState<string>("");
   const [layout, setLayout] = useState<EditorLayout>("split");
   const [showTagPicker, setShowTagPicker] = useState(false);
+  const [showCreatorCard, setShowCreatorCard] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [newTagName, setNewTagName] = useState("");
+  const [newTagColor, setNewTagColor] = useState("#88c0d0");
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [profile, setProfile] = useState<any>(null);
+
+  const editorRef = useRef<any>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const { success: toastSuccess } = useToast();
 
-  const { viewers, lastUpdate, clearUpdate } = useRealtimeNote(noteId);
+  useEffect(() => {
+    fetch("/api/profile")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.profile) setProfile(data.profile);
+      });
+  }, []);
+
+  const formatDate = (date: Date | string) => {
+    const d = new Date(date);
+    const timezone = profile?.timezone || "UTC";
+    const hour12 = profile?.timeFormat === "12h" ? true : profile?.timeFormat === "24h" ? false : undefined;
+
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      timeZone: timezone === "browser" ? undefined : timezone,
+      hour12: hour12,
+    }).format(d);
+  };
+
+  const { viewers, lastUpdate, clearUpdate, localUpdate } = useRealtimeNote(noteId, setContent);
   useEffect(() => {
     if (lastUpdate) {
       toastSuccess(`${lastUpdate.updatedBy} updated this note`);
+      clearUpdate();
     }
   }, [lastUpdate, toastSuccess, clearUpdate]);
+
+  usePrism([content, layout]);
 
   useEffect(() => {
     const savedLayout = localStorage.getItem("mindmatrix-editor-layout") as EditorLayout;
@@ -71,38 +126,53 @@ export default function NoteEditorPage() {
   }, []);
 
   useEffect(() => {
-    async function load() {
-      const res = await fetch(`/api/notes/${noteId}`);
-      const data = await res.json();
-      if (data.note) {
-        setNote(data.note);
-        setTitle(data.note.title);
-        setContent(data.note.content);
-        setSelectedFolder(data.note.folderId || "");
-        setNoteTags(data.note.noteTags?.map((nt: { tag: Tag }) => nt.tag.id) || []);
+    if (tags && tags.length > 0) {
+      setNewTagColor(PALETTE_COLORS[tags.length % PALETTE_COLORS.length]);
+    }
+  }, [tags]);
 
-        const wsRes = await fetch(`/api/workspaces/${data.note.workspaceId}`);
-        const wsData = await wsRes.json();
-        if (wsData.workspace) {
-          setTags(wsData.workspace.tags || []);
-          setFolders(wsData.workspace.folders || []);
+  useEffect(() => {
+    async function load() {
+      const [noteRes, wsRes] = await Promise.all([
+        fetch(`/api/notes/${noteId}`),
+        fetch("/api/workspaces"),
+      ]);
+
+      const noteData = await noteRes.json();
+      const wsData = await wsRes.json();
+
+      if (noteData.note) {
+        setNote(noteData.note);
+        setTitle(noteData.note.title);
+        setContent(noteData.note.content);
+        setSelectedFolder(noteData.note.folderId || "");
+        setNoteTags(noteData.note.noteTags?.map((nt: { tag: Tag }) => nt.tag.id) || []);
+      }
+
+      if (wsData.workspaces && noteData.note) {
+        const activeWs = wsData.workspaces.find((w: any) => w.id === noteData.note.workspaceId);
+        if (activeWs) {
+          setTags(activeWs.tags || []);
+          setFolders(activeWs.folders || []);
         }
       }
     }
     load();
   }, [noteId]);
 
-  const save = useCallback(async () => {
+  const save = useCallback(async (overrides?: { folderId?: string | null; tagIds?: string[] }) => {
     if (!note) return;
     setSaving(true);
+    const fId = overrides && overrides.folderId !== undefined ? overrides.folderId : selectedFolder;
+    const tIds = overrides && overrides.tagIds !== undefined ? overrides.tagIds : noteTags;
     await fetch(`/api/notes/${note.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title,
         content,
-        folderId: selectedFolder || null,
-        tagIds: noteTags,
+        folderId: fId || null,
+        tagIds: tIds,
       }),
     });
     setSavedAt(new Date());
@@ -120,15 +190,207 @@ export default function NoteEditorPage() {
     return () => document.removeEventListener("keydown", handle);
   }, [save]);
 
+  // Debounced Auto-save to maintain DB sync
+  useEffect(() => {
+    if (!note || content === note.content) return;
+    const timer = setTimeout(() => {
+      save();
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [content, note, save]);
+
   function setLayoutAndPersist(l: EditorLayout) {
     setLayout(l);
     localStorage.setItem("mindmatrix-editor-layout", l);
   }
 
-  function toggleTag(tagId: string) {
-    setNoteTags((prev) =>
-      prev.includes(tagId) ? prev.filter((t) => t !== tagId) : [...prev, tagId]
+  const handleFormat = useCallback((type: string) => {
+    const view = editorRef.current?.view;
+    if (!view) return;
+
+    const { state, dispatch } = view;
+    const { from, to } = state.selection.main;
+    const selectedText = state.sliceDoc(from, to);
+
+    let replacement = "";
+    let selectionOffsetStart = 0;
+    let selectionOffsetEnd = 0;
+
+    switch (type) {
+      case "bold":
+        replacement = `**${selectedText}**`;
+        selectionOffsetStart = 2;
+        selectionOffsetEnd = selectedText.length + 2;
+        break;
+      case "italic":
+        replacement = `*${selectedText}*`;
+        selectionOffsetStart = 1;
+        selectionOffsetEnd = selectedText.length + 1;
+        break;
+      case "code":
+        if (selectedText.includes("\n")) {
+          replacement = `\`\`\`\n${selectedText}\n\`\`\``;
+          selectionOffsetStart = 4;
+          selectionOffsetEnd = selectedText.length + 4;
+        } else {
+          replacement = `\`${selectedText}\``;
+          selectionOffsetStart = 1;
+          selectionOffsetEnd = selectedText.length + 1;
+        }
+        break;
+      case "link":
+        replacement = `[${selectedText || "link"}](https://)`;
+        selectionOffsetStart = 1;
+        selectionOffsetEnd = selectedText ? selectedText.length + 1 : 5;
+        break;
+      case "h1":
+        replacement = `# ${selectedText}`;
+        selectionOffsetStart = 2;
+        selectionOffsetEnd = selectedText.length + 2;
+        break;
+      case "h2":
+        replacement = `## ${selectedText}`;
+        selectionOffsetStart = 3;
+        selectionOffsetEnd = selectedText.length + 3;
+        break;
+      case "h3":
+        replacement = `### ${selectedText}`;
+        selectionOffsetStart = 4;
+        selectionOffsetEnd = selectedText.length + 4;
+        break;
+      case "list":
+        replacement = `- ${selectedText}`;
+        selectionOffsetStart = 2;
+        selectionOffsetEnd = selectedText.length + 2;
+        break;
+      case "todo":
+        replacement = `- [ ] ${selectedText}`;
+        selectionOffsetStart = 6;
+        selectionOffsetEnd = selectedText.length + 6;
+        break;
+      case "table":
+        replacement = `\n| Header 1 | Header 2 |\n| -------- | -------- |\n| Cell 1   | Cell 2   |\n`;
+        selectionOffsetStart = 1;
+        selectionOffsetEnd = replacement.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    dispatch(
+      state.update({
+        changes: { from, to, insert: replacement },
+        selection: { anchor: from + selectionOffsetStart, head: from + selectionOffsetEnd },
+        scrollIntoView: true,
+      })
     );
+    view.focus();
+  }, []);
+
+  const uploadImageFile = useCallback(async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/notes/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.url) {
+        // Insert the image markdown into the editor
+        const view = editorRef.current?.view;
+        if (view) {
+          const { state, dispatch } = view;
+          const { from, to } = state.selection.main;
+          const insertText = `![${file.name}](${data.url})`;
+          dispatch(
+            state.update({
+              changes: { from, to, insert: insertText },
+              selection: { anchor: from + insertText.length },
+              scrollIntoView: true,
+            })
+          );
+          view.focus();
+        } else {
+          // Fallback if view not ready: append to state
+          setContent((prev) => prev + `\n![${file.name}](${data.url})`);
+        }
+      } else {
+        alert(data.error || "Failed to upload image");
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("Failed to upload image");
+    }
+  }, []);
+
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      uploadImageFile(file);
+    }
+  }, [uploadImageFile]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.types.includes("Files")) {
+      setIsDragging(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith("image/")) {
+        uploadImageFile(file);
+      }
+    }
+  }, [uploadImageFile]);
+
+  function toggleTag(tagId: string) {
+    const nextTags = noteTags.includes(tagId)
+      ? noteTags.filter((t) => t !== tagId)
+      : [...noteTags, tagId];
+    setNoteTags(nextTags);
+    save({ tagIds: nextTags });
+  }
+
+  async function createTag() {
+    if (!newTagName.trim() || !note) return;
+    try {
+      const res = await fetch("/api/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workspaceId: note.workspaceId,
+          name: newTagName.trim(),
+          color: newTagColor,
+        }),
+      });
+      const data = await res.json();
+      if (data.tag) {
+        setTags((prev) => [...prev, data.tag]);
+        const nextTags = [...noteTags, data.tag.id];
+        setNoteTags(nextTags);
+        save({ tagIds: nextTags });
+        setNewTagName("");
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async function deleteNote() {
@@ -136,6 +398,32 @@ export default function NoteEditorPage() {
     if (!confirm("Delete this note?")) return;
     await fetch(`/api/notes/${note.id}`, { method: "DELETE" });
     router.push(`/dashboard/w/${slug}`);
+  }
+
+  async function togglePublicShare() {
+    if (!note) return;
+    const targetState = !note.isPublic;
+    try {
+      const res = await fetch(`/api/notes/${note.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPublic: targetState }),
+      });
+      const data = await res.json();
+      if (data.note) {
+        setNote(data.note);
+        toastSuccess(targetState ? "Note is now public" : "Note is now private");
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function copyShareLink() {
+    if (!note) return;
+    const shareUrl = `${window.location.origin}/share/${note.id}`;
+    navigator.clipboard.writeText(shareUrl);
+    toastSuccess("Share link copied to clipboard");
   }
 
   if (!note) {
@@ -185,10 +473,64 @@ export default function NoteEditorPage() {
             ))}
           </div>
 
-          <button className="btn primary sm flex align-center gap-1" onClick={save} disabled={saving}>
+          <button className="btn primary sm flex align-center gap-1" onClick={() => save()} disabled={saving}>
             <Save size={14} />
             {saving ? "Saving..." : savedAt ? "Saved" : "Save"}
           </button>
+
+          <div style={{ position: "relative" }}>
+            <button className="btn secondary sm flex align-center gap-1" onClick={() => setShowShareMenu(!showShareMenu)}>
+              <Share2 size={14} />
+              Share
+            </button>
+            {showShareMenu && (
+              <div 
+                className="card" 
+                style={{ 
+                  position: "absolute", 
+                  right: 0, 
+                  top: "100%", 
+                  zIndex: 25, 
+                  minWidth: "260px", 
+                  padding: "1rem", 
+                  marginTop: "0.25rem", 
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                  textAlign: "left"
+                }}
+              >
+                <h4 style={{ margin: 0, marginBottom: "0.5rem", fontSize: "0.875rem", color: "var(--fg-secondary)" }}>Public Sharing</h4>
+                <p className="text-muted" style={{ fontSize: "0.75rem", marginBottom: "1rem" }}>
+                  Anyone with the link can view this note in a distraction-free, read-only layout.
+                </p>
+                <div style={{ marginBottom: "1rem" }}>
+                  <button
+                    className={`btn sm ${note.isPublic ? "danger" : "primary"}`}
+                    onClick={togglePublicShare}
+                    style={{ width: "100%" }}
+                  >
+                    {note.isPublic ? "Unshare Note" : "Share Note"}
+                  </button>
+                </div>
+                {note.isPublic && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <input
+                      readOnly
+                      value={`${typeof window !== "undefined" ? window.location.origin : ""}/share/${note.id}`}
+                      style={{ fontSize: "0.75rem", padding: "0.25rem 0.5rem", borderRadius: "3px" }}
+                      onClick={(e) => (e.target as HTMLInputElement).select()}
+                    />
+                    <button
+                      className="btn secondary sm"
+                      style={{ width: "100%" }}
+                      onClick={copyShareLink}
+                    >
+                      Copy Link
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           <button className="btn danger sm flex align-center gap-1" onClick={deleteNote}>
             <Trash2 size={14} />
@@ -198,18 +540,80 @@ export default function NoteEditorPage() {
 
       {/* Meta bar */}
       <div className="flex align-center justify-between text-xs text-muted" style={{ marginBottom: "1rem" }}>
-        <div className="flex align-center gap-2">
-          <span>Created by {note.creator.name}</span>
+        <div className="flex align-center gap-2" style={{ overflow: "visible" }}>
+          <div 
+            style={{ position: "relative", display: "inline-flex", cursor: "help" }}
+            onMouseEnter={() => setShowCreatorCard(true)}
+            onMouseLeave={() => setShowCreatorCard(false)}
+          >
+            <span style={{ textDecoration: "underline", textDecorationStyle: "dotted" }}>
+              Created by {note.creator.name}
+            </span>
+            {showCreatorCard && (
+              <div 
+                className="card"
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  bottom: "100%",
+                  marginBottom: "0.5rem",
+                  zIndex: 20,
+                  width: "240px",
+                  padding: "0.75rem",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  color: "var(--fg-primary)",
+                  backgroundColor: "var(--bg-secondary)",
+                  borderColor: "var(--border-color)",
+                  textAlign: "left"
+                }}
+              >
+                <Avatar 
+                  name={note.creator.name} 
+                  email={note.creator.email} 
+                  image={note.creator.image} 
+                  size={40} 
+                />
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", minWidth: 0, textAlign: "left" }}>
+                  <span style={{ fontWeight: 600, color: "var(--fg-secondary)", fontSize: "0.875rem" }} className="truncate">
+                    {note.creator.name}
+                  </span>
+                  <span style={{ fontSize: "0.75rem", color: "var(--fg-muted)" }} className="truncate">
+                    {note.creator.email}
+                  </span>
+                  <span 
+                    className="badge" 
+                    style={{ 
+                      alignSelf: "flex-start", 
+                      fontSize: "0.65rem", 
+                      padding: "0.1rem 0.35rem", 
+                      marginTop: "0.25rem",
+                      backgroundColor: note.creator.role === "super_admin" ? "rgba(163, 190, 140, 0.15)" : "var(--bg-tertiary)",
+                      color: note.creator.role === "super_admin" ? "var(--accent-green)" : "var(--fg-secondary)",
+                      borderColor: note.creator.role === "super_admin" ? "var(--accent-green)" : "var(--border-color)",
+                      borderWidth: "1px",
+                      borderStyle: "solid",
+                    }}
+                  >
+                    {note.creator.role === "super_admin" ? "Super Admin" : "User"}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
           <span>·</span>
-          <span>Updated {new Date(note.updatedAt).toLocaleString()}</span>
+          <span>Updated {formatDate(note.updatedAt)}</span>
           <PresenceAvatars viewers={viewers} />
         </div>
         <div className="flex align-center gap-2">
           <select
             value={selectedFolder}
             onChange={(e) => {
-              setSelectedFolder(e.target.value);
-              save();
+              const val = e.target.value;
+              setSelectedFolder(val);
+              save({ folderId: val });
             }}
             style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
           >
@@ -225,7 +629,7 @@ export default function NoteEditorPage() {
               Tags
             </button>
             {showTagPicker && (
-              <div className="card" style={{ position: "absolute", right: 0, top: "100%", zIndex: 10, minWidth: "200px", padding: "0.5rem" }}>
+              <div className="card" style={{ position: "absolute", right: 0, top: "100%", zIndex: 10, minWidth: "220px", padding: "0.5rem" }}>
                 {tags.map((tag) => (
                   <label key={tag.id} className="flex align-center gap-1" style={{ padding: "0.25rem 0", cursor: "pointer", fontSize: "0.875rem" }}>
                     <input
@@ -238,6 +642,30 @@ export default function NoteEditorPage() {
                   </label>
                 ))}
                 {tags.length === 0 && <span className="text-muted text-xs">No tags created</span>}
+                <div style={{ borderTop: "1px solid var(--border-color)", marginTop: "0.5rem", paddingTop: "0.5rem" }}>
+                  <div style={{ display: "flex", gap: "0.25rem", alignItems: "center" }}>
+                    <input
+                      type="text"
+                      placeholder="New tag..."
+                      value={newTagName}
+                      onChange={(e) => setNewTagName(e.target.value)}
+                      style={{ fontSize: "0.75rem", padding: "0.25rem", borderRadius: "3px", flex: 1 }}
+                    />
+                    <input
+                      type="color"
+                      value={newTagColor}
+                      onChange={(e) => setNewTagColor(e.target.value)}
+                      style={{ width: "24px", height: "24px", padding: 0, border: "none", cursor: "pointer", borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}
+                    />
+                    <button
+                      className="btn primary sm"
+                      onClick={createTag}
+                      style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -245,16 +673,93 @@ export default function NoteEditorPage() {
       </div>
 
       {/* Editor area */}
-      <div style={{ display: "flex", gap: "1rem", minHeight: "calc(100vh - 250px)" }}>
+      <div style={{ display: "flex", gap: "1rem", minHeight: "calc(100vh - 250px)", alignItems: "stretch" }}>
         {(layout === "split" || layout === "edit") && (
-          <div style={{ flex: 1, overflow: "auto" }}>
-            <CodeMirror
-              value={content}
-              onChange={(val) => setContent(val)}
-              extensions={[markdown()]}
-              theme={document.documentElement.getAttribute("data-theme")?.includes("dark") ? "dark" : "light"}
-              style={{ fontSize: "0.875rem", fontFamily: "var(--font-mono)", height: "100%", minHeight: "400px" }}
-            />
+          <div 
+            style={{ 
+              flex: 1, 
+              display: "flex", 
+              flexDirection: "column",
+              border: isDragging ? "2px dashed var(--accent-cyan)" : "1px solid var(--border-color)",
+              borderRadius: "var(--border-radius)",
+              overflow: "hidden",
+              backgroundColor: "var(--bg-secondary)"
+            }}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {/* Markdown Formatting Toolbar */}
+            <div 
+              style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                gap: "0.25rem", 
+                backgroundColor: "var(--bg-tertiary)", 
+                borderBottom: "1px solid var(--border-color)",
+                padding: "0.4rem",
+                flexWrap: "wrap",
+                zIndex: 5
+              }}
+            >
+              <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Heading 1" onClick={() => handleFormat("h1")}>
+                <Heading1 size={14} />
+              </button>
+              <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Heading 2" onClick={() => handleFormat("h2")}>
+                <Heading2 size={14} />
+              </button>
+              <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Heading 3" onClick={() => handleFormat("h3")}>
+                <Heading3 size={14} />
+              </button>
+              <span style={{ width: "1px", height: "16px", backgroundColor: "var(--border-color)", margin: "0 0.25rem" }} />
+              <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Bold" onClick={() => handleFormat("bold")}>
+                <Bold size={14} />
+              </button>
+              <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Italic" onClick={() => handleFormat("italic")}>
+                <Italic size={14} />
+              </button>
+              <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Code" onClick={() => handleFormat("code")}>
+                <Code size={14} />
+              </button>
+              <span style={{ width: "1px", height: "16px", backgroundColor: "var(--border-color)", margin: "0 0.25rem" }} />
+              <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Link" onClick={() => handleFormat("link")}>
+                <Link2 size={14} />
+              </button>
+              <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Bullet List" onClick={() => handleFormat("list")}>
+                <List size={14} />
+              </button>
+              <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Task List" onClick={() => handleFormat("todo")}>
+                <CheckSquare size={14} />
+              </button>
+              <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Insert Table" onClick={() => handleFormat("table")}>
+                <Table size={14} />
+              </button>
+              <span style={{ width: "1px", height: "16px", backgroundColor: "var(--border-color)", margin: "0 0.25rem" }} />
+              <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Insert Image" onClick={() => imageInputRef.current?.click()}>
+                <ImageIcon size={14} />
+              </button>
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handleImageUpload}
+              />
+            </div>
+
+            <div style={{ flex: 1, overflow: "auto" }}>
+              <CodeMirror
+                ref={editorRef}
+                value={content}
+                onChange={(val) => {
+                  setContent(val);
+                  localUpdate(val);
+                }}
+                extensions={[markdown()]}
+                theme={theme.endsWith("-dark") ? "dark" : "light"}
+                style={{ fontSize: "0.875rem", fontFamily: "var(--font-mono)", height: "100%", minHeight: "400px" }}
+              />
+            </div>
           </div>
         )}
 
@@ -269,7 +774,7 @@ export default function NoteEditorPage() {
               padding: "1.5rem",
             }}
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
               {content || "*No content yet*"}
             </ReactMarkdown>
           </div>

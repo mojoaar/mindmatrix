@@ -20,6 +20,9 @@ const ProxmoxSettings = lazy(() =>
 const UnifiSettings = lazy(() =>
   import("@/plugins/unifi-topology/components/unifi-settings").then((m) => ({ default: m.UnifiSettings }))
 );
+const GitSettings = lazy(() =>
+  import("@/plugins/git-sync/components/git-settings").then((m) => ({ default: m.GitSettings }))
+);
 
 const settingsMap: Record<string, ComponentType<{ workspaceId: string }>> = {
   "opencode-ai": OpenCodeSettings,
@@ -28,6 +31,7 @@ const settingsMap: Record<string, ComponentType<{ workspaceId: string }>> = {
   "sync-google-drive": DriveSettings,
   "proxmox-inventory": ProxmoxSettings,
   "unifi-topology": UnifiSettings,
+  "git-sync": GitSettings,
 };
 
 interface PluginMeta {

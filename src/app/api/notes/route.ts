@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { db, note, noteTag, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and, or, ilike } from "drizzle-orm";
+import { logAction } from "@/lib/audit";
+import { triggerWebhooks } from "@/lib/webhooks";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -102,6 +104,26 @@ export async function POST(request: Request) {
     where: eq(note.id, id),
     with: { noteTags: { with: { tag: true } }, creator: true, folder: true },
   });
+
+  await logAction(
+    session.user.id,
+    "NOTE_CREATE",
+    `Created note "${title}" (${id}) in workspace ${workspaceId}`,
+    request
+  );
+
+  await triggerWebhooks(
+    workspaceId,
+    "note.created",
+    {
+      id: created!.id,
+      title: created!.title,
+      slug: created!.slug,
+      content: created!.content,
+      folderId: created!.folderId,
+    },
+    { id: session.user.id, name: session.user.name, email: session.user.email }
+  );
 
   return NextResponse.json({ note: created }, { status: 201 });
 }

@@ -35,7 +35,21 @@ export async function sendEmail({
   html: string;
 }) {
   const transport = getTransporter();
-  if (!transport) return false;
+  if (!transport) {
+    if (process.env.NODE_ENV === "development") {
+      console.log("\n📬 ==================================================");
+      console.log("📨 [DEV EMAIL] SMTP not configured — logging email:");
+      console.log(`   To:      ${to}`);
+      console.log(`   Subject: ${subject}`);
+      const linkMatch = html.match(/href="([^"]+)"/);
+      if (linkMatch && linkMatch[1]) {
+        console.log(`   🔗 Link:  ${linkMatch[1]}`);
+      }
+      console.log("==================================================\n");
+      return true;
+    }
+    return false;
+  }
 
   try {
     await transport.sendMail({

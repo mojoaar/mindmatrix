@@ -8,6 +8,7 @@ const connectionString =
 
 const globalForDb = globalThis as unknown as {
   conn: postgres.Sql | undefined;
+  db: any;
 };
 
 const conn =
@@ -24,7 +25,13 @@ if (process.env.NODE_ENV !== "production") {
   globalForDb.conn = conn;
 }
 
-export const db = drizzle(conn, { schema });
+const localDb = drizzle(conn, { schema });
+export const db = (globalForDb.db ?? localDb) as typeof localDb;
+
+if (process.env.NODE_ENV !== "production") {
+  globalForDb.db = db;
+}
+
 export const sql = conn;
 export type DbClient = typeof db;
 export * from "./schema";

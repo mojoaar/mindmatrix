@@ -5,6 +5,19 @@ import { useRouter } from "next/navigation";
 import { useTheme, type Theme } from "@/components/theme/theme-provider";
 import { Avatar } from "@/components/ui/avatar";
 
+const FONT_OPTIONS = [
+  { id: "jetbrains-mono", label: "JetBrains Mono" },
+  { id: "fira-code", label: "Fira Code" },
+  { id: "source-code-pro", label: "Source Code Pro" },
+  { id: "ibm-plex-mono", label: "IBM Plex Mono" },
+  { id: "ubuntu-mono", label: "Ubuntu Mono" },
+  { id: "inconsolata", label: "Inconsolata" },
+  { id: "roboto-mono", label: "Roboto Mono" },
+  { id: "dm-mono", label: "DM Mono" },
+] as const;
+
+const FONT_STORAGE_KEY = "mindmatrix-font";
+
 interface Profile {
   id: string;
   name: string;
@@ -48,6 +61,7 @@ export default function UserSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [timezone, setTimezone] = useState("browser");
   const [timeFormat, setTimeFormat] = useState("browser");
   const [uploading, setUploading] = useState(false);
@@ -61,6 +75,39 @@ export default function UserSettingsPage() {
     return "split";
   });
 
+  const [selectedFont, setSelectedFont] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem(FONT_STORAGE_KEY) || "jetbrains-mono";
+    }
+    return "jetbrains-mono";
+  });
+
+  const [sidebarShowFolders, setSidebarShowFolders] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("mindmatrix-show-sidebar-folders") === "true";
+    }
+    return false;
+  });
+
+  const [sidebarShowTags, setSidebarShowTags] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("mindmatrix-show-sidebar-tags") === "true";
+    }
+    return false;
+  });
+
+  const handleToggleSidebarFolders = (val: boolean) => {
+    setSidebarShowFolders(val);
+    localStorage.setItem("mindmatrix-show-sidebar-folders", val ? "true" : "false");
+    window.dispatchEvent(new CustomEvent("mindmatrix:sidebar-prefs-updated"));
+  };
+
+  const handleToggleSidebarTags = (val: boolean) => {
+    setSidebarShowTags(val);
+    localStorage.setItem("mindmatrix-show-sidebar-tags", val ? "true" : "false");
+    window.dispatchEvent(new CustomEvent("mindmatrix:sidebar-prefs-updated"));
+  };
+
   useEffect(() => {
     fetch("/api/profile")
       .then((r) => {
@@ -71,6 +118,7 @@ export default function UserSettingsPage() {
         if (data.profile) {
           setProfile(data.profile);
           setName(data.profile.name);
+          setEmail(data.profile.email);
           setTimezone(data.profile.timezone || "browser");
           setTimeFormat(data.profile.timeFormat || "browser");
         }
@@ -86,7 +134,7 @@ export default function UserSettingsPage() {
       const res = await fetch("/api/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, timezone, timeFormat }),
+        body: JSON.stringify({ name, email, timezone, timeFormat }),
       });
       const data = await res.json();
       if (data.profile) {
@@ -148,6 +196,12 @@ export default function UserSettingsPage() {
   function setAndSaveLayout(layout: string) {
     setEditorLayout(layout);
     localStorage.setItem("mindmatrix-editor-layout", layout);
+  }
+
+  function setAndSaveFont(fontId: string) {
+    setSelectedFont(fontId);
+    localStorage.setItem(FONT_STORAGE_KEY, fontId);
+    document.documentElement.setAttribute("data-font", fontId);
   }
 
   if (loading || !profile) {
@@ -223,11 +277,8 @@ export default function UserSettingsPage() {
         </div>
 
         <div className="form-group">
-          <label>Email</label>
-          <input value={profile.email} disabled style={{ opacity: 0.6 }} />
-          <p className="text-muted text-xs" style={{ marginTop: "0.25rem" }}>
-            Email cannot be changed.
-          </p>
+          <label htmlFor="email">Email</label>
+          <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
       </div>
 
@@ -268,13 +319,36 @@ export default function UserSettingsPage() {
         <div className="form-group">
           <label>Theme</label>
           <div className="flex gap-1" style={{ marginTop: "0.5rem", flexWrap: "wrap" }}>
-            {(["nord-dark", "nord-light", "dracula-dark", "dracula-light"] as Theme[]).map((t) => (
+            {([
+              "nord-dark", "nord-light",
+              "dracula-dark", "dracula-light",
+              "github-dark", "github-light",
+              "catppuccin-dark", "catppuccin-light",
+              "cyberpunk-dark", "cyberpunk-light",
+              "one-dark", "one-light",
+            ] as Theme[]).map((t) => (
               <button
                 key={t}
                 className={`btn ${theme === t ? "primary" : "secondary"} sm`}
                 onClick={() => setTheme(t)}
               >
                 {t}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>Font</label>
+          <div className="flex gap-1" style={{ marginTop: "0.5rem", flexWrap: "wrap" }}>
+            {FONT_OPTIONS.map((font) => (
+              <button
+                key={font.id}
+                className={`btn ${selectedFont === font.id ? "primary" : "secondary"} sm`}
+                onClick={() => setAndSaveFont(font.id)}
+                style={{ fontFamily: `var(--font-${font.id})`, fontSize: "0.875rem" }}
+              >
+                {font.label}
               </button>
             ))}
           </div>
@@ -293,6 +367,24 @@ export default function UserSettingsPage() {
                 {layout}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>Left Sidebar Layout</label>
+          <div className="flex gap-2" style={{ marginTop: "0.5rem" }}>
+            <button
+              className={`btn ${sidebarShowFolders ? "primary" : "secondary"} sm`}
+              onClick={() => handleToggleSidebarFolders(!sidebarShowFolders)}
+            >
+              {sidebarShowFolders ? "Showing Folders" : "Show Folders in Sidebar"}
+            </button>
+            <button
+              className={`btn ${sidebarShowTags ? "primary" : "secondary"} sm`}
+              onClick={() => handleToggleSidebarTags(!sidebarShowTags)}
+            >
+              {sidebarShowTags ? "Showing Tags" : "Show Tags in Sidebar"}
+            </button>
           </div>
         </div>
 
@@ -315,8 +407,8 @@ export default function UserSettingsPage() {
             </thead>
             <tbody>
               <tr><td>Search</td><td><kbd>Cmd+K</kbd></td><td><kbd>Ctrl+K</kbd></td></tr>
-              <tr><td>New Note</td><td><kbd>Cmd+N</kbd></td><td><kbd>Ctrl+N</kbd></td></tr>
-              <tr><td>New Folder</td><td><kbd>Cmd+Shift+F</kbd></td><td><kbd>Ctrl+Shift+F</kbd></td></tr>
+              <tr><td>New Note</td><td><kbd>Opt+N</kbd></td><td><kbd>Alt+N</kbd></td></tr>
+              <tr><td>New Folder</td><td><kbd>Opt+Shift+F</kbd></td><td><kbd>Alt+Shift+F</kbd></td></tr>
               <tr><td>Save Note</td><td><kbd>Cmd+Enter</kbd></td><td><kbd>Ctrl+Enter</kbd></td></tr>
               <tr><td>Toggle Sidebar</td><td><kbd>Cmd+B</kbd></td><td><kbd>Ctrl+B</kbd></td></tr>
               <tr><td>Settings</td><td><kbd>Cmd+,</kbd></td><td><kbd>Ctrl+,</kbd></td></tr>
@@ -331,7 +423,7 @@ export default function UserSettingsPage() {
         <h3>About</h3>
         <div className="text-sm" style={{ lineHeight: 1.8 }}>
           <p>
-            <strong>MindMatrix</strong> v0.1.0
+            <strong>MindMatrix</strong> v0.2.0
           </p>
           <p className="text-muted">
             Markdown-first, self-hosted, multi-user knowledge hub.

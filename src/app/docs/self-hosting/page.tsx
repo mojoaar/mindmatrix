@@ -15,17 +15,17 @@ export default function SelfHostingDocPage() {
       </div>
       <div className="card">
         <h2>Docker Compose</h2>
-        <pre style={{ backgroundColor: "var(--bg-tertiary)", padding: "1rem", borderRadius: "var(--border-radius)", overflow: "auto" }}>
+        <pre><code className="language-bash">
           {`git clone git@github.com:mojoaar/mindmatrix.git
 cd mindmatrix
 cp .env.example .env
 openssl rand -base64 48  # Generate BETTER_AUTH_SECRET
 docker compose -f deploy/docker-compose.yml up -d`}
-        </pre>
+        </code></pre>
       </div>
       <div className="card">
         <h2>Node.js (systemd)</h2>
-        <pre style={{ backgroundColor: "var(--bg-tertiary)", padding: "1rem", borderRadius: "var(--border-radius)", overflow: "auto" }}>
+        <pre><code className="language-bash">
           {`cp deploy/mindmatrix.service /etc/systemd/system/
 sudo useradd -r -s /bin/false mindmatrix
 sudo mkdir -p /opt/mindmatrix
@@ -33,7 +33,7 @@ sudo chown -R mindmatrix:mindmatrix /opt/mindmatrix
 sudo systemctl daemon-reload
 sudo systemctl enable mindmatrix
 sudo systemctl start mindmatrix`}
-        </pre>
+        </code></pre>
       </div>
       <div className="card">
         <h2>Environment Variables</h2>

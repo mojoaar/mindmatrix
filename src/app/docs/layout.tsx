@@ -1,4 +1,5 @@
 import { SearchOverlay } from "@/components/search/search-overlay";
+import { DocsPrismHighlight } from "@/components/ui/docs-prism-highlight";
 
 export default function DocsLayout({
   children,
@@ -51,7 +52,7 @@ export default function DocsLayout({
           </div>
         </aside>
         <main style={{ flex: 1, overflow: "auto", padding: "2rem 3rem" }}>
-          {children}
+          <DocsPrismHighlight>{children}</DocsPrismHighlight>
         </main>
       </div>
       <SearchOverlay />

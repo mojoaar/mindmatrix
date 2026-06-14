@@ -1,4 +1,4 @@
-# MindMatrix v0.1.0 — Implementation Plan
+# MindMatrix v0.2.0 — Implementation Plan
 
 Markdown-first, self-hosted, multi-user knowledge hub.
 **License**: AGPL-3.0 | **Repo**: git@github.com:mojoaar/mindmatrix.git
@@ -159,13 +159,17 @@ All routes return JSON, require auth (except auth routes), and enforce workspace
 
 ## Theme System
 
-CSS custom properties with 4 themes:
-- `data-theme="nord-dark"` (default)
-- `data-theme="nord-light"`
-- `data-theme="dracula-dark"`
-- `data-theme="dracula-light"`
+CSS custom properties with 12 themes (each with light and dark):
+- Nord: `nord-dark`, `nord-light`
+- Dracula: `dracula-dark`, `dracula-light`
+- GitHub: `github-dark`, `github-light`
+- Catppuccin: `catppuccin-dark`, `catppuccin-light`
+- Cyberpunk: `cyberpunk-dark`, `cyberpunk-light`
+- One: `one-dark`, `one-light`
 
-Stored in `localStorage` key `mindmatrix-theme`. Applied via inline script before first paint.
+8 developer fonts selectable in Settings > Preferences — applied via `data-font` attribute and inline script.
+
+Stored in `localStorage` key `mindmatrix-theme` and `mindmatrix-font`. Applied via inline script before first paint.
 
 ## Keyboard Shortcuts
 
@@ -283,24 +287,54 @@ Stored in `localStorage` key `mindmatrix-theme`. Applied via inline script befor
 - Workspaces sorted alphabetically
 - Port 5434 for PostgreSQL (coexists with FleetOps)
 
-## v0.3 Roadmap
+## v0.3 Roadmap (Completed)
 
-### Sync Plugins (pCloud + Google Drive)
+### Sync Plugins (pCloud + Google Drive) ✓
 - OAuth 2.0 flows for both providers
 - Folder-based sync: upload/download .md files
 - Token refresh for Google (access tokens expire)
 - Settings UI: Connect/Disconnect, status, Sync Now button
+- OAuth callback endpoints: `/api/oauth/pcloud`, `/api/oauth/google-drive`
 
-### Test Coverage
+### Test Coverage ✓
 - Plugin metadata, OpenCode client, event-bus, proxy, config API
-- Target: 39 → ~70 tests across 12 test files
+- 54 tests across test files
+
+### Security Hardening ✓
+- AES-256-GCM encryption for plugin credentials (`src/lib/crypto.ts`)
+- BOLA fixes: workspace membership guards on all plugin endpoints
+- Config masking: sensitive values replaced with `••••••••` before client delivery
+- `requirePluginAccess()` guard in all 5 plugin route handlers
+
+### Super Admin ✓
+- First user auto-promoted to `super_admin`
+- Admin dashboard: stats, workspace/user management, audit logs
+- Audit logging wired to all CRUD operations
+
+### Webhooks & Git Sync ✓
+- Webhooks system with HMAC-SHA256 signature payloads and automatic event logging
+- Git Sync plugin supporting SSH and HTTPS clone, fetch-and-merge note upserting, and push-on-save
+
+### Realtime CRDT & Rich Editor ✓
+- Realtime co-authoring via Y.js Base64 delta streams over PostgreSQL LISTEN/NOTIFY
+- Debounced background saving of co-authored documents to Postgres Note table
+- Full-width notes workspace (100% viewport spacing)
+- Markdown Formatting Toolbar (Headings, bold, italic, code, list, tasks, table grid)
+- Drag & Drop file upload with automatic image insertion
+- Public read-only document sharing and toggle controls
+- User profile timezone / 12h/24h date calculation mapping inside Notes
+
+### Taxonomy & UI Polish ✓
+- Generalized Dashboard Edit Mode (Edit/Done toggle for both folders and tags)
+- Full Folder management: rename and delete directly from folder pills
+- Full Tag management: rename, change colors via circular picker, and delete directly from tag filter pills
+- Automatic tag color rotation from an 8-color cyclic pool on new tag creations
+- Sidebar folder note counts `(N)` updated reactively via workspace data-bindings
+- Nested folders and tags toggles in user settings with instant responsive sidebar layout updates
 
 ### Future (v0.4+)
 - **CLI** — `mindmatrix` terminal command: create notes, search, manage
-- **Webhooks** — HTTP callbacks on note create/update/delete events
-- **Git sync** — Push/pull workspace notes to a configured Git repo
 - **AI search** — Vector embeddings + semantic search across notes
-- **Realtime CRDT** — Y.js-based collaborative editing (upgrade from last-write-wins)
 
 ## Security Hardening Plan (In Progress)
 

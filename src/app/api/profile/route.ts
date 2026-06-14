@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db, user } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { eq } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
+import { logAction } from "@/lib/audit";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -18,6 +19,7 @@ export async function GET(request: Request) {
       image: true,
       timezone: true,
       timeFormat: true,
+      role: true,
       createdAt: true,
     },
   });
@@ -35,7 +37,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { name, timezone, timeFormat } = await request.json();
+  const { name, timezone, timeFormat, email } = await request.json();
 
   const update: Record<string, unknown> = {};
   if (name !== undefined && typeof name === "string" && name.trim().length > 0) {
@@ -43,6 +45,27 @@ export async function PATCH(request: Request) {
   }
   if (timezone !== undefined) update.timezone = timezone;
   if (timeFormat !== undefined) update.timeFormat = timeFormat;
+
+  if (email !== undefined && typeof email === "string") {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      return NextResponse.json({ error: "Email cannot be empty" }, { status: 400 });
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
+    }
+    // Check if email is already in use by another user
+    const existing = await db.query.user.findFirst({
+      where: and(eq(user.email, trimmedEmail), ne(user.id, session.user.id)),
+    });
+    if (existing) {
+      return NextResponse.json({ error: "Email already in use" }, { status: 400 });
+    }
+    if (trimmedEmail !== session.user.email) {
+      update.email = trimmedEmail;
+    }
+  }
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
@@ -59,8 +82,13 @@ export async function PATCH(request: Request) {
       image: user.image,
       timezone: user.timezone,
       timeFormat: user.timeFormat,
+      role: user.role,
       createdAt: user.createdAt,
     });
+
+  if (update.email) {
+    await logAction(session.user.id, "USER_EMAIL_CHANGED", `Email changed to ${update.email}`, request);
+  }
 
   return NextResponse.json({ profile: updated });
 }

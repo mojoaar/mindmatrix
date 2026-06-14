@@ -1,11 +1,12 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
-import { BookOpen, LogOut, Search, Settings, Folders, Cloud, type LucideIcon } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { BookOpen, LogOut, Search, Settings, Folders, ShieldCheck, Sun, Moon, FolderPlus, Tag, type LucideIcon } from "lucide-react";
 import { SearchOverlay } from "@/components/search/search-overlay";
 import { Avatar } from "@/components/ui/avatar";
 import { getIcon } from "@/lib/icons";
+import { useTheme } from "@/components/theme/theme-provider";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -14,12 +15,16 @@ interface Workspace {
   name: string;
   slug: string;
   icon?: string;
+  folders?: { id: string; name: string }[];
+  tags?: { id: string; name: string; color: string }[];
+  notes?: { id: string; folderId: string | null }[];
 }
 
 interface UserInfo {
   name: string;
   email: string;
   image: string | null;
+  role?: string;
 }
 
 const navItems: { href: string; label: string; icon: LucideIcon }[] = [
@@ -34,9 +39,33 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [user, setUser] = useState<UserInfo | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showFolders, setShowFolders] = useState(false);
+  const [showTags, setShowTags] = useState(false);
+
+  useEffect(() => {
+    const loadPrefs = () => {
+      setShowFolders(localStorage.getItem("mindmatrix-show-sidebar-folders") === "true");
+      setShowTags(localStorage.getItem("mindmatrix-show-sidebar-tags") === "true");
+    };
+    loadPrefs();
+    window.addEventListener("mindmatrix:sidebar-prefs-updated", loadPrefs);
+    return () => {
+      window.removeEventListener("mindmatrix:sidebar-prefs-updated", loadPrefs);
+    };
+  }, []);
+
+  const toggleTheme = () => {
+    if (theme.endsWith("-dark")) {
+      setTheme(theme.replace("-dark", "-light") as any);
+    } else if (theme.endsWith("-light")) {
+      setTheme(theme.replace("-light", "-dark") as any);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -99,12 +128,28 @@ export default function DashboardLayout({
       e.preventDefault();
       router.push("/dashboard/settings");
     }
+    if (e.altKey && e.code === "KeyN") {
+      e.preventDefault();
+      if (pathname === "/dashboard" && workspaces.length > 0) {
+        router.push(`/dashboard/w/${workspaces[0].slug}`);
+        return;
+      }
+      window.dispatchEvent(new CustomEvent("mindmatrix:new-note"));
+    }
+    if (e.altKey && e.shiftKey && e.code === "KeyF") {
+      e.preventDefault();
+      if (pathname === "/dashboard" && workspaces.length > 0) {
+        router.push(`/dashboard/w/${workspaces[0].slug}`);
+        return;
+      }
+      window.dispatchEvent(new CustomEvent("mindmatrix:new-folder"));
+    }
   };
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [handleKeyDown]);
 
   return (
     <div style={{ display: "flex", height: "100vh" }}>
@@ -154,30 +199,103 @@ export default function DashboardLayout({
         </Link>
 
         {/* Workspace list */}
-        <div style={{ padding: "0.5rem", flex: 1, overflowY: "auto" }}>
+        <div style={{ padding: "0.5rem", flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
           {workspaces.map((ws) => (
-            <Link
-              key={ws.id}
-              href={`/dashboard/w/${ws.slug}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                padding: "0.5rem 0.75rem",
-                borderRadius: "var(--border-radius)",
-                color: "var(--fg-muted)",
-                fontSize: "0.875rem",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = "var(--bg-tertiary)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = "transparent")
-              }
-            >
-              {(() => { const I = getIcon(ws.icon || "BookOpen"); return <I size={14} />; })()}
-              <span className="truncate">{ws.name}</span>
-            </Link>
+            <div key={ws.id}>
+              <Link
+                href={`/dashboard/w/${ws.slug}`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  padding: "0.5rem 0.75rem",
+                  borderRadius: "var(--border-radius)",
+                  color: "var(--fg-muted)",
+                  fontSize: "0.875rem",
+                  fontWeight: pathname.includes(`/w/${ws.slug}`) ? 600 : 400,
+                  backgroundColor: pathname.includes(`/w/${ws.slug}`) ? "rgba(255, 255, 255, 0.04)" : "transparent",
+                }}
+                onMouseEnter={(e) => {
+                  if (!pathname.includes(`/w/${ws.slug}`)) {
+                    e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!pathname.includes(`/w/${ws.slug}`)) {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }
+                }}
+              >
+                {(() => { const I = getIcon(ws.icon || "BookOpen"); return <I size={14} />; })()}
+                <span className="truncate" style={{ flex: 1 }}>{ws.name}</span>
+              </Link>
+
+              {/* Nested Folders */}
+              {showFolders && ws.folders && ws.folders.length > 0 && (
+                <div style={{ paddingLeft: "1.75rem", marginTop: "0.15rem", display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+                  {ws.folders.map((f: any) => {
+                    const count = ws.notes?.filter((n) => n.folderId === f.id).length || 0;
+                    return (
+                      <div
+                        key={f.id}
+                        className="flex align-center gap-1 text-xs"
+                        style={{ 
+                          color: "var(--fg-muted)", 
+                          padding: "0.25rem 0.5rem",
+                          cursor: "pointer",
+                          borderRadius: "var(--border-radius)",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-tertiary)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                        onClick={() => {
+                          router.push(`/dashboard/w/${ws.slug}?folderId=${f.id}`);
+                          setTimeout(() => {
+                            window.dispatchEvent(new CustomEvent(`mindmatrix:filter-folder:${ws.slug}`, { detail: f.id }));
+                          }, 50);
+                        }}
+                        title={f.name}
+                      >
+                        <FolderPlus size={10} style={{ color: "var(--accent-yellow)", flexShrink: 0 }} />
+                        <span className="truncate" style={{ flex: 1, maxWidth: "140px" }}>{f.name}</span>
+                        <span style={{ fontSize: "0.7rem", opacity: 0.6, flexShrink: 0 }}>({count})</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Nested Tags */}
+              {showTags && ws.tags && ws.tags.length > 0 && (
+                <div style={{ paddingLeft: "1.75rem", marginTop: "0.15rem", display: "flex", flexDirection: "row", gap: "0.25rem", flexWrap: "wrap", paddingBottom: "0.25rem" }}>
+                  {ws.tags.map((t: any) => (
+                    <span
+                      key={t.id}
+                      className="badge"
+                      style={{ 
+                        backgroundColor: t.color, 
+                        fontSize: "0.6rem", 
+                        padding: "0.05rem 0.25rem",
+                        cursor: "pointer",
+                        maxWidth: "100px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        borderRadius: "3px"
+                      }}
+                      onClick={() => {
+                        router.push(`/dashboard/w/${ws.slug}?tagId=${t.id}`);
+                        setTimeout(() => {
+                          window.dispatchEvent(new CustomEvent(`mindmatrix:filter-tag:${ws.slug}`, { detail: t.id }));
+                        }, 50);
+                      }}
+                      title={t.name}
+                    >
+                      {t.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </div>
 
@@ -207,13 +325,56 @@ export default function DashboardLayout({
               {item.label}
             </Link>
           ))}
+          {user?.role === "super_admin" && (
+            <Link
+              href="/dashboard/admin"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.5rem 0.75rem",
+                borderRadius: "var(--border-radius)",
+                color: "var(--accent-green)",
+                fontSize: "0.875rem",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "var(--bg-tertiary)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "transparent")
+              }
+            >
+              <ShieldCheck size={14} />
+              Admin Area
+            </Link>
+          )}
 
           <button
-            className="btn ghost sm"
-            style={{ width: "100%", justifyContent: "flex-start", marginTop: "0.25rem" }}
             onClick={handleLogout}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              padding: "0.5rem 0.75rem",
+              borderRadius: "var(--border-radius)",
+              color: "var(--fg-muted)",
+              fontSize: "0.875rem",
+              backgroundColor: "transparent",
+              border: "none",
+              cursor: "pointer",
+              textAlign: "left",
+              fontFamily: "inherit",
+              marginTop: "0.25rem",
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor = "var(--bg-tertiary)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor = "transparent")
+            }
           >
-            <LogOut size={14} style={{ marginRight: "0.5rem" }} />
+            <LogOut size={14} />
             Sign out
           </button>
         </div>
@@ -262,17 +423,30 @@ export default function DashboardLayout({
             </button>
           </div>
 
-          <div className="flex align-center gap-2">
-            <Link href="/dashboard/sync" className="btn ghost sm">
-              <Cloud size={14} />
-            </Link>
+          <div className="flex align-center gap-1">
+            <button 
+              className="btn ghost sm" 
+              onClick={toggleTheme} 
+              title={theme.endsWith("-dark") ? "Switch to light mode" : "Switch to dark mode"}
+              style={{ padding: "0.25rem 0.5rem" }}
+            >
+              {theme.endsWith("-dark") ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
             <Link href="/dashboard/settings" className="btn ghost sm">
               <Settings size={14} />
             </Link>
           </div>
         </header>
 
-        <div className="container" style={{ paddingTop: "1.5rem" }}>
+        <div 
+          className={pathname.includes("/notes/") ? "" : "container"} 
+          style={{ 
+            paddingLeft: pathname.includes("/notes/") ? "1.5rem" : undefined, 
+            paddingRight: pathname.includes("/notes/") ? "1.5rem" : undefined, 
+            paddingBottom: pathname.includes("/notes/") ? "1.5rem" : undefined, 
+            paddingTop: "1.5rem" 
+          }}
+        >
           {children}
         </div>
       </main>

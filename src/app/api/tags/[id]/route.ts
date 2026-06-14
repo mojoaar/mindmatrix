@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db, tag, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
+import { logAction } from "@/lib/audit";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -30,6 +31,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const [updated] = await db.update(tag).set(update).where(eq(tag.id, id)).returning();
 
+  await logAction(
+    session.user.id,
+    "TAG_UPDATE",
+    `Updated tag "${found.name}" (${id})`,
+    request
+  );
+
   return NextResponse.json({ tag: updated });
 }
 
@@ -52,6 +60,13 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   if (!member || member.role === "viewer") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+
+  await logAction(
+    session.user.id,
+    "TAG_DELETE",
+    `Deleted tag "${found.name}" (${id})`,
+    request
+  );
 
   await db.delete(tag).where(eq(tag.id, id));
   return NextResponse.json({ success: true });

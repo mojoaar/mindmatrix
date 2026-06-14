@@ -19,19 +19,19 @@ export default function GettingStartedPage() {
       <div className="card">
         <h2>Option 1: Docker Compose (Recommended)</h2>
         <p style={{ marginBottom: "1rem" }}>The fastest way to get started:</p>
-        <pre style={{ backgroundColor: "var(--bg-tertiary)", padding: "1rem", borderRadius: "var(--border-radius)", overflow: "auto" }}>
+        <pre><code className="language-bash">
           {`git clone git@github.com:mojoaar/mindmatrix.git
 cd mindmatrix
 cp .env.example .env
 # Edit .env with your secrets
 docker compose -f deploy/docker-compose.yml up -d`}
-        </pre>
+        </code></pre>
         <p className="text-muted text-sm">Access the app at http://localhost:3000</p>
       </div>
 
       <div className="card">
         <h2>Option 2: Node.js with systemd</h2>
-        <pre style={{ backgroundColor: "var(--bg-tertiary)", padding: "1rem", borderRadius: "var(--border-radius)", overflow: "auto" }}>
+        <pre><code className="language-bash">
           {`git clone git@github.com:mojoaar/mindmatrix.git /opt/mindmatrix
 cd /opt/mindmatrix
 cp .env.example .env
@@ -42,7 +42,7 @@ npm run build
 npx drizzle-kit push
 # Start the app
 npm run start`}
-        </pre>
+        </code></pre>
       </div>
 
       <div className="card">

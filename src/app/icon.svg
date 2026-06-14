@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="ribbon1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#bf616a" />
+      <stop offset="100%" stop-color="#b48ead" />
+    </linearGradient>
+    <linearGradient id="ribbon2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#88c0d0" />
+      <stop offset="100%" stop-color="#5e81ac" />
+    </linearGradient>
+    <linearGradient id="ribbon3" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a3be8c" />
+      <stop offset="100%" stop-color="#ebcb8b" />
+    </linearGradient>
+    <filter id="subtle-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <!-- Deep Nord Charcoal Backing -->
+  <rect width="512" height="512" rx="112" fill="#2e3440" />
+
+  <g filter="url(#subtle-shadow)">
+    <!-- Segment 1: Left base upwards fold -->
+    <path d="M 100,380 L 160,150 L 220,150 L 160,380 Z" fill="url(#ribbon1)" />
+
+    <!-- Segment 2: Apex down to center slope -->
+    <path d="M 160,150 L 256,280 L 290,260 L 220,150 Z" fill="url(#ribbon2)" opacity="0.95" />
+
+    <!-- Segment 3: Center up to right apex -->
+    <path d="M 256,280 L 352,150 L 392,165 L 290,260 Z" fill="url(#ribbon3)" opacity="0.9" />
+
+    <!-- Segment 4: Right apex down to base fold -->
+    <path d="M 352,150 L 412,380 L 352,380 L 306,210 Z" fill="url(#ribbon1)" opacity="0.85" />
+    
+    <!-- Segment 5: Möbius loop connector base -->
+    <path d="M 160,380 L 256,310 L 352,380 L 256,340 Z" fill="url(#ribbon2)" style="mix-blend-mode: overlay;" />
+  </g>
+</svg>

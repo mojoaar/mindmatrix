@@ -48,19 +48,22 @@ npm run dev
 
 - **Markdown-native** — Notes stored and edited as plain .md content
 - **Workspaces** — Team organization with role-based permissions (owner, admin, member, viewer)
-- **Folders & Tags** — Hierarchical organization and flexible tagging
+- **Folders & Tags** — Hierarchical organization and flexible tagging, complete with interactive sidebar note counts and dynamic rename, deletion, and color-change management directly in the dashboard
 - **Note Templates** — Workspace-level templates: create from ADR, runbook, meeting notes
 - **Backlinks** — `[[note-slug]]` wiki-style linking with incoming/outgoing links panel
 - **Version History** — Automatic snapshots on save, restore previous versions
 - **Realtime Collaboration** — See who's viewing a note, get notified of changes (SSE + PG NOTIFY)
 - **Global Search** — Press Cmd+K to search across all notes with command palette
-- **Editor** — CodeMirror 6 with configurable layout (split/edit/preview)
+- **Editor** — CodeMirror 6 with configurable layout (split/edit/preview), **Markdown formatting toolbar, inline tag builder, and drag & drop image uploads**
+- **Public Sharing** — Share distraction-free, read-only note views with one click, or instantly toggle back to private
 - **Import/Export** — Export notes as markdown, import from markdown
-- **Plugin System** — Togglable plugins per workspace: OpenCode AI, Proxmox, Unifi, pCloud, Google Drive
+- **Plugin System** — Togglable plugins per workspace: OpenCode AI, OpenCode Zen, Proxmox, Unifi, pCloud, Google Drive
 - **Profile & Avatar** — Upload avatar, set timezone, 12h/24h time format
 - **Workspace Icons** — 400+ Lucide icons per workspace
 - **Full REST API** — Complete API coverage for all features
-- **Themes** — Nord and Dracula themes, light and dark variants
+- **Themes** — 12 themes: Nord, Dracula, GitHub, Catppuccin, Cyberpunk, One (light & dark)
+- **Developer Fonts** — 8 monospace fonts: JetBrains Mono, Fira Code, Source Code Pro, IBM Plex Mono, Ubuntu Mono, Inconsolata, Roboto Mono, DM Mono
+- **Syntax Highlighting** — PrismJS with autoloader supporting 297 languages
 - **Self-hosted** — Docker Compose or systemd deployment
 
 ## Tech Stack
@@ -71,6 +74,7 @@ npm run dev
 - [Better Auth](https://www.better-auth.com/) — Authentication
 - [CodeMirror 6](https://codemirror.net/) — Editor
 - [Radix UI](https://www.radix-ui.com/) — Accessible components
+- [PrismJS](https://prismjs.com/) — Syntax highlighting (297 languages)
 - [Sass/SCSS](https://sass-lang.com/) — Styling
 - [Vitest](https://vitest.dev/) — Testing
 
@@ -79,8 +83,8 @@ npm run dev
 | Action          | macOS           | Windows / Linux     |
 | --------------- | --------------- | ------------------- |
 | Search          | Cmd+K           | Ctrl+K              |
-| New Note        | Cmd+N           | Ctrl+N              |
-| New Folder      | Cmd+Shift+F     | Ctrl+Shift+F        |
+| New Note        | Opt+N           | Alt+N              |
+| New Folder      | Opt+Shift+F     | Alt+Shift+F        |
 | Save Note       | Cmd+Enter       | Ctrl+Enter          |
 | Toggle Sidebar  | Cmd+B           | Ctrl+B              |
 | Settings        | Cmd+,           | Ctrl+,              |
@@ -91,6 +95,7 @@ npm run dev
 Toggle plugins per workspace in Settings. Available:
 
 - **OpenCode AI** — Chat with notes via OpenCode Go (cloud subscription)
+- **OpenCode Zen** — AI chat with multiple model families (GPT, Claude, DeepSeek)
 - **Proxmox Inventory** — Scan VMs, containers, storage into a note
 - **Unifi Topology** — Scan network devices, WiFi, clients into a note
 - **pCloud Sync** — Sync notes as .md files to pCloud storage
@@ -130,6 +135,13 @@ Built by [mojoaar](https://github.com/mojoaar)
 - **Email Verification** — nodemailer-based verification + forgot/reset password flow
 - **Keyboard Command Palette** — Cmd+K shows all shortcuts when empty
 - **Improved Proxy** — auto-redirects auth pages to dashboard, 401 handling
+- **12 Themes** — Added GitHub, Catppuccin, Cyberpunk, One (light/dark each)
+- **8 Developer Fonts** — JetBrains Mono, Fira Code, Source Code Pro, IBM Plex Mono, Ubuntu Mono, Inconsolata, Roboto Mono, DM Mono
+- **PrismJS Syntax Highlighting** — 297 languages with autoloader
+- **Super Admin Dashboard** — stats, workspace/user management, audit logs
+- **Audit Logging** — all CRUD operations tracked with searchable trail
+- **OpenCode Zen Plugin** — multi-model AI chat (GPT, Claude, DeepSeek)
+- **Security Hardening** — AES-256-GCM encryption for plugin credentials, BOLA fixes
 
 ### v0.1.0 — 2026-06-13
 - Initial release: workspaces, notes, folders, tags, search, themes, Docker deployment

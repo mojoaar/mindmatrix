@@ -39,9 +39,13 @@ class EventBus {
   }
 }
 
-let bus: EventBus | null = null;
+const globalForEventBus = globalThis as unknown as {
+  bus: EventBus | undefined;
+};
 
 export function getEventBus(): EventBus {
-  if (!bus) bus = new EventBus();
-  return bus;
+  if (!globalForEventBus.bus) {
+    globalForEventBus.bus = new EventBus();
+  }
+  return globalForEventBus.bus;
 }

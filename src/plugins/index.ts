@@ -5,6 +5,7 @@ import { opencodeAiPlugin } from "./opencode-ai";
 import { opencodeZenPlugin } from "./opencode-zen";
 import { proxmoxInventoryPlugin } from "./proxmox-inventory";
 import { unifiTopologyPlugin } from "./unifi-topology";
+import { gitSyncPlugin } from "./git-sync";
 import { db, workspaceMember, pluginConfig } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import { decryptConfig } from "@/lib/crypto";
@@ -16,6 +17,7 @@ export const plugins: Plugin[] = [
   opencodeZenPlugin,
   proxmoxInventoryPlugin,
   unifiTopologyPlugin,
+  gitSyncPlugin,
 ];
 
 export function getPlugin(id: string): Plugin | undefined {
