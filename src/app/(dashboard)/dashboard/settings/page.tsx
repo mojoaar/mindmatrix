@@ -313,12 +313,31 @@ export default function UserSettingsPage() {
               </tr>
             </thead>
             <tbody>
-              <tr><td><kbd>Cmd+K</kbd></td><td>Global search</td></tr>
+              <tr><td><kbd>Cmd+K</kbd></td><td>Global search overlay</td></tr>
+              <tr><td><kbd>Cmd+N</kbd></td><td>New note</td></tr>
+              <tr><td><kbd>Cmd+Shift+F</kbd></td><td>New folder</td></tr>
               <tr><td><kbd>Cmd+Enter</kbd></td><td>Save current note</td></tr>
               <tr><td><kbd>Cmd+B</kbd></td><td>Toggle sidebar</td></tr>
+              <tr><td><kbd>Cmd+,</kbd></td><td>Settings page</td></tr>
               <tr><td><kbd>Escape</kbd></td><td>Close dialogs</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* About */}
+      <div className="card">
+        <h3>About</h3>
+        <div className="text-sm" style={{ lineHeight: 1.8 }}>
+          <p>
+            <strong>MindMatrix</strong> v0.1.0
+          </p>
+          <p className="text-muted">
+            Markdown-first, self-hosted, multi-user knowledge hub.
+          </p>
+          <p className="text-muted text-xs" style={{ marginTop: "0.75rem" }}>
+            Licensed under AGPL-3.0 · Built by <a href="https://github.com/mojoaar" target="_blank" rel="noopener">mojoaar</a>
+          </p>
         </div>
       </div>
     </div>
