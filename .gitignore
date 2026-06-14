@@ -33,8 +33,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
+# uploaded avatars
+public/uploads/avatars/*

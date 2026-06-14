@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { BookOpen, LogOut, Search, Settings, Folders, Cloud, type LucideIcon } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { SearchOverlay } from "@/components/search/search-overlay";
+import { Avatar } from "@/components/ui/avatar";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -12,6 +13,12 @@ interface Workspace {
   id: string;
   name: string;
   slug: string;
+}
+
+interface UserInfo {
+  name: string;
+  email: string;
+  image: string | null;
 }
 
 const navItems: { href: string; label: string; icon: LucideIcon }[] = [
@@ -27,6 +34,7 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [user, setUser] = useState<UserInfo | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
@@ -34,6 +42,13 @@ export default function DashboardLayout({
       .then((res) => res.json())
       .then((data) => {
         if (data.workspaces) setWorkspaces(data.workspaces);
+      })
+      .catch(() => {});
+
+    fetch("/api/profile")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.profile) setUser(data.profile);
       })
       .catch(() => {});
   }, []);
@@ -71,9 +86,24 @@ export default function DashboardLayout({
         }}
       >
         <div style={{ padding: "1rem", borderBottom: "1px solid var(--border-color)" }}>
-          <Link href="/dashboard" style={{ color: "var(--fg-primary)", fontWeight: 600, fontSize: "1.1rem" }}>
-            MindMatrix
-          </Link>
+          <div className="flex align-center gap-2">
+            <Avatar
+              name={user?.name || "User"}
+              email={user?.email || ""}
+              image={user?.image}
+              size={32}
+            />
+            <div>
+              <div className="text-sm" style={{ fontWeight: 600, color: "var(--fg-primary)" }}>
+                {user?.name || "MindMatrix"}
+              </div>
+              {user && (
+                <div className="text-xs text-muted truncate" style={{ maxWidth: "160px" }}>
+                  {user.email}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Workspace list */}
