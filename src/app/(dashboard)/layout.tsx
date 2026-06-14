@@ -44,10 +44,6 @@ export default function DashboardLayout({
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-      e.preventDefault();
-      // Search overlay will be triggered here
-    }
     if ((e.metaKey || e.ctrlKey) && e.key === "b") {
       e.preventDefault();
       setSidebarOpen((prev) => !prev);
@@ -173,9 +169,7 @@ export default function DashboardLayout({
             )}
             <button
               className="btn secondary sm"
-              onClick={() => {
-                // Trigger search
-              }}
+              onClick={() => window.dispatchEvent(new CustomEvent("mindmatrix:search"))}
               style={{ opacity: 0.6, cursor: "pointer" }}
             >
               <Search size={14} style={{ marginRight: "0.5rem" }} />

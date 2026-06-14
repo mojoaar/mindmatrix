@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { workspace } from "@/lib/db";
-import { eq } from "drizzle-orm";
+import { workspace, workspaceMember } from "@/lib/db";
+import { inArray } from "drizzle-orm";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({
@@ -13,8 +13,19 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const memberships = await db.query.workspaceMember.findMany({
+    where: (wm, { eq }) => eq(wm.userId, session.user!.id),
+    columns: { workspaceId: true },
+  });
+
+  const workspaceIds = memberships.map((m) => m.workspaceId);
+
+  if (workspaceIds.length === 0) {
+    return NextResponse.json({ workspaces: [] });
+  }
+
   const workspaces = await db.query.workspace.findMany({
-    where: eq(workspace.createdById, session.user.id),
+    where: inArray(workspace.id, workspaceIds),
     with: {
       members: true,
     },
@@ -54,6 +65,13 @@ export async function POST(request: Request) {
       createdById: session.user.id,
     })
     .returning();
+
+  await db.insert(workspaceMember).values({
+    id: crypto.randomUUID(),
+    workspaceId: id,
+    userId: session.user.id,
+    role: "owner",
+  });
 
   return NextResponse.json({ workspace: ws }, { status: 201 });
 }

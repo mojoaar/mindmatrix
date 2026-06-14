@@ -46,24 +46,7 @@ export default function WorkspacePage() {
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState("#88c0d0");
   const [showNewTag, setShowNewTag] = useState(false);
-
-  const loadData = useCallback(async () => {
-    try {
-      const wsRes = await fetch(`/api/workspaces?slug=${slug}`);
-      const wsData = await wsRes.json();
-      if (wsData.workspaces) {
-        const ws = wsData.workspaces.find((w: { slug: string }) => w.slug === slug);
-        if (ws) {
-          setWorkspace(ws);
-          loadNotes(ws.id);
-          loadFolders(ws.id);
-          loadTags(ws.id);
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }, [slug]);
+  const [error, setError] = useState("");
 
   async function loadNotes(workspaceId: string) {
     const params = new URLSearchParams({ workspaceId });
@@ -85,6 +68,26 @@ export default function WorkspacePage() {
     const data = await res.json();
     if (data.tags) setTags(data.tags);
   }
+
+  const loadData = useCallback(async () => {
+    try {
+      const wsRes = await fetch("/api/workspaces");
+      const wsData = await wsRes.json();
+      if (wsData.workspaces) {
+        const ws = wsData.workspaces.find((w: { slug: string }) => w.slug === slug);
+        if (ws) {
+          setWorkspace(ws);
+          loadNotes(ws.id);
+          loadFolders(ws.id);
+          loadTags(ws.id);
+        } else {
+          setError("Workspace not found");
+        }
+      }
+    } catch {
+      setError("Failed to load workspace");
+    }
+  }, [slug]);
 
   useEffect(() => {
     loadData();
@@ -144,6 +147,16 @@ export default function WorkspacePage() {
     setShowNewTag(false);
     setNewTagName("");
     if (workspace) loadTags(workspace.id);
+  }
+
+  if (error) {
+    return (
+      <div className="container">
+        <div className="card" style={{ borderColor: "var(--accent-red)", color: "var(--accent-red)" }}>
+          {error}
+        </div>
+      </div>
+    );
   }
 
   if (!workspace) {

@@ -1,26 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-
 export default function ApiDocsPage() {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/@scalar/api-reference";
-    script.async = true;
-    script.onload = () => {
-      if (containerRef.current && (window as any).Scalar) {
-        // Leave container for Scalar to render into
-      }
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
   return (
     <div className="container">
       <h1>API Reference</h1>

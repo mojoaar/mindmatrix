@@ -199,3 +199,38 @@ Stored in `localStorage` key `mindmatrix-theme`. Applied via inline script befor
 14. User Docs: /docs rendering markdown
 15. Tests: Vitest for auth, API, core utilities
 16. Docker + README: Dockerfile, compose, systemd, setup guide
+
+## v0.1 Critical Fixes (Post-Build Audit)
+
+### Block 1 — Broken Core Flow
+- **B1**: `POST /api/workspaces` does not insert creator into `workspaceMember` → all subsequent note/folder/tag creation returns 403
+- **B2**: `GET /api/workspaces` only returns `createdById` workspaces → invited members see nothing, multi-user broken
+- **B3**: No "Create Workspace" button anywhere in the UI → new user stuck with empty state
+- **B11**: `/dashboard` and `/dashboard/settings` render identical settings pages
+
+### Block 2 — Data Leak & Search
+- **B4**: `GET /api/workspaces/[id]` has no membership check → any authenticated user can see all workspace data
+- **B5**: `/api/search` uses `eq(workspaceIds[0])` instead of `inArray()` → search limited to first workspace only
+
+### Block 3 — UI
+- **B6**: `auth.module.scss` never imported in login/register pages → broken styles
+- **B7**: Workspace page fetches all workspaces then client-side filters by slug → fragile, wastes bandwidth
+- **B9**: Search button in dashboard header has empty `onClick` → dead code
+
+### Block 4 — Robustness
+- **I13**: `src/lib/validations.ts` missing — Zod not used despite being a dependency
+- **I14**: `auth.ts` uses non-null assertions on env vars → crashes with opaque error at runtime
+- **I15**: `auth-client.ts` falls back to `localhost:3000` in production
+- **I16**: `/apidocs` loads Scalar CDN script but never initializes it → dead download
+- **I17**: Sync page connect/disconnect buttons are fake local state toggles → no real OAuth
+
+## v0.2 Roadmap
+
+- **Backlinks** — `[[note-slug]]` detection + "what links here" sidebar panel
+- **Version history** — `note_versions` table + diff view for revision tracking
+- **Templates** — workspace-level note templates (ADR, runbook, onboarding doc)
+- **Git sync** — push/pull notes to a configured Git repository on save/load
+- **CLI** — `mindmatrix` CLI for creating/editing/searching notes from terminal
+- **Webhooks** — fire HTTP callbacks on note create/update/delete events
+- **AI search** — vector embeddings + semantic search across notes
+- **Realtime collaboration** — WebSocket-based live editing (Y.js / PartyKit)

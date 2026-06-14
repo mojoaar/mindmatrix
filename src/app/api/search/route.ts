@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db, note, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { eq, and, or, ilike } from "drizzle-orm";
+import { eq, and, or, ilike, inArray } from "drizzle-orm";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
   const notes = await db.query.note.findMany({
     where: and(
       or(ilike(note.title, `%${q}%`), ilike(note.content, `%${q}%`)),
-      workspaceIds.length > 0 ? eq(note.workspaceId, workspaceIds[0]) : undefined,
+      workspaceIds.length > 0 ? inArray(note.workspaceId, workspaceIds) : undefined,
     ),
     with: {
       workspace: { columns: { name: true, slug: true } },
@@ -46,12 +46,8 @@ export async function GET(request: Request) {
     limit: 20,
   });
 
-  const filtered = workspaceIds.length > 0
-    ? notes.filter((n) => workspaceIds.includes(n.workspaceId))
-    : [];
-
   return NextResponse.json({
-    notes: (workspaceIds.length > 0 ? filtered : notes).map((n) => ({
+    notes: notes.map((n) => ({
       id: n.id,
       title: n.title,
       slug: n.slug,

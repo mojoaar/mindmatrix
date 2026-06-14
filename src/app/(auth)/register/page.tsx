@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
+import "../auth.scss";
 
 export default function RegisterPage() {
   const router = useRouter();

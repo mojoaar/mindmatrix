@@ -50,8 +50,13 @@ export function SearchOverlay() {
         setOpen(false);
       }
     };
+    const handleSearchEvent = () => setOpen(true);
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("mindmatrix:search", handleSearchEvent);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mindmatrix:search", handleSearchEvent);
+    };
   }, [open]);
 
   useEffect(() => {
