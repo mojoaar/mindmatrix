@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { workspace, workspaceMember } from "@/lib/db";
-import { inArray } from "drizzle-orm";
+import { inArray, eq } from "drizzle-orm";
+import { toSlug, ensureUniqueSlug } from "@/lib/slug";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({
@@ -50,10 +51,11 @@ export async function POST(request: Request) {
   }
 
   const id = crypto.randomUUID();
-  const slug = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+  const baseSlug = toSlug(name);
+  const slug = await ensureUniqueSlug(baseSlug, async (s) => {
+    const existing = await db.query.workspace.findFirst({ where: eq(workspace.slug, s) });
+    return !existing;
+  });
 
   const [ws] = await db
     .insert(workspace)

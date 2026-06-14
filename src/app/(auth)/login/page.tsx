@@ -95,7 +95,14 @@ export default function LoginPage() {
 
         <p
           className="text-muted text-sm"
-          style={{ marginTop: "1rem", textAlign: "center" }}
+          style={{ marginTop: "0.75rem", textAlign: "center" }}
+        >
+          <Link href="/forgot-password">Forgot password?</Link>
+        </p>
+
+        <p
+          className="text-muted text-sm"
+          style={{ marginTop: "0.5rem", textAlign: "center" }}
         >
           Don&apos;t have an account?{" "}
           <Link href="/register">Create one</Link>

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db, workspace, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
+import { toSlug } from "@/lib/slug";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -50,7 +51,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const update: Record<string, unknown> = {};
   if (name && typeof name === "string") {
     update.name = name;
-    update.slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const slug = toSlug(name);
+    const existing = await db.query.workspace.findFirst({
+      where: and(eq(workspace.slug, slug), ne(workspace.id, id)),
+    });
+    update.slug = existing ? `${slug}-${crypto.randomUUID().split("-")[0]}` : slug;
   }
   if (description !== undefined) update.description = description;
 
