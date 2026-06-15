@@ -369,6 +369,15 @@ export default function WorkspacePage() {
           <Tag size={14} />
           New Tag
         </button>
+        <button
+          className={`btn sm ${editMode ? "primary" : "secondary"}`}
+          style={editMode ? { backgroundColor: "var(--accent-red)", borderColor: "var(--accent-red)", color: "#fff" } : {}}
+          onClick={() => setEditMode(!editMode)}
+          title="Toggle Edit mode"
+        >
+          <Pencil size={12} style={{ marginRight: "0.25rem" }} />
+          {editMode ? "Done Editing" : "Edit"}
+        </button>
       </div>
 
       {/* Tags filter */}
@@ -686,15 +695,6 @@ export default function WorkspacePage() {
               </div>
             );
           })}
-          <button
-            className={`btn sm ${editMode ? "primary" : "secondary"}`}
-            style={editMode ? { backgroundColor: "var(--accent-red)", borderColor: "var(--accent-red)", color: "#fff", marginLeft: "auto" } : { marginLeft: "auto" }}
-            onClick={() => setEditMode(!editMode)}
-            title="Toggle Edit mode"
-          >
-            <Pencil size={12} style={{ marginRight: "0.25rem" }} />
-            {editMode ? "Done Editing" : "Edit"}
-          </button>
         </div>
       )}
 
