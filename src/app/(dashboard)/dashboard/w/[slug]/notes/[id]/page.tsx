@@ -8,6 +8,7 @@ import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import rehypeSanitize from "rehype-sanitize";
 import { useRealtimeNote } from "@/hooks/use-realtime-note";
 import { BacklinksPanel } from "@/components/editor/backlinks-panel";
@@ -800,7 +801,7 @@ export default function NoteEditorPage() {
               padding: "1.5rem",
             }}
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} rehypePlugins={[rehypeSanitize]}>
               {content || "*No content yet*"}
             </ReactMarkdown>
           </div>

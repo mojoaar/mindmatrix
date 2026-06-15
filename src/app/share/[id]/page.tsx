@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import rehypeSanitize from "rehype-sanitize";
 import { DocsPrismHighlight } from "@/components/ui/docs-prism-highlight";
 import { Globe, BookOpen } from "lucide-react";
@@ -90,7 +91,7 @@ export default async function PublicSharePage({ params }: { params: Promise<{ id
 
         <div className="markdown-body" style={{ lineHeight: 1.7, fontSize: "1rem" }}>
           <DocsPrismHighlight>
-            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
+             <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} rehypePlugins={[rehypeSanitize]}>
               {found.content || "*Empty note*"}
             </ReactMarkdown>
           </DocsPrismHighlight>
