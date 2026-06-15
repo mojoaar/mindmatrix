@@ -507,31 +507,6 @@ export default function UserSettingsPage() {
         </button>
       </div>
 
-      {/* Keyboard Shortcuts */}
-      <div className="card">
-        <h3>Keyboard Shortcuts</h3>
-        <div className="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Action</th>
-                <th>macOS</th>
-                <th>Windows / Linux</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>Search</td><td><kbd>Cmd+K</kbd></td><td><kbd>Ctrl+K</kbd></td></tr>
-              <tr><td>New Note</td><td><kbd>Opt+N</kbd></td><td><kbd>Alt+N</kbd></td></tr>
-              <tr><td>New Folder</td><td><kbd>Opt+Shift+F</kbd></td><td><kbd>Alt+Shift+F</kbd></td></tr>
-              <tr><td>Save Note</td><td><kbd>Cmd+Enter</kbd></td><td><kbd>Ctrl+Enter</kbd></td></tr>
-              <tr><td>Toggle Sidebar</td><td><kbd>Cmd+B</kbd></td><td><kbd>Ctrl+B</kbd></td></tr>
-              <tr><td>Settings</td><td><kbd>Cmd+,</kbd></td><td><kbd>Ctrl+,</kbd></td></tr>
-              <tr><td>Close Dialog</td><td><kbd>Escape</kbd></td><td><kbd>Escape</kbd></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
       {/* Security */}
       <div className="card">
         <h3 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -686,6 +661,31 @@ export default function UserSettingsPage() {
             </button>
           </div>
         )}
+      </div>
+
+      {/* Keyboard Shortcuts */}
+      <div className="card">
+        <h3>Keyboard Shortcuts</h3>
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>macOS</th>
+                <th>Windows / Linux</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Search</td><td><kbd>Cmd+K</kbd></td><td><kbd>Ctrl+K</kbd></td></tr>
+              <tr><td>New Note</td><td><kbd>Opt+N</kbd></td><td><kbd>Alt+N</kbd></td></tr>
+              <tr><td>New Folder</td><td><kbd>Opt+Shift+F</kbd></td><td><kbd>Alt+Shift+F</kbd></td></tr>
+              <tr><td>Save Note</td><td><kbd>Cmd+Enter</kbd></td><td><kbd>Ctrl+Enter</kbd></td></tr>
+              <tr><td>Toggle Sidebar</td><td><kbd>Cmd+B</kbd></td><td><kbd>Ctrl+B</kbd></td></tr>
+              <tr><td>Settings</td><td><kbd>Cmd+,</kbd></td><td><kbd>Ctrl+,</kbd></td></tr>
+              <tr><td>Close Dialog</td><td><kbd>Escape</kbd></td><td><kbd>Escape</kbd></td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* About */}
