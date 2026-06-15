@@ -10,6 +10,9 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeSanitize from "rehype-sanitize";
+import { defaultSchema } from "hast-util-sanitize";
+
+const rehypeSanitizeOptions = { ...defaultSchema };
 import { useRealtimeNote } from "@/hooks/use-realtime-note";
 import { BacklinksPanel } from "@/components/editor/backlinks-panel";
 import { VersionPanel } from "@/components/editor/version-panel";
@@ -801,7 +804,7 @@ export default function NoteEditorPage() {
               padding: "1.5rem",
             }}
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} rehypePlugins={[rehypeSanitize]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} rehypePlugins={[[rehypeSanitize, rehypeSanitizeOptions]]}>
               {content || "*No content yet*"}
             </ReactMarkdown>
           </div>
