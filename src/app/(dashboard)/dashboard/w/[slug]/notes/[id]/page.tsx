@@ -448,6 +448,9 @@ export default function NoteEditorPage() {
             onChange={(e) => setTitle(e.target.value)}
             onBlur={() => save()}
             style={{
+              flex: 1,
+              minWidth: 0,
+              width: "100%",
               fontSize: "1.25rem",
               fontWeight: 600,
               backgroundColor: "transparent",
