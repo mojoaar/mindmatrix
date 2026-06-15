@@ -461,32 +461,31 @@ export default function NoteEditorPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex align-center justify-between" style={{ marginBottom: "1rem" }}>
-        <div className="flex align-center gap-2">
-          <Link href={`/dashboard/w/${slug}`} className="btn ghost sm">
-            <ArrowLeft size={14} />
-          </Link>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onBlur={() => save()}
-            style={{
-              flex: 1,
-              minWidth: 0,
-              width: "100%",
-              fontSize: "1.25rem",
-              fontWeight: 600,
-              backgroundColor: "transparent",
-              border: "none",
-              color: "var(--fg-secondary)",
-              outline: "none",
-              fontFamily: "var(--font-sans)",
-            }}
-          />
-        </div>
+        <div className="flex align-center justify-between" style={{ marginBottom: "1rem" }}>
+          <div className="flex align-center gap-2" style={{ flex: 1, minWidth: 0 }}>
+            <Link href={`/dashboard/w/${slug}`} className="btn ghost sm" style={{ flexShrink: 0 }}>
+              <ArrowLeft size={14} />
+            </Link>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={() => save()}
+              style={{
+                flex: 1,
+                minWidth: 0,
+                fontSize: "1.25rem",
+                fontWeight: 600,
+                backgroundColor: "transparent",
+                border: "none",
+                color: "var(--fg-secondary)",
+                outline: "none",
+                fontFamily: "var(--font-sans)",
+              }}
+            />
+          </div>
 
-        <div className="flex align-center gap-1">
+          <div className="flex align-center gap-1" style={{ flexShrink: 0 }}>
           <div className="flex align-center" style={{ backgroundColor: "var(--bg-tertiary)", borderRadius: "var(--border-radius)", padding: "2px" }}>
             {(["split", "edit", "preview"] as EditorLayout[]).map((l) => (
               <button

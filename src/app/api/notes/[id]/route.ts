@@ -45,6 +45,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+
+  try {
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -120,12 +122,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   // Notify realtime listeners
-  getEventBus().notify(`note:${id}`, {
-    type: "note_updated",
-    noteId: id,
-    updatedBy: session.user.name,
-    updatedAt: new Date().toISOString(),
-  });
+  try {
+    getEventBus().notify(`note:${id}`, {
+      type: "note_updated",
+      noteId: id,
+      updatedBy: session.user.name,
+      updatedAt: new Date().toISOString(),
+    });
+  } catch {}
 
   const updated = await db.query.note.findFirst({
     where: eq(note.id, id),
@@ -140,21 +144,27 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   );
 
   if (updated) {
-    await triggerWebhooks(
-      updated.workspaceId,
-      "note.updated",
-      {
-        id: updated.id,
-        title: updated.title,
-        slug: updated.slug,
-        content: updated.content,
-        folderId: updated.folderId,
-      },
-      { id: session.user.id, name: session.user.name, email: session.user.email }
-    );
+    try {
+      await triggerWebhooks(
+        updated.workspaceId,
+        "note.updated",
+        {
+          id: updated.id,
+          title: updated.title,
+          slug: updated.slug,
+          content: updated.content,
+          folderId: updated.folderId,
+        },
+        { id: session.user.id, name: session.user.name, email: session.user.email }
+      );
+    } catch {}
   }
 
   return NextResponse.json({ note: updated });
+  } catch (err) {
+    console.error("PATCH /api/notes/[id] error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
