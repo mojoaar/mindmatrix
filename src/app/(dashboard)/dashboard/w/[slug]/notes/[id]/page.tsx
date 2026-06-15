@@ -8,7 +8,6 @@ import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import remarkBreaks from "remark-breaks";
 import rehypeSanitize from "rehype-sanitize";
 import { defaultSchema } from "hast-util-sanitize";
 
@@ -795,6 +794,7 @@ export default function NoteEditorPage() {
 
         {(layout === "split" || layout === "preview") && (
           <div
+            className="markdown-body"
             style={{
               flex: 1,
               overflow: "auto",
@@ -804,7 +804,7 @@ export default function NoteEditorPage() {
               padding: "1.5rem",
             }}
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} rehypePlugins={[[rehypeSanitize, rehypeSanitizeOptions]]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[[rehypeSanitize, rehypeSanitizeOptions]]}>
               {content || "*No content yet*"}
             </ReactMarkdown>
           </div>

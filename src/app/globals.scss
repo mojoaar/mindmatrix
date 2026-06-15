@@ -383,6 +383,16 @@ button {
   font-size: inherit;
 }
 
+/* Markdown preview */
+.markdown-body {
+  white-space: pre-line;
+}
+
+.markdown-body pre,
+.markdown-body code {
+  white-space: pre;
+}
+
 /* Utility classes */
 .container {
   max-width: 1200px;

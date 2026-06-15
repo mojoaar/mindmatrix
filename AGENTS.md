@@ -186,6 +186,7 @@ NODE_ENV=development
 - Editor layout stored in `localStorage` as `mindmatrix-editor-layout`
 - Plugins toggled per workspace, configs in JSONB `plugin_config` table
 - Zero new dependencies policy for realtime (SSE + PG NOTIFY)
+- Run `npm run db:push` at the start of every local dev session to sync schema changes to the local PostgreSQL container
 - When asked "is docs updated?", "update docs", or similar — always check and update these files together: `/docs` pages, `/apidocs` page, `README.md`, `AGENTS.md`, `plan.md`
 - Version bump checklist (must update all): `package.json` → `AGENTS.md` → settings About section → `README.md` → `plan.md`
 - Always mark todos as `completed` when done — never leave tasks dangling in the todo panel. The todo list in the sidebar must reflect reality.

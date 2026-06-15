@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import remarkBreaks from "remark-breaks";
 import rehypeSanitize from "rehype-sanitize";
 import { defaultSchema } from "hast-util-sanitize";
 import { DocsPrismHighlight } from "@/components/ui/docs-prism-highlight";
@@ -94,7 +93,7 @@ export default async function PublicSharePage({ params }: { params: Promise<{ id
 
         <div className="markdown-body" style={{ lineHeight: 1.7, fontSize: "1rem" }}>
           <DocsPrismHighlight>
-             <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} rehypePlugins={[[rehypeSanitize, rehypeSanitizeOptions]]}>
+             <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[[rehypeSanitize, rehypeSanitizeOptions]]}>
               {found.content || "*Empty note*"}
             </ReactMarkdown>
           </DocsPrismHighlight>
