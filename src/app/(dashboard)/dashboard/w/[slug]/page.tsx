@@ -236,6 +236,7 @@ export default function WorkspacePage() {
     setNewFolderName("");
     setNewFolderIcon("FolderPlus");
     if (workspace) loadFolders(workspace.id);
+    window.dispatchEvent(new CustomEvent("mindmatrix:workspace-updated"));
   }
 
   async function updateFolder() {
@@ -281,6 +282,7 @@ export default function WorkspacePage() {
     setShowNewTag(false);
     setNewTagName("");
     if (workspace) loadTags(workspace.id);
+    window.dispatchEvent(new CustomEvent("mindmatrix:workspace-updated"));
   }
 
   async function updateTag() {
