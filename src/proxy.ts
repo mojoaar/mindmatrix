@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 export default function middleware(request: NextRequest) {
   const sessionCookie =
-    request.cookies.get("better-auth.session_token")?.value ||
-    request.cookies.get("__session")?.value;
+    request.cookies.get("__Secure-better-auth.session_token")?.value ||
+    request.cookies.get("better-auth.session_token")?.value;
 
   const isHomePage = request.nextUrl.pathname === "/";
   const isAuthenticatedPage = request.nextUrl.pathname.startsWith("/dashboard");
