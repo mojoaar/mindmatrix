@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { twoFactor } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db";
@@ -85,6 +86,14 @@ export const auth =
         },
       },
     },
+    plugins: [
+      twoFactor({
+        issuer: "MindMatrix",
+        totpDigits: 6,
+        totpPeriod: 30,
+        numberOfBackupCodes: 10,
+      }),
+    ],
   });
 
 if (process.env.NODE_ENV !== "production") {

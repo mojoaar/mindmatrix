@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme, type Theme } from "@/components/theme/theme-provider";
 import { Avatar } from "@/components/ui/avatar";
+import { authClient } from "@/lib/auth-client";
+import { ShieldCheck, QrCode, KeySquare, Trash2, Copy, Check } from "lucide-react";
 
 const FONT_OPTIONS = [
   { id: "jetbrains-mono", label: "JetBrains Mono" },
@@ -25,6 +27,7 @@ interface Profile {
   image: string | null;
   timezone: string;
   timeFormat: string;
+  twoFactorEnabled: boolean;
   createdAt: string;
 }
 
@@ -108,6 +111,105 @@ export default function UserSettingsPage() {
     window.dispatchEvent(new CustomEvent("mindmatrix:sidebar-prefs-updated"));
   };
 
+  const [mfaEnabled, setMfaEnabled] = useState(false);
+  const [mfaSetupStep, setMfaSetupStep] = useState<"idle" | "qrcode" | "verify" | "done">("idle");
+  const [totpURI, setTotpURI] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [mfaPassword, setMfaPassword] = useState("");
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [mfaMessage, setMfaMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [mfaLoading, setMfaLoading] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  async function startMfaSetup() {
+    if (!mfaPassword) {
+      setMfaMessage({ type: "error", text: "Enter your password to enable MFA" });
+      return;
+    }
+    setMfaLoading(true);
+    setMfaMessage(null);
+    try {
+      const result = await authClient.twoFactor.enable({
+        password: mfaPassword,
+      });
+      const data = result.data as any;
+      if (data?.totpURI) {
+        setTotpURI(data.totpURI);
+        if (data.backupCodes) {
+          setBackupCodes(data.backupCodes);
+        }
+        setMfaSetupStep("qrcode");
+        setMfaPassword("");
+      } else {
+        setMfaMessage({ type: "error", text: "Failed to start MFA setup" });
+      }
+    } catch {
+      setMfaMessage({ type: "error", text: "Failed to start MFA setup" });
+    }
+    setMfaLoading(false);
+  }
+
+  async function verifyMfaSetup() {
+    if (!totpCode || totpCode.length < 6) {
+      setMfaMessage({ type: "error", text: "Enter the 6-digit code from your authenticator app" });
+      return;
+    }
+    setMfaLoading(true);
+    setMfaMessage(null);
+    try {
+      const result = await authClient.twoFactor.verifyTotp({
+        code: totpCode,
+      });
+      if (result.data) {
+        setMfaSetupStep("done");
+        setMfaEnabled(true);
+        setMfaMessage({ type: "success", text: "Two-factor authentication enabled" });
+      } else {
+        setMfaMessage({ type: "error", text: "Invalid code. Try again." });
+      }
+    } catch (e: any) {
+      setMfaMessage({ type: "error", text: e?.message || "Verification failed" });
+    }
+    setMfaLoading(false);
+  }
+
+  async function disableMfa() {
+    if (!mfaPassword) {
+      setMfaMessage({ type: "error", text: "Enter your password to disable MFA" });
+      return;
+    }
+    setMfaLoading(true);
+    setMfaMessage(null);
+    try {
+      await authClient.twoFactor.disable({
+        password: mfaPassword,
+      });
+      setMfaEnabled(false);
+      setMfaSetupStep("idle");
+      setBackupCodes([]);
+      setMfaPassword("");
+      setMfaMessage({ type: "success", text: "Two-factor authentication disabled" });
+    } catch {
+      setMfaMessage({ type: "error", text: "Failed to disable MFA" });
+    }
+    setMfaLoading(false);
+  }
+
+  function copyBackupCodes() {
+    navigator.clipboard.writeText(backupCodes.join("\n"));
+    setCopiedCode("all");
+    setTimeout(() => setCopiedCode(null), 2000);
+  }
+
+  function finishMfaSetup() {
+    setMfaSetupStep("idle");
+    setTotpURI("");
+    setTotpCode("");
+    setMfaPassword("");
+    setBackupCodes([]);
+    setMfaMessage(null);
+  }
+
   useEffect(() => {
     fetch("/api/profile")
       .then((r) => {
@@ -121,6 +223,7 @@ export default function UserSettingsPage() {
           setEmail(data.profile.email);
           setTimezone(data.profile.timezone || "browser");
           setTimeFormat(data.profile.timeFormat || "browser");
+          setMfaEnabled(data.profile.twoFactorEnabled || false);
         }
       })
       .catch(() => {})
@@ -416,6 +519,162 @@ export default function UserSettingsPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Security */}
+      <div className="card">
+        <h3 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <ShieldCheck size={18} style={{ color: mfaEnabled ? "var(--accent-green)" : "var(--fg-muted)" }} />
+          Two-Factor Authentication (TOTP)
+        </h3>
+
+        {mfaMessage && (
+          <div
+            className="card"
+            style={{
+              padding: "0.75rem",
+              marginBottom: "1rem",
+              borderColor: mfaMessage.type === "error" ? "var(--accent-red)" : "var(--accent-green)",
+              color: mfaMessage.type === "error" ? "var(--accent-red)" : "var(--accent-green)",
+            }}
+          >
+            {mfaMessage.text}
+          </div>
+        )}
+
+        {!mfaEnabled && mfaSetupStep === "idle" && (
+          <div>
+            <p className="text-muted text-sm" style={{ marginBottom: "1rem" }}>
+              Add an extra layer of security to your account. After enabling, you'll need to enter a 6-digit code from your authenticator app each time you sign in.
+            </p>
+            <div className="form-group">
+              <label htmlFor="mfa-enable-password">Current password</label>
+              <input
+                id="mfa-enable-password"
+                type="password"
+                value={mfaPassword}
+                onChange={(e) => setMfaPassword(e.target.value)}
+                placeholder="Enter your password to enable MFA"
+                onKeyDown={(e) => e.key === "Enter" && startMfaSetup()}
+              />
+            </div>
+            <button className="btn primary" onClick={startMfaSetup} disabled={mfaLoading}>
+              {mfaLoading ? "Setting up..." : "Enable Two-Factor Auth"}
+            </button>
+          </div>
+        )}
+
+        {mfaSetupStep === "qrcode" && (
+          <div>
+            <p className="text-sm" style={{ marginBottom: "1rem" }}>
+              Scan this QR code with your authenticator app (Google Authenticator, Authy, 1Password, etc.)
+            </p>
+            <div style={{ textAlign: "center", marginBottom: "1.5rem", padding: "1rem", backgroundColor: "var(--bg-primary)", borderRadius: "var(--border-radius)" }}>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(totpURI)}`}
+                alt="TOTP QR Code"
+                width={200}
+                height={200}
+                style={{ display: "block", margin: "0 auto" }}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="totp-code">Verification code</label>
+              <input
+                id="totp-code"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                placeholder="Enter 6-digit code"
+                value={totpCode}
+                onChange={(e) => setTotpCode(e.target.value.replace(/[^0-9]/g, ""))}
+                onKeyDown={(e) => e.key === "Enter" && verifyMfaSetup()}
+                style={{ fontSize: "1.5rem", textAlign: "center", letterSpacing: "0.5rem", fontFamily: "var(--font-mono)" }}
+              />
+            </div>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button className="btn primary" onClick={verifyMfaSetup} disabled={mfaLoading}>
+                {mfaLoading ? "Verifying..." : "Verify Code"}
+              </button>
+              <button className="btn secondary" onClick={() => { setMfaSetupStep("idle"); setMfaMessage(null); }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {mfaSetupStep === "done" && (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+              <KeySquare size={18} style={{ color: "var(--accent-green)" }} />
+              <strong style={{ color: "var(--accent-green)" }}>Two-factor authentication is active</strong>
+            </div>
+
+            {backupCodes.length > 0 && (
+              <div style={{ marginBottom: "1.5rem" }}>
+                <p className="text-sm" style={{ marginBottom: "0.75rem", color: "var(--accent-orange)" }}>
+                  Save these backup codes in a safe place. Each code can only be used once.
+                </p>
+                <div
+                  style={{
+                    backgroundColor: "var(--bg-primary)",
+                    border: "1px solid var(--border-color)",
+                    borderRadius: "var(--border-radius)",
+                    padding: "1rem",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.85rem",
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "0.5rem",
+                  }}
+                >
+                  {backupCodes.map((code) => (
+                    <div key={code} style={{ color: "var(--fg-primary)" }}>{code}</div>
+                  ))}
+                </div>
+                <button
+                  className="btn secondary sm"
+                  onClick={copyBackupCodes}
+                  style={{ marginTop: "0.5rem" }}
+                >
+                  {copiedCode === "all" ? <Check size={12} /> : <Copy size={12} />}
+                  <span style={{ marginLeft: "0.25rem" }}>{copiedCode === "all" ? "Copied" : "Copy All"}</span>
+                </button>
+                <button className="btn primary sm" onClick={finishMfaSetup} style={{ marginTop: "0.5rem", marginLeft: "0.5rem" }}>
+                  Done
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {mfaEnabled && mfaSetupStep === "idle" && (
+          <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+              <KeySquare size={18} style={{ color: "var(--accent-green)" }} />
+              <strong style={{ color: "var(--accent-green)" }}>Two-factor authentication is active</strong>
+            </div>
+            <p className="text-muted text-sm" style={{ marginBottom: "1rem" }}>
+              Your account is protected with TOTP-based two-factor authentication.
+            </p>
+            <div className="form-group">
+              <label htmlFor="mfa-disable-password">Current password</label>
+              <input
+                id="mfa-disable-password"
+                type="password"
+                value={mfaPassword}
+                onChange={(e) => setMfaPassword(e.target.value)}
+                placeholder="Enter your password to disable MFA"
+                onKeyDown={(e) => e.key === "Enter" && disableMfa()}
+              />
+            </div>
+            <button className="btn danger" onClick={disableMfa} disabled={mfaLoading}>
+              <Trash2 size={14} />
+              {mfaLoading ? "Disabling..." : "Disable Two-Factor Auth"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* About */}

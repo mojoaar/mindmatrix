@@ -20,6 +20,7 @@ export async function GET(request: Request) {
       timezone: true,
       timeFormat: true,
       role: true,
+      twoFactorEnabled: true,
       createdAt: true,
     },
   });
@@ -83,6 +84,7 @@ export async function PATCH(request: Request) {
       timezone: user.timezone,
       timeFormat: user.timeFormat,
       role: user.role,
+      twoFactorEnabled: user.twoFactorEnabled,
       createdAt: user.createdAt,
     });
 

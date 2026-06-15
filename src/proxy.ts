@@ -11,7 +11,8 @@ export default function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/register") ||
     request.nextUrl.pathname.startsWith("/forgot-password") ||
-    request.nextUrl.pathname.startsWith("/reset-password");
+    request.nextUrl.pathname.startsWith("/reset-password") ||
+    request.nextUrl.pathname.startsWith("/verify-totp");
 
   if (isHomePage && sessionCookie) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
@@ -23,7 +24,7 @@ export default function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (isAuthPage && sessionCookie && request.nextUrl.pathname !== "/reset-password") {
+  if (isAuthPage && sessionCookie && request.nextUrl.pathname !== "/reset-password" && request.nextUrl.pathname !== "/verify-totp") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

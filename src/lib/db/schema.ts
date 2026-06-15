@@ -35,6 +35,7 @@ export const user = pgTable("user", {
   timezone: text("timezone").default("browser").notNull(),
   timeFormat: text("time_format").default("browser").notNull(),
   role: text("role").default("user").notNull(),
+  twoFactorEnabled: boolean("two_factor_enabled").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
