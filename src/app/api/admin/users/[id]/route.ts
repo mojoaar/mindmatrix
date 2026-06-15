@@ -49,13 +49,6 @@ export async function PATCH(
     );
   }
 
-  if (emailVerified !== undefined && !role && targetId === session.user.id) {
-    return NextResponse.json(
-      { error: "Cannot verify yourself" },
-      { status: 400 }
-    );
-  }
-
   if (role && targetId === session.user.id) {
     return NextResponse.json(
       { error: "Cannot change your own role" },
