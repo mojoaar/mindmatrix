@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 import { useToast } from "@/components/ui/toast";
 import Link from "next/link";
 import "../auth.scss";
 
 export default function LoginPage() {
-  const router = useRouter();
   const { error: toastError } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,20 +17,24 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/sign-in/email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-
-      if (data.token) {
+      const { data, error } = await authClient.signIn.email({ email, password });
+      if (data) {
         window.location.href = "/dashboard";
         return;
       }
-
-      toastError(data.message || "Invalid email or password");
-    } catch {
+      if (error) {
+        if (error.status === 422) {
+          window.location.href = "/dashboard";
+          return;
+        }
+        toastError(error.message || "Invalid email or password");
+      }
+    } catch (err) {
+      const e = err as { status?: number };
+      if (e.status === 422) {
+        window.location.href = "/dashboard";
+        return;
+      }
       toastError("An unexpected error occurred");
     }
 
