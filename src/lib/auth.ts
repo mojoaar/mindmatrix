@@ -49,17 +49,6 @@ export const auth =
         });
       },
     },
-    emailVerification: {
-      sendOnSignUp: true,
-      autoSignInAfterVerification: true,
-      sendVerificationEmail: async ({ user, url }) => {
-        await sendEmail({
-          to: user.email,
-          subject: "Verify your MindMatrix account",
-          html: `<p>Welcome to MindMatrix! Click the link below to verify your email:</p><p><a href="${url}">${url}</a></p>`,
-        });
-      },
-    },
     databaseHooks: {
       user: {
         create: {

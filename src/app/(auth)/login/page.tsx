@@ -22,11 +22,6 @@ export default function LoginPage() {
       const res = await authClient.signIn.email({ email, password });
 
       if (res.error) {
-        const session = await authClient.getSession();
-        if (session?.data?.user) {
-          router.push("/dashboard");
-          return;
-        }
         toastError(res.error.message || "Invalid email or password");
       } else {
         router.push("/dashboard");
