@@ -204,7 +204,7 @@ export const note = pgTable(
   (table) => ({
     noteWorkspaceIdx: index("note_workspace_idx").on(table.workspaceId),
     noteFolderIdx: index("note_folder_idx").on(table.folderId),
-    noteSearchIdx: index("note_search_idx").on(table.title, table.content),
+    noteSearchIdx: index("note_search_idx").on(table.title),
   })
 );
 
