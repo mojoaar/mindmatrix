@@ -30,6 +30,25 @@ const authInstance = betterAuth({
         required: false,
         defaultValue: "user",
       },
+      image: {
+        type: "string",
+        required: false,
+      },
+      timezone: {
+        type: "string",
+        required: false,
+        defaultValue: "browser",
+      },
+      timeFormat: {
+        type: "string",
+        required: false,
+        defaultValue: "browser",
+      },
+      twoFactorEnabled: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+      },
     },
   },
   emailAndPassword: {

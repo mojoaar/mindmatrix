@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   }
 
   const ext = file.type.split("/")[1] || "png";
-  const filename = `${session.user.id}.${ext}`;
+  const filename = `${session.user.id}_${Date.now()}.${ext}`;
   const filepath = path.join(UPLOAD_DIR, filename);
   const publicPath = `/uploads/avatars/${filename}`;
 
