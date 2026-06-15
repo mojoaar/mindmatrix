@@ -40,6 +40,7 @@ export const auth =
     },
     emailAndPassword: {
       enabled: true,
+      requireEmailVerification: false,
       sendResetPassword: async ({ user, url }) => {
         await sendEmail({
           to: user.email,
