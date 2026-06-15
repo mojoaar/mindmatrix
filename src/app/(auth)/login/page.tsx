@@ -21,10 +21,12 @@ export default function LoginPage() {
     try {
       const res = await authClient.signIn.email({ email, password });
 
-      if (res.error) {
+      if (res.data?.token) {
+        router.push("/dashboard");
+      } else if (res.error) {
         toastError(res.error.message || "Invalid email or password");
       } else {
-        router.push("/dashboard");
+        toastError("Unable to sign in");
       }
     } catch {
       toastError("An unexpected error occurred");
