@@ -332,11 +332,20 @@ Stored in `localStorage` key `mindmatrix-theme` and `mindmatrix-font`. Applied v
 - Sidebar folder note counts `(N)` updated reactively via workspace data-bindings
 - Nested folders and tags toggles in user settings with instant responsive sidebar layout updates
 
+### Landing Page & Security ✓
+- Unauthenticated Dracula landing page with theme toggle preserving user preferences
+- TOTP two-factor authentication (opt-in, QR code setup, backup codes, trusted devices)
+- Proxy `__Secure-` cookie prefix fix for HTTPS production compatibility
+- SSRF protection for webhook URL validation (`src/lib/security.ts`)
+- Rate limiting on auth endpoints and note file uploads (`src/lib/rate-limit.ts`)
+- XSS sanitization via rehype-sanitize in note editor and public share pages
+- Avatar cache-busting (timestamped filenames) and Better Auth additionalFields sync
+
 ### Future (v0.4+)
 - **CLI** — `mindmatrix` terminal command: create notes, search, manage
 - **AI search** — Vector embeddings + semantic search across notes
 
-## Security Hardening Plan (In Progress)
+## Security Hardening Plan (Completed ✓)
 
 ### 1. Database At-Rest Encryption (`src/lib/crypto.ts`)
 - Symmetric AES-256-GCM encryption using `ENCRYPTION_KEY` from `.env`.

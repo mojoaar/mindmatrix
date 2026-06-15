@@ -52,12 +52,16 @@ npm run dev
 - **Note Templates** — Workspace-level templates: create from ADR, runbook, meeting notes
 - **Backlinks** — `[[note-slug]]` wiki-style linking with incoming/outgoing links panel
 - **Version History** — Automatic snapshots on save, restore previous versions
-- **Realtime Collaboration** — See who's viewing a note, get notified of changes (SSE + PG NOTIFY)
+- **Realtime Collaboration** — CRDT-based co-authoring via Y.js, presence avatars, live notifications (SSE + PG NOTIFY)
+- **Landing Page** — Unauthenticated responsive landing page with theme toggle
+- **Webhooks** — HMAC-SHA256 signed HTTP callbacks on note, folder, and tag events
+- **Git Sync Plugin** — Pull/commit workspace notes to any Git repository (SSH or HTTPS) per workspace
+- **TOTP Two-Factor Auth** — Opt-in MFA with QR setup, backup codes, and trusted devices
 - **Global Search** — Press Cmd+K to search across all notes with command palette
 - **Editor** — CodeMirror 6 with configurable layout (split/edit/preview), **Markdown formatting toolbar, inline tag builder, and drag & drop image uploads**
 - **Public Sharing** — Share distraction-free, read-only note views with one click, or instantly toggle back to private
 - **Import/Export** — Export notes as markdown, import from markdown
-- **Plugin System** — Togglable plugins per workspace: OpenCode AI, OpenCode Zen, Proxmox, Unifi, pCloud, Google Drive
+- **Plugin System** — Togglable plugins per workspace: OpenCode AI, OpenCode Zen, Proxmox, Unifi, pCloud, Google Drive, Git Sync
 - **Profile & Avatar** — Upload avatar, set timezone, 12h/24h time format
 - **Workspace Icons** — 400+ Lucide icons per workspace
 - **Full REST API** — Complete API coverage for all features
@@ -100,6 +104,7 @@ Toggle plugins per workspace in Settings. Available:
 - **Unifi Topology** — Scan network devices, WiFi, clients into a note
 - **pCloud Sync** — Sync notes as .md files to pCloud storage
 - **Google Drive Sync** — Sync notes as .md files to Google Drive
+- **Git Sync** — Pull and commit workspace notes to any Git repository (SSH or HTTPS)
 
 ## API Documentation
 
@@ -142,6 +147,17 @@ Built by [mojoaar](https://github.com/mojoaar)
 - **Audit Logging** — all CRUD operations tracked with searchable trail
 - **OpenCode Zen Plugin** — multi-model AI chat (GPT, Claude, DeepSeek)
 - **Security Hardening** — AES-256-GCM encryption for plugin credentials, BOLA fixes
+- **Landing Page** — unauthenticated responsive landing page with theme toggle
+- **Webhooks** — HMAC-SHA256 signed HTTP callbacks on note, folder, and tag events with SSRF protection
+- **Git Sync Plugin** — pull/commit workspace notes to any Git repository (SSH/HTTPS)
+- **TOTP Two-Factor Auth** — opt-in MFA with QR setup, backup codes, and trusted devices
+- **CRDT Realtime Co-authoring** — Y.js-based collaborative editing with delta sync (upgrade from last-write-wins)
+- **Public Note Sharing** — one-click read-only public document links with SEO preview cards
+- **Markdown Formatting Toolbar** — headings, lists, links, tables, code blocks in the editor
+- **Drag & Drop Image Upload** — drop images directly into the editor for instant upload
+- **Sidebar Folders & Tags** — interactive folder and tag navigation with note counts
+- **Proxy Cookie Fix** — `__Secure-` prefix added for HTTPS production compatibility
+- **Customizable Email** — users can change their email address with uniqueness validation
 
 ### v0.1.0 — 2026-06-13
 - Initial release: workspaces, notes, folders, tags, search, themes, Docker deployment

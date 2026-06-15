@@ -31,8 +31,12 @@ export default function DocsPage() {
           <li>Backlinks — <code>[[note-slug]]</code> wiki-style linking with incoming/outgoing panel</li>
           <li>Version history — automatic snapshots on save, restore any version</li>
           <li>Note templates — create from ADR, runbook, meeting notes, or custom templates</li>
-          <li>Realtime collaboration — see who's viewing, get notified of remote saves</li>
-          <li>Plugin system — toggle per-workspace: OpenCode AI, Proxmox, Unifi, pCloud, Google Drive</li>
+          <li>Realtime collaboration — CRDT-based co-authoring (Y.js), presence avatars, live update notifications</li>
+          <li>Plugin system — toggle per-workspace: OpenCode AI, OpenCode Zen, Proxmox, Unifi, pCloud, Google Drive, Git Sync</li>
+          <li>Webhooks — HTTP callbacks with HMAC-SHA256 signing on note, folder, and tag events</li>
+          <li>TOTP two-factor authentication — opt-in MFA with QR setup and backup codes</li>
+          <li>Public note sharing — one-click toggle to create read-only public document links</li>
+          <li>Landing page — unauthenticated responsive landing page with theme toggle</li>
           <li>Global search with command palette (Cmd+K)</li>
           <li>Import/export markdown notes</li>
           <li>Cloud sync to pCloud and Google Drive (per-workspace plugin)</li>
