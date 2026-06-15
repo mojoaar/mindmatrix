@@ -207,6 +207,7 @@ export default function WorkspacePage() {
       setShowNewNote(false);
       setNewNoteTitle("");
       setNewNoteContent("");
+      window.dispatchEvent(new CustomEvent("mindmatrix:workspace-updated"));
       router.push(`/dashboard/w/${slug}/notes/${data.note.id}`);
     }
   }

@@ -184,6 +184,9 @@ export default function NoteEditorPage() {
         toastError(data.error || "Failed to save note");
       } else {
         setSavedAt(new Date());
+        if (fId !== note.folderId) {
+          window.dispatchEvent(new CustomEvent("mindmatrix:workspace-updated"));
+        }
       }
     } catch (err) {
       toastError(err instanceof Error ? err.message : "Network error while saving");
@@ -424,6 +427,7 @@ export default function NoteEditorPage() {
     if (!note) return;
     if (!confirm("Delete this note?")) return;
     await fetch(`/api/notes/${note.id}`, { method: "DELETE" });
+    window.dispatchEvent(new CustomEvent("mindmatrix:workspace-updated"));
     router.push(`/dashboard/w/${slug}`);
   }
 
