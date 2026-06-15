@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface AvatarProps {
   name: string;
@@ -32,6 +32,10 @@ export function Avatar({ name, email, image, size = 40 }: AvatarProps) {
   const [imgError, setImgError] = useState(false);
   const color = PALETTE[hashStr(name + email) % PALETTE.length];
   const initials = getInitials(name || email);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [image]);
 
   if (image && !imgError) {
     return (
