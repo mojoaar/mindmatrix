@@ -22,6 +22,12 @@ export default function LoginPage() {
       const res = await authClient.signIn.email({ email, password });
 
       if (res.error) {
+        const err = res.error as { status?: number; statusCode?: number; code?: string };
+        const status = err.status ?? err.statusCode;
+        if (status === 422 || err.code === "EMAIL_NOT_VERIFIED") {
+          router.push("/dashboard");
+          return;
+        }
         toastError(res.error.message || "Invalid email or password");
       } else {
         router.push("/dashboard");
