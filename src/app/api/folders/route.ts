@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { workspaceId, parentId, name } = await request.json();
+  const { workspaceId, parentId, name, icon } = await request.json();
   if (!name || !workspaceId) {
     return NextResponse.json({ error: "Name and workspaceId are required" }, { status: 400 });
   }
@@ -71,6 +71,7 @@ export async function POST(request: Request) {
       parentId: parentId || null,
       name,
       slug,
+      icon: icon || "FolderPlus",
       createdById: session.user.id,
       position: 0,
     })

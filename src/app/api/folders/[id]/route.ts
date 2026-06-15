@@ -24,13 +24,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { name, parentId } = await request.json();
+  const { name, parentId, icon } = await request.json();
   const update: Record<string, unknown> = {};
   if (name !== undefined) {
     update.name = name;
     update.slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   }
   if (parentId !== undefined) update.parentId = parentId || null;
+  if (icon !== undefined) update.icon = icon;
 
   const [updated] = await db.update(folder).set(update).where(eq(folder.id, id)).returning();
 

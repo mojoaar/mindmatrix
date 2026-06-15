@@ -2,7 +2,7 @@
 
 import { authClient } from "@/lib/auth-client";
 import { useRouter, usePathname } from "next/navigation";
-import { BookOpen, LogOut, Search, Settings, Folders, ShieldCheck, Sun, Moon, FolderPlus, Tag, type LucideIcon } from "lucide-react";
+import { BookOpen, LogOut, Search, Settings, Folders, ShieldCheck, Sun, Moon, Tag, type LucideIcon } from "lucide-react";
 import { SearchOverlay } from "@/components/search/search-overlay";
 import { Avatar } from "@/components/ui/avatar";
 import { getIcon } from "@/lib/icons";
@@ -15,7 +15,7 @@ interface Workspace {
   name: string;
   slug: string;
   icon?: string;
-  folders?: { id: string; name: string }[];
+  folders?: { id: string; name: string; icon?: string }[];
   tags?: { id: string; name: string; color: string }[];
   notes?: { id: string; folderId: string | null }[];
 }
@@ -226,7 +226,7 @@ export default function DashboardLayout({
                   }
                 }}
               >
-                {(() => { const I = getIcon(ws.icon || "BookOpen"); return <I size={14} />; })()}
+                {(() => { const I = getIcon(ws.icon || "BookOpen"); return <I size={16} />; })()}
                 <span className="truncate" style={{ flex: 1 }}>{ws.name}</span>
               </Link>
 
@@ -255,7 +255,7 @@ export default function DashboardLayout({
                         }}
                         title={f.name}
                       >
-                        <FolderPlus size={10} style={{ color: "var(--accent-yellow)", flexShrink: 0 }} />
+                        {(() => { const FI = getIcon(f.icon || "FolderPlus"); return <FI size={12} style={{ color: "var(--accent-yellow)", flexShrink: 0 }} />; })()}
                         <span className="truncate" style={{ flex: 1, maxWidth: "140px" }}>{f.name}</span>
                         <span style={{ fontSize: "0.7rem", opacity: 0.6, flexShrink: 0 }}>({count})</span>
                       </div>
@@ -321,7 +321,7 @@ export default function DashboardLayout({
                 (e.currentTarget.style.backgroundColor = "transparent")
               }
             >
-              <item.icon size={14} />
+              <item.icon size={16} />
               {item.label}
             </Link>
           ))}
@@ -344,7 +344,7 @@ export default function DashboardLayout({
                 (e.currentTarget.style.backgroundColor = "transparent")
               }
             >
-              <ShieldCheck size={14} />
+              <ShieldCheck size={16} />
               Admin Area
             </Link>
           )}
@@ -374,7 +374,7 @@ export default function DashboardLayout({
               (e.currentTarget.style.backgroundColor = "transparent")
             }
           >
-            <LogOut size={14} />
+            <LogOut size={16} />
             Sign out
           </button>
         </div>
@@ -398,7 +398,7 @@ export default function DashboardLayout({
                 className="btn ghost sm"
                 onClick={() => setSidebarOpen(true)}
               >
-              <BookOpen size={14} />
+              <BookOpen size={16} />
               </button>
             )}
             <button
@@ -406,7 +406,7 @@ export default function DashboardLayout({
               onClick={() => window.dispatchEvent(new CustomEvent("mindmatrix:search"))}
               style={{ opacity: 0.6, cursor: "pointer" }}
             >
-              <Search size={14} style={{ marginRight: "0.5rem" }} />
+              <Search size={16} style={{ marginRight: "0.5rem" }} />
               Search...
               <kbd
                 style={{
@@ -430,10 +430,10 @@ export default function DashboardLayout({
               title={theme.endsWith("-dark") ? "Switch to light mode" : "Switch to dark mode"}
               style={{ padding: "0.25rem 0.5rem" }}
             >
-              {theme.endsWith("-dark") ? <Sun size={14} /> : <Moon size={14} />}
+              {theme.endsWith("-dark") ? <Sun size={16} /> : <Moon size={16} />}
             </button>
             <Link href="/dashboard/settings" className="btn ghost sm">
-              <Settings size={14} />
+              <Settings size={16} />
             </Link>
           </div>
         </header>

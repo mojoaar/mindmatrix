@@ -159,6 +159,7 @@ export const folder = pgTable(
     }),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
+    icon: text("icon").default("FolderPlus").notNull(),
     position: integer("position").default(0).notNull(),
     createdById: text("created_by_id")
       .notNull()

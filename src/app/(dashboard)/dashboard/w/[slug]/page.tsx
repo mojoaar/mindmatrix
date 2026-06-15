@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
 import Link from "next/link";
 import { Plus, FileText, FolderPlus, Search, Tag, Pencil, Trash } from "lucide-react";
+import { IconPicker } from "@/components/ui/icon-picker";
 
 interface Note {
   id: string;
@@ -72,6 +73,8 @@ export default function WorkspacePage() {
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [showRenameFolder, setShowRenameFolder] = useState<Folder | null>(null);
   const [renameFolderName, setRenameFolderName] = useState("");
+  const [newFolderIcon, setNewFolderIcon] = useState("FolderPlus");
+  const [renameFolderIcon, setRenameFolderIcon] = useState("FolderPlus");
   const [editMode, setEditMode] = useState(false);
   const [showRenameTag, setShowRenameTag] = useState<Tag | null>(null);
   const [renameTagName, setRenameTagName] = useState("");
@@ -226,10 +229,12 @@ export default function WorkspacePage() {
       body: JSON.stringify({
         workspaceId: workspace.id,
         name: newFolderName,
+        icon: newFolderIcon,
       }),
     });
     setShowNewFolder(false);
     setNewFolderName("");
+    setNewFolderIcon("FolderPlus");
     if (workspace) loadFolders(workspace.id);
   }
 
@@ -240,10 +245,12 @@ export default function WorkspacePage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: renameFolderName,
+        icon: renameFolderIcon,
       }),
     });
     setShowRenameFolder(null);
     setRenameFolderName("");
+    setRenameFolderIcon("FolderPlus");
     loadFolders(workspace.id);
     window.dispatchEvent(new CustomEvent("mindmatrix:workspace-updated"));
   }
@@ -517,11 +524,14 @@ export default function WorkspacePage() {
             autoFocus
             style={{ width: "100%", marginBottom: "0.5rem" }}
           />
+          <div style={{ marginBottom: "0.5rem" }}>
+            <IconPicker value={newFolderIcon} onChange={setNewFolderIcon} />
+          </div>
           <div className="flex gap-1">
             <button className="btn primary sm" onClick={createFolder}>
               Create
             </button>
-            <button className="btn secondary sm" onClick={() => setShowNewFolder(false)}>
+            <button className="btn secondary sm" onClick={() => { setShowNewFolder(false); setNewFolderIcon("FolderPlus"); }}>
               Cancel
             </button>
           </div>
@@ -540,11 +550,14 @@ export default function WorkspacePage() {
             autoFocus
             style={{ width: "100%", marginBottom: "0.5rem" }}
           />
+          <div style={{ marginBottom: "0.5rem" }}>
+            <IconPicker value={renameFolderIcon} onChange={setRenameFolderIcon} />
+          </div>
           <div className="flex gap-1">
             <button className="btn primary sm" onClick={updateFolder}>
               Rename
             </button>
-            <button className="btn secondary sm" onClick={() => { setShowRenameFolder(null); setRenameFolderName(""); }}>
+            <button className="btn secondary sm" onClick={() => { setShowRenameFolder(null); setRenameFolderName(""); setRenameFolderIcon("FolderPlus"); }}>
               Cancel
             </button>
           </div>
@@ -664,6 +677,7 @@ export default function WorkspacePage() {
                         e.stopPropagation();
                         setShowRenameFolder(folder);
                         setRenameFolderName(folder.name);
+                        setRenameFolderIcon((folder as any).icon || "FolderPlus");
                       }}
                       title="Rename folder"
                     >
