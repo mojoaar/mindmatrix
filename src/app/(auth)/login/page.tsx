@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
 import { useToast } from "@/components/ui/toast";
 import Link from "next/link";
 import "../auth.scss";
@@ -19,19 +18,19 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await authClient.signIn.email({ email, password });
+      const res = await fetch("/api/auth/sign-in/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
 
-      if (res.error) {
-        const err = res.error as { status?: number; statusCode?: number; code?: string };
-        const status = err.status ?? err.statusCode;
-        if (status === 422 || err.code === "EMAIL_NOT_VERIFIED") {
-          router.push("/dashboard");
-          return;
-        }
-        toastError(res.error.message || "Invalid email or password");
-      } else {
+      if (data.token) {
         router.push("/dashboard");
+        return;
       }
+
+      toastError(data.message || "Invalid email or password");
     } catch {
       toastError("An unexpected error occurred");
     }
