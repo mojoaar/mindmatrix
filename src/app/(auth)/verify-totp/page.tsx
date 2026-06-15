@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
 import { ShieldCheck, KeyRound } from "lucide-react";
 
 export default function VerifyTotpPage() {
@@ -19,25 +18,24 @@ export default function VerifyTotpPage() {
     setError("");
     setLoading(true);
     try {
-      if (useBackup) {
-        const result = await authClient.twoFactor.verifyBackupCode({
-          code: backupCode,
-        });
-        if (result.data) {
-          router.push("/dashboard");
-        } else {
-          setError("Invalid backup code");
-        }
+      const endpoint = useBackup
+        ? "/api/auth/two-factor/verify-backup-code"
+        : "/api/auth/two-factor/verify-totp";
+
+      const body = useBackup
+        ? { code: backupCode }
+        : { code, trustDevice };
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        router.push("/dashboard");
       } else {
-        const result = await authClient.twoFactor.verifyTotp({
-          code,
-          trustDevice,
-        });
-        if (result.data) {
-          router.push("/dashboard");
-        } else {
-          setError("Invalid verification code");
-        }
+        setError(useBackup ? "Invalid backup code" : "Invalid verification code");
       }
     } catch {
       setError("Verification failed. Please try again.");

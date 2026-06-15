@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme, type Theme } from "@/components/theme/theme-provider";
 import { Avatar } from "@/components/ui/avatar";
-import { authClient } from "@/lib/auth-client";
 import { ShieldCheck, QrCode, KeySquare, Trash2, Copy, Check } from "lucide-react";
 
 const FONT_OPTIONS = [
@@ -129,10 +128,12 @@ export default function UserSettingsPage() {
     setMfaLoading(true);
     setMfaMessage(null);
     try {
-      const result = await authClient.twoFactor.enable({
-        password: mfaPassword,
+      const res = await fetch("/api/auth/two-factor/enable", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: mfaPassword }),
       });
-      const data = result.data as any;
+      const data = await res.json();
       if (data?.totpURI) {
         setTotpURI(data.totpURI);
         if (data.backupCodes) {
@@ -141,7 +142,7 @@ export default function UserSettingsPage() {
         setMfaSetupStep("qrcode");
         setMfaPassword("");
       } else {
-        setMfaMessage({ type: "error", text: "Failed to start MFA setup" });
+        setMfaMessage({ type: "error", text: data?.message || "Failed to start MFA setup" });
       }
     } catch {
       setMfaMessage({ type: "error", text: "Failed to start MFA setup" });
@@ -157,15 +158,18 @@ export default function UserSettingsPage() {
     setMfaLoading(true);
     setMfaMessage(null);
     try {
-      const result = await authClient.twoFactor.verifyTotp({
-        code: totpCode,
+      const res = await fetch("/api/auth/two-factor/verify-totp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: totpCode }),
       });
-      if (result.data) {
+      const data = await res.json();
+      if (res.ok) {
         setMfaSetupStep("done");
         setMfaEnabled(true);
         setMfaMessage({ type: "success", text: "Two-factor authentication enabled" });
       } else {
-        setMfaMessage({ type: "error", text: "Invalid code. Try again." });
+        setMfaMessage({ type: "error", text: data?.message || "Invalid code. Try again." });
       }
     } catch (e: any) {
       setMfaMessage({ type: "error", text: e?.message || "Verification failed" });
@@ -181,14 +185,21 @@ export default function UserSettingsPage() {
     setMfaLoading(true);
     setMfaMessage(null);
     try {
-      await authClient.twoFactor.disable({
-        password: mfaPassword,
+      const res = await fetch("/api/auth/two-factor/disable", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: mfaPassword }),
       });
-      setMfaEnabled(false);
-      setMfaSetupStep("idle");
-      setBackupCodes([]);
-      setMfaPassword("");
-      setMfaMessage({ type: "success", text: "Two-factor authentication disabled" });
+      if (res.ok) {
+        setMfaEnabled(false);
+        setMfaSetupStep("idle");
+        setBackupCodes([]);
+        setMfaPassword("");
+        setMfaMessage({ type: "success", text: "Two-factor authentication disabled" });
+      } else {
+        const data = await res.json();
+        setMfaMessage({ type: "error", text: data?.message || "Failed to disable MFA" });
+      }
     } catch {
       setMfaMessage({ type: "error", text: "Failed to disable MFA" });
     }
