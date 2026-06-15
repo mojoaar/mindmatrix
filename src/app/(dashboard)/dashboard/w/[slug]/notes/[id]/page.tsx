@@ -83,7 +83,7 @@ export default function NoteEditorPage() {
 
   const editorRef = useRef<any>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
-  const { success: toastSuccess } = useToast();
+  const { success: toastSuccess, error: toastError } = useToast();
 
   useEffect(() => {
     fetch("/api/profile")
@@ -165,19 +165,30 @@ export default function NoteEditorPage() {
     setSaving(true);
     const fId = overrides && overrides.folderId !== undefined ? overrides.folderId : selectedFolder;
     const tIds = overrides && overrides.tagIds !== undefined ? overrides.tagIds : noteTags;
-    await fetch(`/api/notes/${note.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title,
-        content,
-        folderId: fId || null,
-        tagIds: tIds,
-      }),
-    });
-    setSavedAt(new Date());
-    setSaving(false);
-  }, [note, title, content, selectedFolder, noteTags]);
+    try {
+      const res = await fetch(`/api/notes/${note.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          content,
+          folderId: fId || null,
+          tagIds: tIds,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toastError(data.error || "Failed to save note");
+      } else {
+        setSavedAt(new Date());
+      }
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : "Network error while saving");
+      throw err;
+    } finally {
+      setSaving(false);
+    }
+  }, [note, title, content, selectedFolder, noteTags, toastError]);
 
   useEffect(() => {
     const handle = (e: KeyboardEvent) => {
@@ -195,9 +206,22 @@ export default function NoteEditorPage() {
     if (!note || content === note.content) return;
     const timer = setTimeout(() => {
       save();
-    }, 5000);
+    }, 2000);
     return () => clearTimeout(timer);
   }, [content, note, save]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (note && content !== note.content) {
+        navigator.sendBeacon(
+          `/api/notes/${note.id}`,
+          JSON.stringify({ title, content, folderId: selectedFolder || null, tagIds: noteTags })
+        );
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [note, title, content, selectedFolder, noteTags]);
 
   function setLayoutAndPersist(l: EditorLayout) {
     setLayout(l);
