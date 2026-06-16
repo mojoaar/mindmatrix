@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Search, FileText, X, PlusSquare, FolderPlus, Settings } from "lucide-react";
 import Link from "next/link";
 
@@ -22,6 +22,18 @@ export function SearchOverlay() {
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+
+  const commands = useMemo(() => [
+    { keys: ["⌥", "N"], winKeys: ["Alt", "N"], label: "New Note", icon: PlusSquare, action: () => window.dispatchEvent(new CustomEvent("mindmatrix:new-note")) },
+    { keys: ["⌥", "⇧", "F"], winKeys: ["Alt", "Shift", "F"], label: "New Folder", icon: FolderPlus, action: () => window.dispatchEvent(new CustomEvent("mindmatrix:new-folder")) },
+    { keys: ["⌘", "\\"], winKeys: ["Ctrl", "\\"], label: "Toggle Preview", icon: FileText, action: () => window.dispatchEvent(new CustomEvent("mindmatrix:toggle-preview")) },
+    { keys: ["⌘", "↵"], winKeys: ["Ctrl", "Enter"], label: "Save Note", icon: FileText, action: () => window.dispatchEvent(new CustomEvent("mindmatrix:save-note")) },
+    { keys: ["⌘", "⇧", "⌫"], winKeys: ["Ctrl", "Shift", "Backspace"], label: "Delete Note", icon: FileText, action: () => window.dispatchEvent(new CustomEvent("mindmatrix:delete-note")) },
+    { keys: ["⌘", "⌥", "["], winKeys: ["Ctrl", "Alt", "["], label: "Back to Workspace", icon: FileText, action: () => window.dispatchEvent(new CustomEvent("mindmatrix:back-to-workspace")) },
+    { keys: ["⌘", "⇧", "P"], winKeys: ["Ctrl", "Shift", "P"], label: "Share/Public Toggle", icon: FileText, action: () => window.dispatchEvent(new CustomEvent("mindmatrix:share-note")) },
+    { keys: ["⌘", "B"], winKeys: ["Ctrl", "B"], label: "Toggle Sidebar", icon: FileText, action: () => window.dispatchEvent(new CustomEvent("mindmatrix:toggle-sidebar")) },
+    { keys: ["⌘", ","], winKeys: ["Ctrl", ","], label: "Settings", icon: Settings, action: () => { window.location.href = "/dashboard/settings"; } },
+  ], []);
 
   const search = useCallback(async (q: string) => {
     if (q.trim().length < 1) {
@@ -79,16 +91,21 @@ export function SearchOverlay() {
   }, [query, search]);
 
   const handleItemKeyDown = (e: React.KeyboardEvent) => {
+    const maxIndex = query ? results.length - 1 : commands.length - 1;
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
+      setSelectedIndex((prev) => Math.min(prev + 1, Math.max(0, maxIndex)));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setSelectedIndex((prev) => Math.max(prev - 1, 0));
-    } else if (e.key === "Enter" && results[selectedIndex]) {
+    } else if (e.key === "Enter") {
       e.preventDefault();
-      const r = results[selectedIndex];
-      window.location.href = `/dashboard/w/${r.workspaceSlug}/notes/${r.id}`;
+      if (query && results[selectedIndex]) {
+        const r = results[selectedIndex];
+        window.location.href = `/dashboard/w/${r.workspaceSlug}/notes/${r.id}`;
+      } else if (!query && selectedIndex < commands.length) {
+        commands[selectedIndex].action();
+      }
       setOpen(false);
     }
   };
@@ -211,17 +228,7 @@ export function SearchOverlay() {
             <p className="text-muted text-xs" style={{ padding: "0.5rem" }}>
               Search notes by title or content
             </p>
-            {[
-              { keys: ["⌥", "N"], winKeys: ["Alt", "N"], label: "New Note", icon: PlusSquare },
-              { keys: ["⌥", "⇧", "F"], winKeys: ["Alt", "Shift", "F"], label: "New Folder", icon: FolderPlus },
-              { keys: ["⌘", "\\"], winKeys: ["Ctrl", "\\"], label: "Toggle Preview", icon: FileText },
-              { keys: ["⌘", "↵"], winKeys: ["Ctrl", "Enter"], label: "Save Note", icon: FileText },
-              { keys: ["⌘", "⇧", "⌫"], winKeys: ["Ctrl", "Shift", "Backspace"], label: "Delete Note", icon: FileText },
-              { keys: ["⌘", "⌥", "["], winKeys: ["Ctrl", "Alt", "["], label: "Back to Workspace", icon: FileText },
-              { keys: ["⌘", "⇧", "P"], winKeys: ["Ctrl", "Shift", "P"], label: "Share/Public Toggle", icon: FileText },
-              { keys: ["⌘", "B"], winKeys: ["Ctrl", "B"], label: "Toggle Sidebar", icon: FileText },
-              { keys: ["⌘", ","], winKeys: ["Ctrl", ","], label: "Settings", icon: Settings },
-            ].map((cmd, i) => (
+            {commands.map((cmd, i) => (
               <div
                 key={cmd.label}
                 className="flex align-center justify-between"

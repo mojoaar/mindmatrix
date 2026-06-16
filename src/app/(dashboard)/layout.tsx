@@ -121,11 +121,14 @@ export default function DashboardLayout({
         })
         .catch(() => {});
     };
+    const handleToggleSidebar = () => setSidebarOpen((prev) => !prev);
     window.addEventListener("mindmatrix:profile-updated", handleProfileUpdate);
     window.addEventListener("mindmatrix:workspace-updated", handleWorkspaceUpdate);
+    window.addEventListener("mindmatrix:toggle-sidebar", handleToggleSidebar);
     return () => {
       window.removeEventListener("mindmatrix:profile-updated", handleProfileUpdate);
       window.removeEventListener("mindmatrix:workspace-updated", handleWorkspaceUpdate);
+      window.removeEventListener("mindmatrix:toggle-sidebar", handleToggleSidebar);
     };
   }, []);
 
@@ -174,6 +177,10 @@ export default function DashboardLayout({
     if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.code === "KeyP") {
       e.preventDefault();
       window.dispatchEvent(new CustomEvent("mindmatrix:share-note"));
+    }
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent("mindmatrix:save-note"));
     }
   };
 

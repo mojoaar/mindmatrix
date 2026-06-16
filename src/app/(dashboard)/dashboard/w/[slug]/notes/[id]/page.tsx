@@ -188,17 +188,7 @@ export default function NoteEditorPage() {
   }, [note, title, content, selectedFolder, noteTags, toastError]);
 
   useEffect(() => {
-    const handle = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-        e.preventDefault();
-        save();
-      }
-    };
-    document.addEventListener("keydown", handle);
-    return () => document.removeEventListener("keydown", handle);
-  }, [save]);
-
-  useEffect(() => {
+    const handleSave = () => { save(); };
     const togglePreview = () => {
       if (layout === "split") setLayoutAndPersist("edit");
       else if (layout === "edit") setLayoutAndPersist("preview");
@@ -208,17 +198,19 @@ export default function NoteEditorPage() {
     const back = () => { router.push(`/dashboard/w/${slug}`); };
     const share = () => { togglePublicShare(); };
 
+    window.addEventListener("mindmatrix:save-note", handleSave);
     window.addEventListener("mindmatrix:toggle-preview", togglePreview);
     window.addEventListener("mindmatrix:delete-note", del);
     window.addEventListener("mindmatrix:back-to-workspace", back);
     window.addEventListener("mindmatrix:share-note", share);
     return () => {
+      window.removeEventListener("mindmatrix:save-note", handleSave);
       window.removeEventListener("mindmatrix:toggle-preview", togglePreview);
       window.removeEventListener("mindmatrix:delete-note", del);
       window.removeEventListener("mindmatrix:back-to-workspace", back);
       window.removeEventListener("mindmatrix:share-note", share);
     };
-  }, [layout, slug]);
+  }, [save, layout, slug]);
 
   // Debounced Auto-save to maintain DB sync
   useEffect(() => {
