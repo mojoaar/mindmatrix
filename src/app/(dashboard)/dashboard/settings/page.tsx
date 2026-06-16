@@ -98,6 +98,8 @@ export default function UserSettingsPage() {
     return false;
   });
 
+  const [dateFormat, setDateFormat] = useState("browser");
+
   async function syncPref(fields: Record<string, unknown>) {
     try {
       await fetch("/api/profile", {
@@ -248,6 +250,9 @@ export default function UserSettingsPage() {
           setEmail(data.profile.email);
           setTimezone(data.profile.timezone || "browser");
           setTimeFormat(data.profile.timeFormat || "browser");
+          if (data.profile.dateFormat) {
+            setDateFormat(data.profile.dateFormat);
+          }
           setMfaEnabled(data.profile.twoFactorEnabled || false);
           if (data.profile.theme) {
             setTheme(data.profile.theme);
@@ -517,16 +522,18 @@ export default function UserSettingsPage() {
 
         <div className="form-group">
           <label>Left Sidebar Layout</label>
-          <div className="flex gap-1" style={{ marginTop: "0.5rem", flexDirection: "column" }}>
+          <div className="flex gap-1" style={{ marginTop: "0.5rem" }}>
             <button
               className={`btn ${sidebarShowFolders ? "primary" : "secondary"} sm`}
               onClick={() => handleToggleSidebarFolders(!sidebarShowFolders)}
+              style={{ flex: 1 }}
             >
               {sidebarShowFolders ? "Showing Folders" : "Show Folders in Sidebar"}
             </button>
             <button
               className={`btn ${sidebarShowTags ? "primary" : "secondary"} sm`}
               onClick={() => handleToggleSidebarTags(!sidebarShowTags)}
+              style={{ flex: 1 }}
             >
               {sidebarShowTags ? "Showing Tags" : "Show Tags in Sidebar"}
             </button>

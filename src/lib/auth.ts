@@ -74,6 +74,11 @@ const authInstance = betterAuth({
         required: false,
         defaultValue: "split",
       },
+      dateFormat: {
+        type: "string",
+        required: false,
+        defaultValue: "browser",
+      },
     },
   },
   emailAndPassword: {

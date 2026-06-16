@@ -41,6 +41,7 @@ export const user = pgTable("user", {
   sidebarFolders: boolean("sidebar_folders").default(false).notNull(),
   sidebarTags: boolean("sidebar_tags").default(false).notNull(),
   editorLayout: text("editor_layout").default("split").notNull(),
+  dateFormat: text("date_format").default("browser").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -574,3 +575,9 @@ export const webhookRelations = relations(webhook, ({ one }) => ({
     references: [workspace.id],
   }),
 }));
+
+export const systemConfig = pgTable("system_config", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

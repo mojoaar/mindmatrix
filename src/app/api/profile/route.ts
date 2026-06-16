@@ -26,6 +26,7 @@ export async function GET(request: Request) {
       sidebarFolders: true,
       sidebarTags: true,
       editorLayout: true,
+      dateFormat: true,
       createdAt: true,
     },
   });
@@ -43,7 +44,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { name, timezone, timeFormat, email, theme, font, sidebarFolders, sidebarTags, editorLayout } = await request.json();
+  const { name, timezone, timeFormat, email, theme, font, sidebarFolders, sidebarTags, editorLayout, dateFormat } = await request.json();
 
   const update: Record<string, unknown> = {};
   if (name !== undefined && typeof name === "string" && name.trim().length > 0) {
@@ -56,6 +57,7 @@ export async function PATCH(request: Request) {
   if (sidebarFolders !== undefined && typeof sidebarFolders === "boolean") update.sidebarFolders = sidebarFolders;
   if (sidebarTags !== undefined && typeof sidebarTags === "boolean") update.sidebarTags = sidebarTags;
   if (editorLayout !== undefined && typeof editorLayout === "string") update.editorLayout = editorLayout;
+  if (dateFormat !== undefined && typeof dateFormat === "string") update.dateFormat = dateFormat;
 
   if (email !== undefined && typeof email === "string") {
     const trimmedEmail = email.trim();
@@ -100,6 +102,7 @@ export async function PATCH(request: Request) {
       sidebarFolders: user.sidebarFolders,
       sidebarTags: user.sidebarTags,
       editorLayout: user.editorLayout,
+      dateFormat: user.dateFormat,
       createdAt: user.createdAt,
     });
 

@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/toast";
 import Link from "next/link";
 import { Plus, FileText, FolderPlus, Search, Tag, Pencil, Trash } from "lucide-react";
 import { IconPicker } from "@/components/ui/icon-picker";
+import { getIcon } from "@/lib/icons";
 
 interface Note {
   id: string;
@@ -22,6 +23,7 @@ interface Folder {
   id: string;
   name: string;
   slug: string;
+  icon?: string;
   children?: Folder[];
   notes?: { id: string }[];
 }
@@ -661,7 +663,7 @@ export default function WorkspacePage() {
                   style={{ cursor: "pointer" }}
                   onClick={() => setActiveFolderId(isActive ? null : folder.id)}
                 >
-                  <FolderPlus size={12} style={{ color: isActive ? "#fff" : "var(--accent-yellow)", flexShrink: 0 }} />
+                  {(() => { const I = getIcon(folder.icon || "FolderPlus"); return <I size={12} style={{ color: isActive ? "#fff" : "var(--accent-yellow)", flexShrink: 0 }} />; })()}
                   <span>{folder.name}</span>
                   <span style={{ opacity: 0.7, fontSize: "0.75rem" }}>
                     ({folder.notes?.length || 0})
