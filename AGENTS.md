@@ -76,6 +76,8 @@ src/
 │   ├── email.ts                     # Nodemailer transport
   │   ├── email-templates.ts           # Markdown email templates (verify, password reset)
   │   ├── date-format.ts               # Shared date formatting utility
+  │   ├── export-pdf.ts                # PDF generation with title page, headers, lists
+  │   └── notifications.ts             # createNotification() with SSE push via event-bus
   │   └── validations.ts               # Zod schemas for all API routes
 ├── hooks/
 │   └── use-realtime-note.ts         # SSE + presence heartbeat hook
@@ -131,7 +133,7 @@ All routes under `/api/` require auth (except `/api/auth/*`). Auth checked via `
 - `/api/folders` — CRUD folders
 - `/api/tags` — CRUD tags
 - `/api/search` — Full-text search
-- `/api/export` — Export as markdown
+- `/api/export` — Export as markdown (format=markdown|json|pdf)
 - `/api/import` — Import markdown
 - `/api/templates` — CRUD note templates
 - `/api/profile` — User profile (name, email, avatar, timezone, timeFormat, dateFormat)
@@ -149,6 +151,9 @@ All routes under `/api/` require auth (except `/api/auth/*`). Auth checked via `
 - `/api/notes/upload` — Drag & drop file uploads (configurable types/size)
 - `/api/workspaces/[id]/webhooks` — Webhook CRUD per workspace
 - `/api/oauth/pcloud`, `/api/oauth/google-drive` — OAuth callback handlers
+- `/api/notifications` — List, create, mark all read (GET/POST/PATCH)
+- `/api/notifications/[id]` — Mark single notification as read (PATCH)
+- `/api/notifications/events` — SSE stream for real-time notification delivery
 
 ## Keyboard Shortcuts
 | Shortcut                   | macOS                  | Windows / Linux           |

@@ -32,13 +32,15 @@ export default function DocsPage() {
           <li>Version history — automatic snapshots on save, restore any version</li>
           <li>Note templates — create from ADR, runbook, meeting notes, or custom templates</li>
           <li>Realtime collaboration — CRDT-based co-authoring (Y.js), presence avatars, live update notifications</li>
+          <li>Notifications center — bell icon with unread badge, SSE real-time delivery for invites and note edits</li>
           <li>Plugin system — toggle per-workspace: OpenCode AI, OpenCode Zen, Proxmox, Unifi, pCloud, Google Drive, Git Sync</li>
           <li>Webhooks — HTTP callbacks with HMAC-SHA256 signing on note, folder, and tag events</li>
           <li>TOTP two-factor authentication — opt-in MFA with QR setup and backup codes</li>
           <li>Public note sharing — one-click toggle to create read-only public document links</li>
           <li>Landing page — unauthenticated responsive landing page with theme toggle</li>
+          <li>Mobile responsive — hamburger menu, auto-collapse sidebar at 768px, touch-friendly sizing</li>
           <li>Global search with command palette (Cmd+K)</li>
-          <li>Import/export markdown notes</li>
+          <li>Import/export markdown notes and PDF</li>
           <li>Cloud sync to pCloud and Google Drive (per-workspace plugin)</li>
           <li>Full REST API for all operations</li>
           <li>12 themes: Nord, Dracula, GitHub, Catppuccin, Cyberpunk, One (light/dark each)</li>

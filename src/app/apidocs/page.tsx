@@ -214,6 +214,26 @@ export default function ApiDocsPage() {
       </div>
 
       <div className="card" style={{ marginBottom: "1.5rem" }}>
+        <h2>Notifications</h2>
+        <p className="text-muted text-sm" style={{ marginBottom: "1rem" }}>
+          Persistent notification system with unread tracking and SSE real-time delivery.
+        </p>
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>GET</code></td><td><code>/api/notifications?limit=&page=</code></td><td>List notifications (paginated, includes unread count)</td></tr>
+              <tr><td><code>PATCH</code></td><td><code>/api/notifications</code></td><td>Mark all notifications as read</td></tr>
+              <tr><td><code>PATCH</code></td><td><code>/api/notifications/:id</code></td><td>Mark a single notification as read</td></tr>
+              <tr><td><code>GET</code></td><td><code>/api/notifications/events</code></td><td>SSE stream for real-time notification delivery</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="card" style={{ marginBottom: "1.5rem" }}>
         <h2>Plugins</h2>
         <div className="table-wrapper">
           <table>
@@ -271,7 +291,8 @@ export default function ApiDocsPage() {
             </thead>
             <tbody>
               <tr><td><code>GET</code></td><td><code>/api/search?q=&workspaceId=</code></td><td>Search notes</td></tr>
-              <tr><td><code>GET</code></td><td><code>/api/export?workspaceId=</code></td><td>Export workspace notes as markdown</td></tr>
+              <tr><td><code>GET</code></td><td><code>/api/export?workspaceId=&format=markdown</code></td><td>Export workspace notes as markdown</td></tr>
+              <tr><td><code>GET</code></td><td><code>/api/export?workspaceId=&format=pdf</code></td><td>Export workspace notes as PDF with title page</td></tr>
               <tr><td><code>POST</code></td><td><code>/api/import</code></td><td>Import markdown notes</td></tr>
               <tr><td><code>GET/POST</code></td><td><code>/api/sync/pcloud</code></td><td>pCloud sync management</td></tr>
               <tr><td><code>GET/POST</code></td><td><code>/api/sync/google-drive</code></td><td>Google Drive sync management</td></tr>

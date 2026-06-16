@@ -53,6 +53,7 @@ npm run dev
 - **Backlinks** — `[[note-slug]]` wiki-style linking with incoming/outgoing links panel
 - **Version History** — Automatic snapshots on save, restore previous versions
 - **Realtime Collaboration** — CRDT-based co-authoring via Y.js, presence avatars, live notifications (SSE + PG NOTIFY)
+- **Notifications Center** — Bell icon with unread badge, SSE real-time delivery for invites and note edits
 - **Landing Page** — Unauthenticated responsive landing page with theme toggle
 - **Webhooks** — HMAC-SHA256 signed HTTP callbacks on note, folder, and tag events
 - **Git Sync Plugin** — Pull/commit workspace notes to any Git repository (SSH or HTTPS) per workspace
@@ -60,7 +61,7 @@ npm run dev
 - **Global Search** — Press Cmd+K to search across all notes with command palette
 - **Editor** — CodeMirror 6 with configurable layout (split/edit/preview), **Markdown formatting toolbar, inline tag builder, and drag & drop image uploads**
 - **Public Sharing** — Share distraction-free, read-only note views with one click, or instantly toggle back to private
-- **Import/Export** — Export notes as markdown, import from markdown
+- **Import/Export** — Export notes as markdown, JSON, or PDF with formatted content; import from markdown
 - **Plugin System** — Togglable plugins per workspace: OpenCode AI, OpenCode Zen, Proxmox, Unifi, pCloud, Google Drive, Git Sync
 - **Profile & Avatar** — Upload avatar, set timezone, date format (ISO/US/EU/long/short), 12h/24h time format
 - **Workspace Icons** — 400+ Lucide icons per workspace and folder
@@ -69,6 +70,7 @@ npm run dev
 - **Themes** — 12 themes: Nord, Dracula, GitHub, Catppuccin, Cyberpunk, One (light & dark)
 - **Developer Fonts** — 8 monospace fonts: JetBrains Mono, Fira Code, Source Code Pro, IBM Plex Mono, Ubuntu Mono, Inconsolata, Roboto Mono, DM Mono
 - **Syntax Highlighting** — PrismJS with autoloader supporting 297 languages
+- **Mobile Responsive** — Hamburger menu, auto-collapse sidebar at 768px, touch-friendly sizing
 - **Self-hosted** — Docker Compose or systemd deployment
 
 ## Tech Stack
@@ -80,6 +82,7 @@ npm run dev
 - [CodeMirror 6](https://codemirror.net/) — Editor
 - [Radix UI](https://www.radix-ui.com/) — Accessible components
 - [PrismJS](https://prismjs.com/) — Syntax highlighting (297 languages)
+- [pdf-lib](https://pdf-lib.js.org/) — PDF generation
 - [Sass/SCSS](https://sass-lang.com/) — Styling
 - [Vitest](https://vitest.dev/) — Testing
 
@@ -146,6 +149,9 @@ Built by [mojoaar](https://github.com/mojoaar)
 - **Dynamic System Config** — admin UI for upload file types, max size, landing page toggle
 - **Server-Side Preferences** — theme, font, editor layout, and sidebar visibility stored in user profile
 - **Folder Icons** — 400+ Lucide icons selectable per folder alongside workspace icons
+- **PDF Export** — one-click export workspace notes as PDF with title page and formatted content
+- **Notifications Center** — bell icon with unread badge, SSE real-time delivery for invites and edits
+- **Mobile Responsive** — hamburger menu, auto-collapse sidebar at 768px, touch-friendly sizing
 
 ### v0.2.0 — 2026-06-14
 - **Backlinks** — `[[note-slug]]` detection with incoming/outgoing links panel

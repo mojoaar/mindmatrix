@@ -107,7 +107,8 @@ mindmatrix/
 - `notes` — id, workspaceId, folderId, title, slug, content, createdById, updatedById, createdAt, updatedAt
 - `tags` — id, workspaceId, name, color, createdById, createdAt
 - `note_tags` — noteId, tagId
-- `sync_connections` — id, userId, provider, accessToken, refreshToken, expiresAt, config
+- `notifications` — id, userId, type, title, message, link, isRead, createdAt
+- `system_config` — key (PK), value, updatedAt
 - `system_config` — key (text PK), value (text), updatedAt (timestamp)
 
 ## API Routes
@@ -151,8 +152,14 @@ All routes return JSON, require auth (except auth routes), and enforce workspace
 - `GET /api/search?q=&workspaceId=` — Full-text search
 
 ### Export/Import
-- `GET /api/export?workspaceId=&format=zip` — Export as zip
+- `GET /api/export?workspaceId=&format=markdown|json|pdf` — Export workspace notes
 - `POST /api/import` — Import markdown/zip
+
+### Notifications
+- `GET /api/notifications?limit=&page=` — List (paginated, with unread count)
+- `PATCH /api/notifications` — Mark all read
+- `PATCH /api/notifications/[id]` — Mark one read
+- `GET /api/notifications/events` — SSE stream for real-time delivery
 
 ### Cloud Sync
 - `GET/POST /api/sync/pcloud/*` — pCloud OAuth + sync
