@@ -82,7 +82,7 @@ npm run dev
 - [CodeMirror 6](https://codemirror.net/) — Editor
 - [Radix UI](https://www.radix-ui.com/) — Accessible components
 - [PrismJS](https://prismjs.com/) — Syntax highlighting (297 languages)
-- [pdf-lib](https://pdf-lib.js.org/) — PDF generation
+- [Vitest](https://vitest.dev/) — Testing
 - [Sass/SCSS](https://sass-lang.com/) — Styling
 - [Vitest](https://vitest.dev/) — Testing
 
@@ -149,7 +149,7 @@ Built by [mojoaar](https://github.com/mojoaar)
 - **Dynamic System Config** — admin UI for upload file types, max size, landing page toggle
 - **Server-Side Preferences** — theme, font, editor layout, and sidebar visibility stored in user profile
 - **Folder Icons** — 400+ Lucide icons selectable per folder alongside workspace icons
-- **PDF Export** — one-click export workspace notes as PDF with title page and formatted content
+- **PDF Export** — one-click HTML print page using browser&rsquo;s native &ldquo;Save as PDF&rdquo;
 - **Notifications Center** — bell icon with unread badge, SSE real-time delivery for invites and edits
 - **Mobile Responsive** — hamburger menu, auto-collapse sidebar at 768px, touch-friendly sizing
 
