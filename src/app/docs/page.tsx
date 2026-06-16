@@ -40,7 +40,7 @@ export default function DocsPage() {
           <li>Landing page — unauthenticated responsive landing page with theme toggle</li>
           <li>Mobile responsive — hamburger menu, auto-collapse sidebar at 768px, touch-friendly sizing</li>
           <li>Global search with command palette (Cmd+K)</li>
-          <li>Import/export markdown notes and PDF</li>
+          <li>Import/export markdown notes and print-friendly HTML</li>
           <li>Cloud sync to pCloud and Google Drive (per-workspace plugin)</li>
           <li>Full REST API for all operations</li>
           <li>12 themes: Nord, Dracula, GitHub, Catppuccin, Cyberpunk, One (light/dark each)</li>

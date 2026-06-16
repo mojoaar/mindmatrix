@@ -292,7 +292,7 @@ export default function ApiDocsPage() {
             <tbody>
               <tr><td><code>GET</code></td><td><code>/api/search?q=&workspaceId=</code></td><td>Search notes</td></tr>
               <tr><td><code>GET</code></td><td><code>/api/export?workspaceId=&format=markdown</code></td><td>Export workspace notes as markdown</td></tr>
-              <tr><td><code>GET</code></td><td><code>/api/export?workspaceId=&format=pdf</code></td><td>Export workspace notes as PDF with title page</td></tr>
+              <tr><td><code>GET</code></td><td><code>/api/export?workspaceId=&format=pdf</code></td><td>Export workspace notes as print-friendly HTML page</td></tr>
               <tr><td><code>POST</code></td><td><code>/api/import</code></td><td>Import markdown notes</td></tr>
               <tr><td><code>GET/POST</code></td><td><code>/api/sync/pcloud</code></td><td>pCloud sync management</td></tr>
               <tr><td><code>GET/POST</code></td><td><code>/api/sync/google-drive</code></td><td>Google Drive sync management</td></tr>

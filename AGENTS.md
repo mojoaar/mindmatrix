@@ -76,7 +76,7 @@ src/
 │   ├── email.ts                     # Nodemailer transport
   │   ├── email-templates.ts           # Markdown email templates (verify, password reset)
   │   ├── date-format.ts               # Shared date formatting utility
-  │   ├── export-pdf.ts                # PDF generation with title page, headers, lists
+  │   ├── export-pdf.ts                # Print-friendly HTML export page
   │   └── notifications.ts             # createNotification() with SSE push via event-bus
   │   └── validations.ts               # Zod schemas for all API routes
 ├── hooks/
