@@ -8,7 +8,15 @@ import { rateLimit } from "@/lib/rate-limit";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "notes");
 const DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
-const DEFAULT_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const DEFAULT_TYPES = [
+  "text/markdown",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+];
 
 export async function POST(request: Request) {
   const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
@@ -53,7 +61,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Only ${allowedTypes.join(", ")} allowed` }, { status: 400 });
     }
 
-    const ext = file.type.split("/")[1] || "png";
+    const mimeToExt: Record<string, string> = {
+      "text/markdown": "md",
+      "application/pdf": "pdf",
+      "application/msword": "doc",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+      "image/png": "png",
+      "image/jpeg": "jpeg",
+      "image/webp": "webp",
+    };
+    const ext = mimeToExt[file.type] || file.type.split("/")[1] || "bin";
     const filename = `${crypto.randomUUID()}.${ext}`;
     const filepath = path.join(UPLOAD_DIR, filename);
     const publicPath = `/uploads/notes/${filename}`;
@@ -64,15 +81,16 @@ export async function POST(request: Request) {
 
     // Verify magic bytes
     const header = buffer.slice(0, 4).toString("hex");
-    const validHeaders: Record<string, string[]> = {
-      "image/jpeg": ["ffd8ff"],
+    const imageHeaders: Record<string, string[]> = {
       "image/png": ["89504e47"],
+      "image/jpeg": ["ffd8ff"],
       "image/webp": ["52494646"],
-      "image/gif": ["47494638"],
     };
-    const expected = validHeaders[file.type];
-    if (!expected || !expected.some((h) => header.startsWith(h))) {
-      return NextResponse.json({ error: "Invalid image file" }, { status: 400 });
+    if (file.type.startsWith("image/")) {
+      const expected = imageHeaders[file.type];
+      if (!expected || !expected.some((h) => header.startsWith(h))) {
+        return NextResponse.json({ error: "Invalid image file" }, { status: 400 });
+      }
     }
 
     await writeFile(filepath, buffer);
@@ -80,6 +98,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ url: publicPath, filename: file.name });
   } catch (error) {
     console.error("Upload error:", error);
-    return NextResponse.json({ error: "Failed to upload image" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to upload file" }, { status: 500 });
   }
 }

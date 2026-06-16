@@ -549,10 +549,11 @@ export default function AdminPage() {
                 id="upload-types"
                 value={settingsConfig.uploadTypes || ""}
                 onChange={(e) => setSettingsConfig((prev) => ({ ...prev, uploadTypes: e.target.value }))}
-                placeholder="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+                placeholder="text/markdown,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg,image/webp"
               />
               <p className="text-muted text-xs" style={{ marginTop: "0.25rem" }}>
-                Comma-separated MIME types for note attachment uploads.
+                Comma-separated MIME types for note attachment uploads.{" "}
+                <a href="https://mime-type.com/mime-types" target="_blank" rel="noopener">Browse MIME types</a>
               </p>
             </div>
             <div className="form-group">
