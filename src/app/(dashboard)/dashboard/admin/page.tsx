@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, Users, Building2, FileText, Activity, Search, Trash2, Shield, User, Settings2 } from "lucide-react";
+import { ShieldCheck, Users, Building2, FileText, Activity, Search, Trash2, Shield, User, Settings2, Mail } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { formatDate as fmtDate } from "@/lib/date-format";
+import { DEFAULT_VERIFY_TEMPLATE, DEFAULT_RESET_TEMPLATE } from "@/lib/email-templates";
 
 interface Stats {
   users: number;
@@ -66,6 +67,8 @@ export default function AdminPage() {
   const [logSearch, setLogSearch] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
   const [togglingRole, setTogglingRole] = useState<string | null>(null);
+  const [emailTestStatus, setEmailTestStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [emailTestMessage, setEmailTestMessage] = useState("");
 
   const loadStats = useCallback(async () => {
     const res = await fetch("/api/admin/stats");
@@ -578,6 +581,180 @@ export default function AdminPage() {
             >
               Save Upload Settings
             </button>
+          </div>
+
+          <div className="card" style={{ marginBottom: "1.5rem" }}>
+            <h3>Email Settings</h3>
+
+            <div className="flex gap-1" style={{ marginBottom: "1.25rem" }}>
+              <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+                <label htmlFor="smtp-host">SMTP Host</label>
+                <input
+                  id="smtp-host"
+                  value={settingsConfig.smtpHost || ""}
+                  onChange={(e) => setSettingsConfig((prev) => ({ ...prev, smtpHost: e.target.value }))}
+                  placeholder="mail.smtp2go.com"
+                />
+              </div>
+              <div className="form-group" style={{ flex: 1, marginBottom: 0, maxWidth: "120px" }}>
+                <label htmlFor="smtp-port">Port</label>
+                <input
+                  id="smtp-port"
+                  value={settingsConfig.smtpPort || ""}
+                  onChange={(e) => setSettingsConfig((prev) => ({ ...prev, smtpPort: e.target.value }))}
+                  placeholder="587"
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label htmlFor="smtp-user">SMTP User</label>
+              <input
+                id="smtp-user"
+                value={settingsConfig.smtpUser || ""}
+                onChange={(e) => setSettingsConfig((prev) => ({ ...prev, smtpUser: e.target.value }))}
+                placeholder="user@example.com"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="smtp-pass">SMTP Password</label>
+              <input
+                id="smtp-pass"
+                type="password"
+                value={settingsConfig.smtpPass || ""}
+                onChange={(e) => setSettingsConfig((prev) => ({ ...prev, smtpPass: e.target.value }))}
+                placeholder="••••••••"
+              />
+              <p className="text-muted text-xs" style={{ marginTop: "0.25rem" }}>
+                Encrypted at rest. Leave as •••••••• to keep unchanged.
+              </p>
+            </div>
+            <div className="form-group">
+              <label htmlFor="smtp-from">From Address</label>
+              <input
+                id="smtp-from"
+                value={settingsConfig.smtpFrom || ""}
+                onChange={(e) => setSettingsConfig((prev) => ({ ...prev, smtpFrom: e.target.value }))}
+                placeholder="noreply@mindmatrix.local"
+              />
+            </div>
+
+            <div className="flex gap-1 align-center" style={{ marginBottom: "1rem" }}>
+              <button
+                className="btn primary sm"
+                onClick={() => {
+                  const keys = ["smtpHost", "smtpPort", "smtpUser", "smtpPass", "smtpFrom"] as const;
+                  for (const k of keys) {
+                    const v = settingsConfig[k];
+                    if (v !== undefined) saveConfig(k, v);
+                  }
+                }}
+              >
+                Save SMTP Settings
+              </button>
+              <button
+                className="btn secondary sm"
+                disabled={emailTestStatus === "loading"}
+                onClick={async () => {
+                  setEmailTestStatus("loading");
+                  setEmailTestMessage("");
+                  try {
+                    const res = await fetch("/api/admin/settings/email-test", { method: "POST" });
+                    const data = await res.json();
+                    if (res.ok) {
+                      setEmailTestStatus("success");
+                      setEmailTestMessage(`Test email sent to ${data.to}`);
+                    } else {
+                      setEmailTestStatus("error");
+                      setEmailTestMessage(data.error || "Failed");
+                    }
+                  } catch {
+                    setEmailTestStatus("error");
+                    setEmailTestMessage("Network error");
+                  }
+                }}
+              >
+                <Mail size={12} style={{ marginRight: "0.25rem" }} />
+                {emailTestStatus === "loading" ? "Sending..." : "Send Test Email"}
+              </button>
+            </div>
+            {emailTestMessage && (
+              <div
+                style={{
+                  padding: "0.5rem 0.75rem",
+                  borderRadius: "var(--border-radius)",
+                  backgroundColor: emailTestStatus === "success" ? "rgba(163,190,140,0.15)" : "rgba(191,97,106,0.15)",
+                  color: emailTestStatus === "success" ? "var(--accent-green)" : "var(--accent-red)",
+                  fontSize: "0.875rem",
+                  marginBottom: "1rem",
+                }}
+              >
+                {emailTestMessage}
+              </div>
+            )}
+
+            <div className="form-group">
+              <label htmlFor="template-verify">Verification Email Template</label>
+              <textarea
+                id="template-verify"
+                rows={8}
+                style={{ fontFamily: "var(--font-mono)", fontSize: "0.8125rem", lineHeight: 1.5 }}
+                value={settingsConfig.emailTemplateVerify || ""}
+                onChange={(e) => setSettingsConfig((prev) => ({ ...prev, emailTemplateVerify: e.target.value }))}
+                placeholder={DEFAULT_VERIFY_TEMPLATE}
+              />
+              <p className="text-muted text-xs" style={{ marginTop: "0.25rem" }}>
+                Markdown. Placeholders: {"{{name}} {{email}} {{url}} {{app}}"}. Template sent as HTML.
+              </p>
+              <div className="flex gap-1" style={{ marginTop: "0.5rem" }}>
+                <button
+                  className="btn primary sm"
+                  onClick={() => saveConfig("emailTemplateVerify", settingsConfig.emailTemplateVerify || "")}
+                >
+                  Save Template
+                </button>
+                <button
+                  className="btn secondary sm"
+                  onClick={() => {
+                    setSettingsConfig((prev) => ({ ...prev, emailTemplateVerify: DEFAULT_VERIFY_TEMPLATE }));
+                    saveConfig("emailTemplateVerify", DEFAULT_VERIFY_TEMPLATE);
+                  }}
+                >
+                  Restore Default
+                </button>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="template-reset">Password Reset Template</label>
+              <textarea
+                id="template-reset"
+                rows={8}
+                style={{ fontFamily: "var(--font-mono)", fontSize: "0.8125rem", lineHeight: 1.5 }}
+                value={settingsConfig.emailTemplateReset || ""}
+                onChange={(e) => setSettingsConfig((prev) => ({ ...prev, emailTemplateReset: e.target.value }))}
+                placeholder={DEFAULT_RESET_TEMPLATE}
+              />
+              <p className="text-muted text-xs" style={{ marginTop: "0.25rem" }}>
+                Markdown. Placeholders: {"{{name}} {{email}} {{url}} {{app}}"}. Template sent as HTML.
+              </p>
+              <div className="flex gap-1" style={{ marginTop: "0.5rem" }}>
+                <button
+                  className="btn primary sm"
+                  onClick={() => saveConfig("emailTemplateReset", settingsConfig.emailTemplateReset || "")}
+                >
+                  Save Template
+                </button>
+                <button
+                  className="btn secondary sm"
+                  onClick={() => {
+                    setSettingsConfig((prev) => ({ ...prev, emailTemplateReset: DEFAULT_RESET_TEMPLATE }));
+                    saveConfig("emailTemplateReset", DEFAULT_RESET_TEMPLATE);
+                  }}
+                >
+                  Restore Default
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="card">
