@@ -85,15 +85,19 @@ npm run dev
 
 ## Keyboard Shortcuts
 
-| Action          | macOS           | Windows / Linux     |
-| --------------- | --------------- | ------------------- |
-| Search          | Cmd+K           | Ctrl+K              |
-| New Note        | Opt+N           | Alt+N              |
-| New Folder      | Opt+Shift+F     | Alt+Shift+F        |
-| Save Note       | Cmd+Enter       | Ctrl+Enter          |
-| Toggle Sidebar  | Cmd+B           | Ctrl+B              |
-| Settings        | Cmd+,           | Ctrl+,              |
-| Close Dialogs   | Escape          | Escape              |
+| Action               | macOS                 | Windows / Linux          |
+| -------------------- | --------------------- | ------------------------ |
+| Search               | Cmd+K                 | Ctrl+K                   |
+| New Note             | Opt+N                 | Alt+N                    |
+| New Folder           | Opt+Shift+F           | Alt+Shift+F              |
+| Save Note            | Cmd+Enter             | Ctrl+Enter               |
+| Toggle Sidebar       | Cmd+B                 | Ctrl+B                   |
+| Settings             | Cmd+,                 | Ctrl+,                   |
+| Toggle Preview       | Cmd+\                 | Ctrl+\                   |
+| Delete Note          | Cmd+Shift+Backspace   | Ctrl+Shift+Backspace     |
+| Back to Workspace    | Cmd+Opt+[             | Ctrl+Alt+[               |
+| Toggle Public Share  | Cmd+Shift+P           | Ctrl+Shift+P             |
+| Close Dialogs        | Escape                | Escape                   |
 
 ## Plugin System
 

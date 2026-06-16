@@ -736,6 +736,10 @@ export default function UserSettingsPage() {
               <tr><td>Save Note</td><td><kbd>Cmd+Enter</kbd></td><td><kbd>Ctrl+Enter</kbd></td></tr>
               <tr><td>Toggle Sidebar</td><td><kbd>Cmd+B</kbd></td><td><kbd>Ctrl+B</kbd></td></tr>
               <tr><td>Settings</td><td><kbd>Cmd+,</kbd></td><td><kbd>Ctrl+,</kbd></td></tr>
+              <tr><td>Toggle Preview</td><td><kbd>Cmd+\</kbd></td><td><kbd>Ctrl+\</kbd></td></tr>
+              <tr><td>Delete Note</td><td><kbd>Cmd+Shift+Backspace</kbd></td><td><kbd>Ctrl+Shift+Backspace</kbd></td></tr>
+              <tr><td>Back to Workspace</td><td><kbd>Cmd+Opt+[</kbd></td><td><kbd>Ctrl+Alt+[</kbd></td></tr>
+              <tr><td>Toggle Public Share</td><td><kbd>Cmd+Shift+P</kbd></td><td><kbd>Ctrl+Shift+P</kbd></td></tr>
               <tr><td>Close Dialog</td><td><kbd>Escape</kbd></td><td><kbd>Escape</kbd></td></tr>
             </tbody>
           </table>

@@ -198,6 +198,28 @@ export default function NoteEditorPage() {
     return () => document.removeEventListener("keydown", handle);
   }, [save]);
 
+  useEffect(() => {
+    const togglePreview = () => {
+      if (layout === "split") setLayoutAndPersist("edit");
+      else if (layout === "edit") setLayoutAndPersist("preview");
+      else setLayoutAndPersist("split");
+    };
+    const del = () => { deleteNote(); };
+    const back = () => { router.push(`/dashboard/w/${slug}`); };
+    const share = () => { togglePublicShare(); };
+
+    window.addEventListener("mindmatrix:toggle-preview", togglePreview);
+    window.addEventListener("mindmatrix:delete-note", del);
+    window.addEventListener("mindmatrix:back-to-workspace", back);
+    window.addEventListener("mindmatrix:share-note", share);
+    return () => {
+      window.removeEventListener("mindmatrix:toggle-preview", togglePreview);
+      window.removeEventListener("mindmatrix:delete-note", del);
+      window.removeEventListener("mindmatrix:back-to-workspace", back);
+      window.removeEventListener("mindmatrix:share-note", share);
+    };
+  }, [layout, slug]);
+
   // Debounced Auto-save to maintain DB sync
   useEffect(() => {
     if (!note || content === note.content) return;

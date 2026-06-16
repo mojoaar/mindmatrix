@@ -214,8 +214,12 @@ export function SearchOverlay() {
             {[
               { keys: ["⌥", "N"], winKeys: ["Alt", "N"], label: "New Note", icon: PlusSquare },
               { keys: ["⌥", "⇧", "F"], winKeys: ["Alt", "Shift", "F"], label: "New Folder", icon: FolderPlus },
-              { keys: ["⌘", "B"], winKeys: ["Ctrl", "B"], label: "Toggle Sidebar", icon: FileText },
+              { keys: ["⌘", "\\"], winKeys: ["Ctrl", "\\"], label: "Toggle Preview", icon: FileText },
               { keys: ["⌘", "↵"], winKeys: ["Ctrl", "Enter"], label: "Save Note", icon: FileText },
+              { keys: ["⌘", "⇧", "⌫"], winKeys: ["Ctrl", "Shift", "Backspace"], label: "Delete Note", icon: FileText },
+              { keys: ["⌘", "⌥", "["], winKeys: ["Ctrl", "Alt", "["], label: "Back to Workspace", icon: FileText },
+              { keys: ["⌘", "⇧", "P"], winKeys: ["Ctrl", "Shift", "P"], label: "Share/Public Toggle", icon: FileText },
+              { keys: ["⌘", "B"], winKeys: ["Ctrl", "B"], label: "Toggle Sidebar", icon: FileText },
               { keys: ["⌘", ","], winKeys: ["Ctrl", ","], label: "Settings", icon: Settings },
             ].map((cmd, i) => (
               <div

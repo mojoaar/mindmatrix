@@ -159,6 +159,22 @@ export default function DashboardLayout({
       }
       window.dispatchEvent(new CustomEvent("mindmatrix:new-folder"));
     }
+    if ((e.metaKey || e.ctrlKey) && e.key === "\\") {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent("mindmatrix:toggle-preview"));
+    }
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "Backspace") {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent("mindmatrix:delete-note"));
+    }
+    if ((e.metaKey || e.ctrlKey) && e.altKey && e.key === "[") {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent("mindmatrix:back-to-workspace"));
+    }
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.code === "KeyP") {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent("mindmatrix:share-note"));
+    }
   };
 
   useEffect(() => {
