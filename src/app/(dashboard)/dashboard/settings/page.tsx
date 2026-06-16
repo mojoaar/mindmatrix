@@ -747,7 +747,7 @@ export default function UserSettingsPage() {
         <h3>About</h3>
         <div className="text-sm" style={{ lineHeight: 1.8 }}>
           <p>
-            <strong>MindMatrix</strong> v0.2.0
+            <strong>MindMatrix</strong> v0.3.0
           </p>
           <p className="text-muted">
             Markdown-first, self-hosted, multi-user knowledge hub.

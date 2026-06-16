@@ -1,4 +1,4 @@
-# MindMatrix v0.2.0 — Implementation Plan
+# MindMatrix v0.3.0 — Implementation Plan
 
 Markdown-first, self-hosted, multi-user knowledge hub.
 **License**: AGPL-3.0 | **Repo**: git@github.com:mojoaar/mindmatrix.git
@@ -108,6 +108,7 @@ mindmatrix/
 - `tags` — id, workspaceId, name, color, createdById, createdAt
 - `note_tags` — noteId, tagId
 - `sync_connections` — id, userId, provider, accessToken, refreshToken, expiresAt, config
+- `system_config` — key (text PK), value (text), updatedAt (timestamp)
 
 ## API Routes
 
@@ -156,6 +157,23 @@ All routes return JSON, require auth (except auth routes), and enforce workspace
 ### Cloud Sync
 - `GET/POST /api/sync/pcloud/*` — pCloud OAuth + sync
 - `GET/POST /api/sync/google-drive/*` — Google Drive OAuth + sync
+
+### Admin
+- `GET /api/admin/stats` — Dashboard statistics
+- `GET /api/admin/workspaces` — List all workspaces
+- `DELETE /api/admin/workspaces/[id]` — Force-delete workspace
+- `GET /api/admin/users` — List all users
+- `PATCH /api/admin/users/[id]` — Update user role/verification
+- `GET /api/admin/audit-logs` — Paginated audit trail
+- `GET /api/admin/settings` — Get system config
+- `PATCH /api/admin/settings` — Update system config
+- `POST /api/admin/settings/email-test` — Test SMTP send
+
+### Profile
+- `GET /api/profile` — Get current user
+- `PATCH /api/profile` — Update name, email, timezone, timeFormat, dateFormat
+- `POST /api/profile/avatar` — Upload avatar
+- `DELETE /api/profile/avatar` — Remove avatar
 
 ## Theme System
 

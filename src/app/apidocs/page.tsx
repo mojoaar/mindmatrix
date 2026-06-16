@@ -90,7 +90,7 @@ export default function ApiDocsPage() {
               <tr><td><code>GET</code></td><td><code>/api/notes/:id</code></td><td>Get note with full content (bypasses auth if note is publicly shared)</td></tr>
               <tr><td><code>PATCH</code></td><td><code>/api/notes/:id</code></td><td>Update note (title, content, isPublic, folderId, tagIds)</td></tr>
               <tr><td><code>DELETE</code></td><td><code>/api/notes/:id</code></td><td>Delete note</td></tr>
-              <tr><td><code>POST</code></td><td><code>/api/notes/upload</code></td><td>Upload note image (multipart form, 5MB limit, JPEG/PNG/WebP/GIF)</td></tr>
+              <tr><td><code>POST</code></td><td><code>/api/notes/upload</code></td><td>Upload note attachment (configurable file types/size via admin)</td></tr>
             </tbody>
           </table>
         </div>
@@ -142,6 +142,9 @@ export default function ApiDocsPage() {
               <tr><td><code>GET</code></td><td><code>/api/admin/users</code></td><td>List all users with roles and verification status</td></tr>
               <tr><td><code>PATCH</code></td><td><code>/api/admin/users/:id</code></td><td>Promote or demote user role</td></tr>
               <tr><td><code>GET</code></td><td><code>/api/admin/audit-logs</code></td><td>Paginated, searchable audit trail</td></tr>
+              <tr><td><code>GET</code></td><td><code>/api/admin/settings</code></td><td>Get system config (uploads, SMTP, landing page)</td></tr>
+              <tr><td><code>PATCH</code></td><td><code>/api/admin/settings</code></td><td>Update system config key/value pairs</td></tr>
+              <tr><td><code>POST</code></td><td><code>/api/admin/settings/email-test</code></td><td>Send test email to verify SMTP setup</td></tr>
             </tbody>
           </table>
         </div>
@@ -160,7 +163,7 @@ export default function ApiDocsPage() {
             </thead>
             <tbody>
               <tr><td><code>GET</code></td><td><code>/api/profile</code></td><td>Get current user profile</td></tr>
-              <tr><td><code>PATCH</code></td><td><code>/api/profile</code></td><td>Update name, timezone, time format</td></tr>
+              <tr><td><code>PATCH</code></td><td><code>/api/profile</code></td><td>Update name, email, timezone, time format, date format</td></tr>
               <tr><td><code>POST</code></td><td><code>/api/profile/avatar</code></td><td>Upload avatar (JPEG/PNG/WebP, max 2MB)</td></tr>
               <tr><td><code>DELETE</code></td><td><code>/api/profile/avatar</code></td><td>Remove avatar</td></tr>
             </tbody>

@@ -47,9 +47,31 @@ sudo systemctl start mindmatrix`}
               <tr><td><code>NEXT_PUBLIC_APP_URL</code></td><td>Yes</td><td>Public URL for client</td></tr>
               <tr><td><code>DB_MAX_CONNECTIONS</code></td><td>No</td><td>Max DB connections (default 10)</td></tr>
               <tr><td><code>NODE_ENV</code></td><td>No</td><td>production or development</td></tr>
+              <tr><td><code>SMTP_HOST</code></td><td>No</td><td>SMTP server hostname for emails</td></tr>
+              <tr><td><code>SMTP_PORT</code></td><td>No</td><td>SMTP port (e.g. 587)</td></tr>
+              <tr><td><code>SMTP_USER</code></td><td>No</td><td>SMTP username</td></tr>
+              <tr><td><code>SMTP_PASS</code></td><td>No</td><td>SMTP password</td></tr>
+              <tr><td><code>EMAIL_FROM</code></td><td>No</td><td>Sender email address</td></tr>
+              <tr><td><code>ENCRYPTION_KEY</code></td><td>No</td><td>AES-256-GCM key for plugin credentials (generate with openssl rand -hex 32)</td></tr>
             </tbody>
           </table>
         </div>
+      </div>
+      <div className="card">
+        <h2>System Configuration</h2>
+        <p>
+          Dynamic admin settings are stored in the <code>system_config</code> PostgreSQL table and can be managed
+          from the Admin Dashboard under the Settings tab. Configurable options include:
+        </p>
+        <ul style={{ paddingLeft: "1.5rem", marginTop: "0.5rem" }}>
+          <li>Upload file types and max upload size</li>
+          <li>SMTP host, port, user, password, and sender email</li>
+          <li>Markdown email templates (verification, password reset)</li>
+          <li>Landing page enable/disable</li>
+        </ul>
+        <p className="text-muted text-sm" style={{ marginTop: "0.75rem" }}>
+          SMTP and ENCRYPTION_KEY can also be set as environment variables, which take priority over the database-stored values.
+        </p>
       </div>
     </div>
   );

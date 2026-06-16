@@ -43,7 +43,10 @@ export default function DocsPage() {
           <li>Full REST API for all operations</li>
           <li>12 themes: Nord, Dracula, GitHub, Catppuccin, Cyberpunk, One (light/dark each)</li>
           <li>8 developer fonts: JetBrains Mono, Fira Code, Source Code Pro, IBM Plex Mono, Ubuntu Mono, Inconsolata, Roboto Mono, DM Mono</li>
-          <li>Super admin dashboard — stats, workspaces, users, audit logs</li>
+          <li>Super admin dashboard — stats, workspaces, users, audit logs, solution settings</li>
+          <li>Email system — SMTP config in admin, markdown email templates, test email button</li>
+          <li>Date format preference — choose browser, ISO, US, EU, long, or short date display</li>
+          <li>Dynamic system config — admin UI for upload types, max size, landing page toggle</li>
           <li>Self-hosted with Docker Compose or systemd</li>
         </ul>
       </div>

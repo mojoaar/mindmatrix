@@ -2,7 +2,7 @@
 
 Markdown-first, self-hosted, multi-user knowledge hub for teams and thinkers.
 
-**Version**: 0.2.0 | **License**: AGPL-3.0
+**Version**: 0.3.0 | **License**: AGPL-3.0
 
 ## Quick Start
 
@@ -62,9 +62,10 @@ npm run dev
 - **Public Sharing** — Share distraction-free, read-only note views with one click, or instantly toggle back to private
 - **Import/Export** — Export notes as markdown, import from markdown
 - **Plugin System** — Togglable plugins per workspace: OpenCode AI, OpenCode Zen, Proxmox, Unifi, pCloud, Google Drive, Git Sync
-- **Profile & Avatar** — Upload avatar, set timezone, 12h/24h time format
-- **Workspace Icons** — 400+ Lucide icons per workspace
-- **Full REST API** — Complete API coverage for all features
+- **Profile & Avatar** — Upload avatar, set timezone, date format (ISO/US/EU/long/short), 12h/24h time format
+- **Workspace Icons** — 400+ Lucide icons per workspace and folder
+- **Admin Settings** — SMTP email configuration, upload type/size limits, landing page toggle, markdown email templates
+- **Full REST API** — Complete API coverage including webhooks, delta sync, admin settings
 - **Themes** — 12 themes: Nord, Dracula, GitHub, Catppuccin, Cyberpunk, One (light & dark)
 - **Developer Fonts** — 8 monospace fonts: JetBrains Mono, Fira Code, Source Code Pro, IBM Plex Mono, Ubuntu Mono, Inconsolata, Roboto Mono, DM Mono
 - **Syntax Highlighting** — PrismJS with autoloader supporting 297 languages
@@ -124,7 +125,7 @@ Built by [mojoaar](https://github.com/mojoaar)
 
 ## Changelog
 
-### v0.2.0 — 2026-06-14
+### v0.3.0 — 2026-06-16
 - **Backlinks** — `[[note-slug]]` detection with incoming/outgoing links panel
 - **Version History** — auto-snapshot on save, restore from history
 - **Realtime Collaboration** — presence avatars, live update notifications (SSE + PG NOTIFY)
@@ -158,6 +159,11 @@ Built by [mojoaar](https://github.com/mojoaar)
 - **Sidebar Folders & Tags** — interactive folder and tag navigation with note counts
 - **Proxy Cookie Fix** — `__Secure-` prefix added for HTTPS production compatibility
 - **Customizable Email** — users can change their email address with uniqueness validation
+- **Date Format Preference** — choose browser, ISO, US, EU, long, or short date display format
+- **Admin Email Settings** — SMTP configuration, markdown email templates, test email button
+- **Dynamic System Config** — admin UI for upload file types, max size, landing page toggle
+- **Server-Side Preferences** — theme, font, editor layout, and sidebar visibility stored in user profile
+- **Folder Icons** — 400+ Lucide icons selectable per folder alongside workspace icons
 
 ### v0.1.0 — 2026-06-13
 - Initial release: workspaces, notes, folders, tags, search, themes, Docker deployment

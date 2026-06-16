@@ -2,7 +2,7 @@
 
 ## Project Overview
 MindMatrix is a markdown-first, self-hosted, multi-user knowledge hub for teams and thinkers.
-- **Version**: 0.2.0
+- **Version**: 0.3.0
 - **License**: AGPL-3.0
 - **Repo**: git@github.com:mojoaar/mindmatrix.git
 
@@ -74,7 +74,9 @@ src/
 │   ├── icons.ts                     # 400+ Lucide icon registry
 │   ├── slug.ts                      # Slug generation utilities
 │   ├── email.ts                     # Nodemailer transport
-│   └── validations.ts               # Zod schemas for all API routes
+  │   ├── email-templates.ts           # Markdown email templates (verify, password reset)
+  │   ├── date-format.ts               # Shared date formatting utility
+  │   └── validations.ts               # Zod schemas for all API routes
 ├── hooks/
 │   └── use-realtime-note.ts         # SSE + presence heartbeat hook
 ├── middleware.ts                    # Route protection via cookie check
@@ -132,7 +134,7 @@ All routes under `/api/` require auth (except `/api/auth/*`). Auth checked via `
 - `/api/export` — Export as markdown
 - `/api/import` — Import markdown
 - `/api/templates` — CRUD note templates
-- `/api/profile` — User profile (name, avatar, timezone)
+- `/api/profile` — User profile (name, email, avatar, timezone, timeFormat, dateFormat)
 - `/api/profile/avatar` — Avatar upload (2MB, JPEG/PNG/WebP)
 - `/api/notes/[id]/links` — Backlinks (incoming + outgoing)
 - `/api/notes/[id]/versions` — Version history (list + restore)
@@ -142,6 +144,11 @@ All routes under `/api/` require auth (except `/api/auth/*`). Auth checked via `
 - `/api/plugins/[...plugin]` — Dynamic plugin API route dispatcher
 - `/api/plugins/config` — Plugin enable/disable + config CRUD
 - `/api/sync/pcloud`, `/api/sync/google-drive` — Cloud sync
+- `/api/admin/[...]` — Super admin: stats, workspaces, users, audit-logs, settings (system config + email test)
+- `/api/notes/[id]/delta` — Y.js CRDT delta updates
+- `/api/notes/upload` — Drag & drop file uploads (configurable types/size)
+- `/api/workspaces/[id]/webhooks` — Webhook CRUD per workspace
+- `/api/oauth/pcloud`, `/api/oauth/google-drive` — OAuth callback handlers
 
 ## Keyboard Shortcuts
 | Shortcut         | macOS              | Windows / Linux       |
