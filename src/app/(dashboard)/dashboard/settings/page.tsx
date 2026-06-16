@@ -517,7 +517,7 @@ export default function UserSettingsPage() {
 
         <div className="form-group">
           <label>Left Sidebar Layout</label>
-          <div className="flex gap-2" style={{ marginTop: "0.5rem" }}>
+          <div className="flex gap-1" style={{ marginTop: "0.5rem", flexDirection: "column" }}>
             <button
               className={`btn ${sidebarShowFolders ? "primary" : "secondary"} sm`}
               onClick={() => handleToggleSidebarFolders(!sidebarShowFolders)}
