@@ -32,24 +32,29 @@ export async function GET(request: Request) {
       orderBy: (n) => [n.title],
     });
 
-    const pdfBytes = await generateNotePdf(
-      `${notes.length} Notes`,
-      notes.map((n) => {
-        let frontmatter = `# ${n.title}\n\n`;
-        if (n.slug) frontmatter += `slug: ${n.slug}\n`;
-        frontmatter += `created: ${n.createdAt}\n`;
-        frontmatter += `updated: ${n.updatedAt}\n\n`;
-        return frontmatter + (n.content || "");
-      }).join("\n\n---\n\n"),
-      session.user.name
-    );
+    try {
+      const pdfBytes = await generateNotePdf(
+        `${notes.length} Notes`,
+        notes.map((n) => {
+          let frontmatter = `# ${n.title}\n\n`;
+          if (n.slug) frontmatter += `slug: ${n.slug}\n`;
+          frontmatter += `created: ${n.createdAt}\n`;
+          frontmatter += `updated: ${n.updatedAt}\n\n`;
+          return frontmatter + (n.content || "");
+        }).join("\n\n---\n\n"),
+        session.user.name
+      );
 
-    return new NextResponse(Buffer.from(pdfBytes), {
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="mindmatrix-export.pdf"`,
-      },
-    });
+      return new NextResponse(Buffer.from(pdfBytes), {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="mindmatrix-export.pdf"`,
+        },
+      });
+    } catch (err) {
+      console.error("PDF export error:", err);
+      return NextResponse.json({ error: "Failed to generate PDF" }, { status: 500 });
+    }
   }
 
   if (!workspaceId) {

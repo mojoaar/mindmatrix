@@ -586,7 +586,14 @@ export default function NoteEditorPage() {
           </button>
           <button
             className="btn secondary sm flex align-center gap-1"
-            onClick={() => window.open(`/api/export?workspaceId=${note.workspaceId}&format=pdf`, "_blank")}
+            onClick={() => {
+              const a = document.createElement("a");
+              a.href = `/api/export?workspaceId=${note.workspaceId}&format=pdf`;
+              a.download = `${note.title || "note"}.pdf`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            }}
             title="Export as PDF"
           >
             <Printer size={14} />
