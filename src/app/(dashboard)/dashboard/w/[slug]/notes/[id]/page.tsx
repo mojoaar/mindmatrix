@@ -586,7 +586,7 @@ export default function NoteEditorPage() {
             onClick={() => {
               window.open(`/api/export?workspaceId=${note.workspaceId}&format=pdf`, "_blank");
             }}
-            title="Export as PDF"
+            title="Export for Print"
           >
             <Printer size={14} />
           </button>
