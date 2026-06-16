@@ -25,7 +25,7 @@ export async function GET(request: Request) {
         },
       },
     },
-    orderBy: (ws, { desc }) => [desc(ws.createdAt)],
+    orderBy: (ws, { asc }) => [asc(ws.name)],
   });
 
   const result = await Promise.all(
