@@ -382,7 +382,15 @@ export default function WorkspacePage() {
         <button
           className={`btn sm ${editMode ? "primary" : "secondary"}`}
           style={editMode ? { backgroundColor: "var(--accent-red)", borderColor: "var(--accent-red)", color: "#fff" } : {}}
-          onClick={() => { setEditMode(false); setShowRenameFolder(null); setShowRenameTag(null); }}
+          onClick={() => {
+            setEditMode((prev) => {
+              if (prev) {
+                setShowRenameFolder(null);
+                setShowRenameTag(null);
+              }
+              return !prev;
+            });
+          }}
           title="Toggle Edit mode"
         >
           <Pencil size={12} style={{ marginRight: "0.25rem" }} />
