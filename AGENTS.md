@@ -202,6 +202,7 @@ NODE_ENV=development
 - Editor layout stored in `localStorage` as `mindmatrix-editor-layout`
 - Plugins toggled per workspace, configs in JSONB `plugin_config` table
 - Zero new dependencies policy for realtime (SSE + PG NOTIFY)
+- Never run `npm audit fix --force` — it downgrades packages across major versions (e.g., Next.js 16→9). Use only `npm audit fix` (no --force) which stays within semver
 - Run `npm run db:push` at the start of every local dev session to sync schema changes to the local PostgreSQL container
 - When asked "is docs updated?", "update docs", or similar — always check and update these files together: `/docs` pages, `/apidocs` page, `README.md`, `AGENTS.md`, `plan.md`
 - Version bump checklist (must update all): `package.json` → `AGENTS.md` → settings About section → landing page → `src/lib/webhooks.ts` → `README.md` → `plan.md`
