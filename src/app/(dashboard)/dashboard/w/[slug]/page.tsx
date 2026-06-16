@@ -8,6 +8,13 @@ import { Plus, FileText, FolderPlus, Search, Tag, Pencil, Trash } from "lucide-r
 import { IconPicker } from "@/components/ui/icon-picker";
 import { getIcon } from "@/lib/icons";
 import { formatDate } from "@/lib/date-format";
+import type { DateFormat, TimeFormat } from "@/lib/date-format";
+
+interface Profile {
+  dateFormat: string;
+  timezone: string;
+  timeFormat: string;
+}
 
 interface Note {
   id: string;
@@ -91,6 +98,7 @@ export default function WorkspacePage() {
     }
     return null;
   });
+  const [profile, setProfile] = useState<Profile>({ dateFormat: "browser", timezone: "browser", timeFormat: "browser" });
 
   async function loadNotes(workspaceId: string, customFolderId?: string | null) {
     const params = new URLSearchParams({ workspaceId });
@@ -150,6 +158,21 @@ export default function WorkspacePage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    fetch("/api/profile")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.profile) {
+          setProfile({
+            dateFormat: data.profile.dateFormat || "browser",
+            timezone: data.profile.timezone || "browser",
+            timeFormat: data.profile.timeFormat || "browser",
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (tags && tags.length > 0) {
@@ -790,7 +813,12 @@ export default function WorkspacePage() {
                   </div>
                 </td>
                 <td className="text-muted text-xs">
-                                    {formatDate(note.updatedAt, { includeTime: false })}
+                                    {formatDate(note.updatedAt, {
+                              includeTime: false,
+                              dateFormat: profile.dateFormat as DateFormat,
+                              timezone: profile.timezone,
+                              timeFormat: profile.timeFormat as TimeFormat,
+                            })}
                 </td>
               </tr>
             ))}

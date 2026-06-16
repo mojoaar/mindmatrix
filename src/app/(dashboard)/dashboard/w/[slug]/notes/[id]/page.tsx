@@ -468,7 +468,6 @@ export default function NoteEditorPage() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              onBlur={() => save()}
               style={{
                 flex: 1,
                 minWidth: 0,
@@ -776,6 +775,7 @@ export default function NoteEditorPage() {
                 ref={editorRef}
                 value={content}
                 onChange={(val) => {
+                  if (val === undefined || val === null || (typeof val === "string" && content.length > 0 && val.length === 0)) return;
                   setContent(val);
                   localUpdate(val);
                 }}
