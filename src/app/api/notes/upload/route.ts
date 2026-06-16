@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { db, systemConfig as systemConfigTable } from "@/lib/db";
+import { rateLimit } from "@/lib/rate-limit";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { logAction } from "@/lib/audit";
 import crypto from "crypto";
-import { rateLimit } from "@/lib/rate-limit";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "notes");
 const DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
@@ -94,6 +95,8 @@ export async function POST(request: Request) {
     }
 
     await writeFile(filepath, buffer);
+
+    await logAction(session.user.id, "NOTE_UPLOAD", `Uploaded ${file.name}`, request);
 
     return NextResponse.json({ url: publicPath, filename: file.name });
   } catch (error) {

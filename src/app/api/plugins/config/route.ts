@@ -3,6 +3,7 @@ import { db, pluginConfig, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { encryptConfig, decryptConfig, maskConfig } from "@/lib/crypto";
+import { logAction } from "@/lib/audit";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -92,6 +93,8 @@ export async function POST(request: Request) {
       config: encryptedConfig,
     });
   }
+
+  await logAction(session.user.id, "PLUGIN_CONFIG_UPDATED", `Plugin ${pluginId}: ${enabled ? "enabled" : "disabled"}`, request);
 
   return NextResponse.json({ saved: true });
 }

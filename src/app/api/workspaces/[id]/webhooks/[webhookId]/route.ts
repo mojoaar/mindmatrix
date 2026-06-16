@@ -3,6 +3,7 @@ import { db, webhook, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { encrypt } from "@/lib/crypto";
+import { logAction } from "@/lib/audit";
 
 export async function PATCH(
   request: Request,
@@ -50,6 +51,8 @@ export async function PATCH(
 
   await db.update(webhook).set(updateData).where(eq(webhook.id, webhookId));
 
+  await logAction(session.user.id, "WEBHOOK_UPDATE", `Updated webhook "${name || existingHook.name}"`, request);
+
   const updatedHook = await db.query.webhook.findFirst({
     where: eq(webhook.id, webhookId),
   });
@@ -81,6 +84,8 @@ export async function DELETE(
   }
 
   await db.delete(webhook).where(and(eq(webhook.id, webhookId), eq(webhook.workspaceId, workspaceId)));
+
+  await logAction(session.user.id, "WEBHOOK_DELETE", "Deleted webhook", request);
 
   return NextResponse.json({ success: true });
 }

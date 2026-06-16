@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db, note, noteVersion, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and, desc } from "drizzle-orm";
+import { logAction } from "@/lib/audit";
 
 export async function GET(
   request: Request,
@@ -98,6 +99,8 @@ export async function POST(
       updatedById: session.user.id,
     })
     .where(eq(note.id, id));
+
+  await logAction(session.user.id, "NOTE_VERSION_RESTORED", `Restored note "${found.title}" to version ${versionId.slice(0, 8)}`, request);
 
   return NextResponse.json({ restored: true });
 }

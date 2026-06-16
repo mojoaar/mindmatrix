@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { writeFile, unlink, mkdir } from "fs/promises";
 import path from "path";
+import { logAction } from "@/lib/audit";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "avatars");
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
@@ -70,6 +71,8 @@ export async function POST(request: Request) {
       .set({ image: publicPath })
       .where(eq(user.id, session.user.id));
 
+    await logAction(session.user.id, "USER_AVATAR_UPLOADED", `Avatar uploaded (${ext})`, request);
+
     return NextResponse.json({ image: publicPath });
   } catch {
     return NextResponse.json({ error: "Failed to save avatar" }, { status: 500 });
@@ -97,6 +100,8 @@ export async function DELETE(request: Request) {
     .update(user)
     .set({ image: null })
     .where(eq(user.id, session.user.id));
+
+  await logAction(session.user.id, "USER_AVATAR_DELETED", "Avatar removed", request);
 
   return NextResponse.json({ image: null });
 }

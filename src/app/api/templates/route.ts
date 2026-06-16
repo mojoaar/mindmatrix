@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db, noteTemplate, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
+import { logAction } from "@/lib/audit";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -70,6 +71,8 @@ export async function POST(request: Request) {
       createdById: session.user.id,
     })
     .returning();
+
+  await logAction(session.user.id, "TEMPLATE_CREATE", `Created template "${name}"`, request);
 
   return NextResponse.json({ template: tmpl }, { status: 201 });
 }

@@ -108,6 +108,9 @@ export async function PATCH(request: Request) {
 
   if (update.email) {
     await logAction(session.user.id, "USER_EMAIL_CHANGED", `Email changed to ${update.email}`, request);
+  } else if (Object.keys(update).length > 0) {
+    const fields = Object.keys(update).join(", ");
+    await logAction(session.user.id, "USER_PROFILE_UPDATED", `Updated: ${fields}`, request);
   }
 
   return NextResponse.json({ profile: updated });

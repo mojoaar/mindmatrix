@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db, note, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
+import { logAction } from "@/lib/audit";
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -43,6 +44,8 @@ export async function POST(request: Request) {
 
     created.push({ id, title: item.title });
   }
+
+  await logAction(session.user.id, "NOTE_IMPORT", `Imported ${created.length} notes to workspace`, request);
 
   return NextResponse.json({ imported: created.length, notes: created }, { status: 201 });
 }

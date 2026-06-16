@@ -118,6 +118,11 @@ const authInstance = betterAuth({
           await logAction(session.userId, "USER_LOGIN", session.ipAddress ? `IP: ${session.ipAddress}` : "Login", undefined);
         },
       },
+      delete: {
+        after: async (session) => {
+          await logAction(session.userId, "USER_LOGOUT", "User signed out", undefined);
+        },
+      },
     },
   },
   plugins: [

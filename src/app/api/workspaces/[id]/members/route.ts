@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db, workspaceMember, user } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
+import { logAction } from "@/lib/audit";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -60,6 +61,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       role: role || "member",
     })
     .returning();
+
+  await logAction(session.user.id, "WORKSPACE_MEMBER_ADDED", `Added ${targetUser.email} as ${role || "member"} to workspace`, request);
 
   return NextResponse.json({ member }, { status: 201 });
 }

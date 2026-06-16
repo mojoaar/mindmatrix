@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db, noteTemplate, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
+import { logAction } from "@/lib/audit";
 
 export async function GET(
   request: Request,
@@ -75,6 +76,8 @@ export async function PATCH(
     .where(eq(noteTemplate.id, id))
     .returning();
 
+  await logAction(session.user.id, "TEMPLATE_UPDATE", `Updated template "${updated?.name || tmpl.name}"`, request);
+
   return NextResponse.json({ template: updated });
 }
 
@@ -108,5 +111,6 @@ export async function DELETE(
   }
 
   await db.delete(noteTemplate).where(eq(noteTemplate.id, id));
+  await logAction(session.user.id, "TEMPLATE_DELETE", `Deleted template "${tmpl.name}"`, request);
   return NextResponse.json({ success: true });
 }

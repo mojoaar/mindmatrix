@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db, systemConfig as systemConfigTable } from "@/lib/db";
 import { encrypt, decrypt } from "@/lib/crypto";
 import { resetConfigCache } from "@/lib/email";
+import { logAction } from "@/lib/audit";
 
 const SENSITIVE_CONFIG_KEYS = ["smtpPass"];
 
@@ -59,6 +60,8 @@ export async function PATCH(request: Request) {
     });
 
   resetConfigCache();
+
+  await logAction(session.user.id, "SYSTEM_CONFIG_UPDATED", `Updated ${key}`, request);
 
   return NextResponse.json({ key, value: String(value) });
 }

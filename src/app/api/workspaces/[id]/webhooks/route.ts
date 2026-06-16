@@ -3,6 +3,7 @@ import { db, webhook, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { encrypt } from "@/lib/crypto";
+import { logAction } from "@/lib/audit";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: workspaceId } = await params;
@@ -65,6 +66,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     events: events || [],
     active: active !== false,
   });
+
+  await logAction(session.user.id, "WEBHOOK_CREATE", `Created webhook "${name}"`, request);
 
   return NextResponse.json({
     webhook: {
