@@ -588,6 +588,7 @@ export default function NoteEditorPage() {
             className="btn secondary sm flex align-center gap-1"
             onClick={async () => {
               try {
+                toastSuccess("Generating PDF...");
                 const res = await fetch(`/api/export?workspaceId=${note.workspaceId}&format=pdf`);
                 const data = await res.json();
                 if (data.pdf) {
@@ -597,8 +598,12 @@ export default function NoteEditorPage() {
                   document.body.appendChild(a);
                   a.click();
                   document.body.removeChild(a);
+                } else {
+                  toastError(data.error || "Failed to generate PDF");
                 }
-              } catch {}
+              } catch {
+                toastError("Failed to generate PDF");
+              }
             }}
             title="Export as PDF"
           >
