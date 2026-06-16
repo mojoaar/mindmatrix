@@ -45,7 +45,7 @@ export async function GET(request: Request) {
         session.user.name
       );
 
-      return new NextResponse(Buffer.from(pdfBytes), {
+      return new Response(pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength) as ArrayBuffer, {
         headers: {
           "Content-Type": "application/pdf",
           "Content-Disposition": `attachment; filename="mindmatrix-export.pdf"`,
