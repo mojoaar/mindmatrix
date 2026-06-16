@@ -591,19 +591,8 @@ export default function NoteEditorPage() {
                 toastSuccess("Generating PDF...");
                 const res = await fetch(`/api/export?workspaceId=${note.workspaceId}&format=pdf`);
                 const data = await res.json();
-                if (data.pdf) {
-                  const byteChars = atob(data.pdf);
-                  const byteNums = new Uint8Array(byteChars.length);
-                  for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
-                  const blob = new Blob([byteNums], { type: "application/pdf" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `${note.title || "note"}.pdf`;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(url);
+                if (data.url) {
+                  window.open(data.url, "_blank");
                 } else {
                   toastError(data.error || "Failed to generate PDF");
                 }
