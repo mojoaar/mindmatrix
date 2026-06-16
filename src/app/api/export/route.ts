@@ -45,12 +45,8 @@ export async function GET(request: Request) {
         session.user.name
       );
 
-      return new Response(pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength) as ArrayBuffer, {
-        headers: {
-          "Content-Type": "application/pdf",
-          "Content-Disposition": `attachment; filename="mindmatrix-export.pdf"`,
-        },
-      });
+      const base64 = Buffer.from(pdfBytes).toString("base64");
+      return NextResponse.json({ pdf: base64, filename: "mindmatrix-export.pdf" });
     } catch (err) {
       console.error("PDF export error:", err);
       return NextResponse.json({ error: "Failed to generate PDF" }, { status: 500 });

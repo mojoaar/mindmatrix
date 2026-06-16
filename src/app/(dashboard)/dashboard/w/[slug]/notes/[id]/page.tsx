@@ -586,13 +586,19 @@ export default function NoteEditorPage() {
           </button>
           <button
             className="btn secondary sm flex align-center gap-1"
-            onClick={() => {
-              const a = document.createElement("a");
-              a.href = `/api/export?workspaceId=${note.workspaceId}&format=pdf`;
-              a.download = `${note.title || "note"}.pdf`;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
+            onClick={async () => {
+              try {
+                const res = await fetch(`/api/export?workspaceId=${note.workspaceId}&format=pdf`);
+                const data = await res.json();
+                if (data.pdf) {
+                  const a = document.createElement("a");
+                  a.href = `data:application/pdf;base64,${data.pdf}`;
+                  a.download = `${note.title || "note"}.pdf`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                }
+              } catch {}
             }}
             title="Export as PDF"
           >
