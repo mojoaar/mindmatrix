@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import { rateLimit } from "@/lib/rate-limit";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "notes");
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB limit
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
+const DEFAULT_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 export async function POST(request: Request) {
   const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
@@ -32,12 +33,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: "File exceeds 5MB limit" }, { status: 400 });
+    const configRow = await db.query.systemConfig.findMany();
+    const config: Record<string, string> = {};
+    for (const row of configRow) config[row.key] = row.value;
+
+    const maxSize = config.uploadMaxSize
+      ? parseInt(config.uploadMaxSize) * 1024 * 1024
+      : DEFAULT_MAX_SIZE;
+    const allowedTypes = config.uploadTypes
+      ? config.uploadTypes.split(",").map((t) => t.trim()).filter(Boolean)
+      : DEFAULT_TYPES;
+
+    if (file.size > maxSize) {
+      const sizeMB = Math.round(maxSize / 1024 / 1024);
+      return NextResponse.json({ error: `File exceeds ${sizeMB}MB limit` }, { status: 400 });
     }
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: "Only JPEG, PNG, WebP, and GIF images are allowed" }, { status: 400 });
+    if (!allowedTypes.includes(file.type)) {
+      return NextResponse.json({ error: `Only ${allowedTypes.join(", ")} allowed` }, { status: 400 });
     }
 
     const ext = file.type.split("/")[1] || "png";

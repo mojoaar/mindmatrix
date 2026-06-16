@@ -230,6 +230,9 @@ export default function DashboardLayout({
                   fontWeight: pathname.includes(`/w/${ws.slug}`) ? 600 : 400,
                   backgroundColor: pathname.includes(`/w/${ws.slug}`) ? "rgba(255, 255, 255, 0.04)" : "transparent",
                 }}
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent("mindmatrix:clear-filters"));
+                }}
                 onMouseEnter={(e) => {
                   if (!pathname.includes(`/w/${ws.slug}`)) {
                     e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { History, RotateCcw } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
+import { formatDate } from "@/lib/date-format";
 
 interface Version {
   id: string;
@@ -69,7 +70,7 @@ export function VersionPanel({ noteId }: VersionPanelProps) {
             >
               <div>
                 <span className="text-xs">
-                  {new Date(v.createdAt).toLocaleString()}
+                  {formatDate(v.createdAt)}
                 </span>
               </div>
               <button

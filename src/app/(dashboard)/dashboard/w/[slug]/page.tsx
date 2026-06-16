@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Plus, FileText, FolderPlus, Search, Tag, Pencil, Trash } from "lucide-react";
 import { IconPicker } from "@/components/ui/icon-picker";
 import { getIcon } from "@/lib/icons";
+import { formatDate } from "@/lib/date-format";
 
 interface Note {
   id: string;
@@ -180,13 +181,19 @@ export default function WorkspacePage() {
       const tagId = (e as CustomEvent).detail;
       setSelectedTag(tagId);
     };
+    const handleClearFilters = () => {
+      setActiveFolderId(null);
+      setSelectedTag(null);
+    };
     
     window.addEventListener(`mindmatrix:filter-folder:${slug}`, handleFilterFolder);
     window.addEventListener(`mindmatrix:filter-tag:${slug}`, handleFilterTag);
+    window.addEventListener("mindmatrix:clear-filters", handleClearFilters);
     
     return () => {
       window.removeEventListener(`mindmatrix:filter-folder:${slug}`, handleFilterFolder);
       window.removeEventListener(`mindmatrix:filter-tag:${slug}`, handleFilterTag);
+      window.removeEventListener("mindmatrix:clear-filters", handleClearFilters);
     };
   }, [slug]);
 
@@ -783,7 +790,7 @@ export default function WorkspacePage() {
                   </div>
                 </td>
                 <td className="text-muted text-xs">
-                  {new Date(note.updatedAt).toLocaleDateString()}
+                                    {formatDate(note.updatedAt, { includeTime: false })}
                 </td>
               </tr>
             ))}

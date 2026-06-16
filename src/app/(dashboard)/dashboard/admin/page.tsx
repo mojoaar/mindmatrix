@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, Users, Building2, FileText, Activity, Search, Trash2, Shield, User } from "lucide-react";
+import { ShieldCheck, Users, Building2, FileText, Activity, Search, Trash2, Shield, User, Settings2 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
+import { formatDate as fmtDate } from "@/lib/date-format";
 
 interface Stats {
   users: number;
@@ -44,7 +45,7 @@ interface AuditEntry {
   user?: { id: string; name: string; email: string } | null;
 }
 
-type Tab = "overview" | "workspaces" | "users" | "audit";
+type Tab = "overview" | "workspaces" | "users" | "audit" | "settings";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -54,6 +55,8 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [timezone, setTimezone] = useState("browser");
   const [timeFormat, setTimeFormat] = useState("browser");
+  const [dateFormat, setDateFormat] = useState("browser");
+  const [settingsConfig, setSettingsConfig] = useState<Record<string, string>>({});
   const [stats, setStats] = useState<Stats | null>(null);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -106,6 +109,14 @@ export default function AdminPage() {
     }
   }, []);
 
+  const loadConfig = useCallback(async () => {
+    const res = await fetch("/api/admin/settings");
+    if (res.ok) {
+      const data = await res.json();
+      if (data.config) setSettingsConfig(data.config);
+    }
+  }, []);
+
   useEffect(() => {
     async function init() {
       const res = await fetch("/api/profile");
@@ -120,6 +131,7 @@ export default function AdminPage() {
       }
       setTimezone(data.profile.timezone || "browser");
       setTimeFormat(data.profile.timeFormat || "browser");
+      setDateFormat(data.profile.dateFormat || "browser");
       setAuthorized(true);
       setLoading(false);
     }
@@ -226,25 +238,38 @@ export default function AdminPage() {
   if (!authorized) return null;
 
   function formatDate(iso: string): string {
-    const d = new Date(iso);
-    try {
-      const tz = timezone !== "browser" ? timezone : undefined;
-      const opts: Intl.DateTimeFormatOptions = timeFormat === "24h"
-        ? { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false, timeZone: tz }
-        : timeFormat === "12h"
-        ? { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true, timeZone: tz }
-        : { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit", timeZone: tz };
-      return d.toLocaleString(undefined, opts);
-    } catch {
-      return d.toLocaleString();
-    }
+    return fmtDate(iso, {
+      timezone,
+      timeFormat: timeFormat as "browser" | "12h" | "24h",
+      dateFormat: dateFormat as "browser" | "iso" | "us" | "eu" | "long" | "short",
+    });
   }
+
+  const saveConfig = async (key: string, value: string) => {
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, value }),
+      });
+      if (res.ok) {
+        setSettingsConfig((prev) => ({ ...prev, [key]: value }));
+        toastSuccess("Setting saved");
+      } else {
+        const data = await res.json();
+        toastError(data.error || "Failed to save setting");
+      }
+    } catch {
+      toastError("Failed to save setting");
+    }
+  };
 
   const tabs: { id: Tab; label: string; icon: typeof ShieldCheck }[] = [
     { id: "overview", label: "Overview", icon: Activity },
     { id: "workspaces", label: "Workspaces", icon: Building2 },
     { id: "users", label: "Users", icon: Users },
     { id: "audit", label: "Audit Logs", icon: FileText },
+    { id: "settings", label: "Settings", icon: Settings2 },
   ];
 
   const statCards = stats
@@ -511,6 +536,64 @@ export default function AdminPage() {
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === "settings" && (
+        <div>
+          <div className="card" style={{ marginBottom: "1.5rem" }}>
+            <h3>Upload Settings</h3>
+            <div className="form-group">
+              <label htmlFor="upload-types">Allowed File Types</label>
+              <input
+                id="upload-types"
+                value={settingsConfig.uploadTypes || ""}
+                onChange={(e) => setSettingsConfig((prev) => ({ ...prev, uploadTypes: e.target.value }))}
+                placeholder="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+              />
+              <p className="text-muted text-xs" style={{ marginTop: "0.25rem" }}>
+                Comma-separated MIME types for note attachment uploads.
+              </p>
+            </div>
+            <div className="form-group">
+              <label htmlFor="upload-max-size">Max Upload Size (MB)</label>
+              <input
+                id="upload-max-size"
+                type="number"
+                value={settingsConfig.uploadMaxSize || "5"}
+                onChange={(e) => setSettingsConfig((prev) => ({ ...prev, uploadMaxSize: e.target.value }))}
+              />
+            </div>
+            <button
+              className="btn primary"
+              onClick={() => {
+                const types = settingsConfig.uploadTypes;
+                const size = settingsConfig.uploadMaxSize;
+                if (types !== undefined) saveConfig("uploadTypes", types);
+                if (size !== undefined && types) saveConfig("uploadMaxSize", size);
+                else saveConfig("uploadTypes", types || "");
+                if (size !== undefined) setTimeout(() => saveConfig("uploadMaxSize", size), 500);
+              }}
+            >
+              Save Upload Settings
+            </button>
+          </div>
+
+          <div className="card">
+            <h3>Landing Page</h3>
+            <div className="flex align-center justify-between" style={{ marginTop: "0.5rem" }}>
+              <div>
+                <strong>Show Landing Page</strong>
+                <p className="text-muted text-xs">When disabled, unauthenticated visitors are redirected to /login.</p>
+              </div>
+              <button
+                className={`btn ${settingsConfig.showLandingPage === "false" ? "danger" : "primary"} sm`}
+                onClick={() => saveConfig("showLandingPage", settingsConfig.showLandingPage === "false" ? "true" : "false")}
+              >
+                {settingsConfig.showLandingPage === "false" ? "Disabled" : "Enabled"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -13,6 +13,7 @@ import { defaultSchema } from "hast-util-sanitize";
 
 const rehypeSanitizeOptions = { ...defaultSchema };
 import { useRealtimeNote } from "@/hooks/use-realtime-note";
+import { formatDate as fmtDate } from "@/lib/date-format";
 import { BacklinksPanel } from "@/components/editor/backlinks-panel";
 import { VersionPanel } from "@/components/editor/version-panel";
 import { PresenceAvatars } from "@/components/editor/presence-avatars";
@@ -96,22 +97,12 @@ export default function NoteEditorPage() {
       });
   }, []);
 
-  const formatDate = (date: Date | string) => {
-    const d = new Date(date);
-    const timezone = profile?.timezone || "UTC";
-    const hour12 = profile?.timeFormat === "12h" ? true : profile?.timeFormat === "24h" ? false : undefined;
-
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      timeZone: timezone === "browser" ? undefined : timezone,
-      hour12: hour12,
-    }).format(d);
-  };
+  const formatDate = (date: Date | string) =>
+    fmtDate(date, {
+      timezone: profile?.timezone || "UTC",
+      timeFormat: (profile?.timeFormat as "browser" | "12h" | "24h") || "browser",
+      dateFormat: (profile?.dateFormat as "browser" | "iso" | "us" | "eu" | "long" | "short") || "browser",
+    });
 
   const { viewers, lastUpdate, clearUpdate, localUpdate } = useRealtimeNote(noteId, setContent);
   useEffect(() => {

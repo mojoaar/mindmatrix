@@ -1,4 +1,4 @@
-export type DateFormat = "browser" | "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD" | "YYYY/MM/DD" | "DD.MM.YYYY";
+export type DateFormat = "browser" | "iso" | "us" | "eu" | "long" | "short";
 export type TimeFormat = "browser" | "12h" | "24h";
 
 export interface FormatDateOptions {
@@ -39,7 +39,7 @@ export function formatDate(date: Date | string, opts: FormatDateOptions = {}): s
   const dateStr = buildDateString(dateFormat, DD, MM, YYYY);
   if (!includeTime) return dateStr;
 
-  const timeStr = hour12 !== false
+  const timeStr = hour12 === true
     ? `${HH}:${mm} ${values.dayPeriod || ""}`.trim()
     : `${HH}:${mm}`;
 
@@ -48,17 +48,21 @@ export function formatDate(date: Date | string, opts: FormatDateOptions = {}): s
 
 function buildDateString(format: DateFormat, DD: string, MM: string, YYYY: string): string {
   switch (format) {
-    case "DD/MM/YYYY": return `${DD}/${MM}/${YYYY}`;
-    case "MM/DD/YYYY": return `${MM}/${DD}/${YYYY}`;
-    case "YYYY-MM-DD": return `${YYYY}-${MM}-${DD}`;
-    case "YYYY/MM/DD": return `${YYYY}/${MM}/${DD}`;
-    case "DD.MM.YYYY": return `${DD}.${MM}.${YYYY}`;
+    case "iso": return `${YYYY}-${MM}-${DD}`;
+    case "us": return `${MM}/${DD}/${YYYY}`;
+    case "eu": return `${DD}/${MM}/${YYYY}`;
+    case "long":
+      return new Intl.DateTimeFormat("en-US", {
+        year: "numeric", month: "long", day: "numeric",
+      }).format(new Date(`${YYYY}-${MM}-${DD}`));
+    case "short":
+      return new Intl.DateTimeFormat("en-US", {
+        year: "numeric", month: "short", day: "numeric",
+      }).format(new Date(`${YYYY}-${MM}-${DD}`));
     case "browser":
     default:
       return new Intl.DateTimeFormat(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }).format(new Date(Number(YYYY), Number(MM) - 1, Number(DD)));
+        year: "numeric", month: "short", day: "numeric",
+      }).format(new Date(`${YYYY}-${MM}-${DD}`));
   }
 }

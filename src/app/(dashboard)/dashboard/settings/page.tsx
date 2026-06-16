@@ -26,6 +26,7 @@ interface Profile {
   image: string | null;
   timezone: string;
   timeFormat: string;
+  dateFormat: string;
   twoFactorEnabled: boolean;
   createdAt: string;
 }
@@ -458,9 +459,24 @@ export default function UserSettingsPage() {
               <button
                 key={fmt}
                 className={`btn ${timeFormat === fmt ? "primary" : "secondary"} sm`}
-                onClick={() => setTimeFormat(fmt)}
+                onClick={() => { setTimeFormat(fmt); syncPref({ timeFormat: fmt }); }}
               >
                 {fmt === "browser" ? "Browser Default" : fmt === "12h" ? "12-hour (AM/PM)" : "24-hour"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>Date Format</label>
+          <div className="flex gap-1" style={{ marginTop: "0.5rem", flexWrap: "wrap" }}>
+            {(["browser", "iso", "us", "eu", "long", "short"] as const).map((fmt) => (
+              <button
+                key={fmt}
+                className={`btn ${dateFormat === fmt ? "primary" : "secondary"} sm`}
+                onClick={() => { setDateFormat(fmt); syncPref({ dateFormat: fmt }); }}
+              >
+                {fmt === "browser" ? "Browser Default" : fmt === "iso" ? "ISO 8601" : fmt === "us" ? "US (MM/DD/YYYY)" : fmt === "eu" ? "EU (DD/MM/YYYY)" : fmt === "long" ? "Long" : "Short"}
               </button>
             ))}
           </div>
