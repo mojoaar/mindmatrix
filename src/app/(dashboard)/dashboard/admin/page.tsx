@@ -257,13 +257,36 @@ export default function AdminPage() {
       });
       if (res.ok) {
         setSettingsConfig((prev) => ({ ...prev, [key]: value }));
-        toastSuccess("Setting saved");
+        return true;
       } else {
         const data = await res.json();
         toastError(data.error || "Failed to save setting");
+        return false;
       }
     } catch {
       toastError("Failed to save setting");
+      return false;
+    }
+  };
+
+  const saveConfigs = async (entries: { key: string; value: string }[]) => {
+    let ok = true;
+    for (const { key, value } of entries) {
+      const res = await fetch("/api/admin/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, value }),
+      });
+      if (res.ok) {
+        setSettingsConfig((prev) => ({ ...prev, [key]: value }));
+      } else {
+        ok = false;
+      }
+    }
+    if (ok) {
+      toastSuccess("Settings saved");
+    } else {
+      toastError("Some settings failed to save");
     }
   };
 
@@ -571,12 +594,10 @@ export default function AdminPage() {
             <button
               className="btn primary"
               onClick={() => {
-                const types = settingsConfig.uploadTypes;
-                const size = settingsConfig.uploadMaxSize;
-                if (types !== undefined) saveConfig("uploadTypes", types);
-                if (size !== undefined && types) saveConfig("uploadMaxSize", size);
-                else saveConfig("uploadTypes", types || "");
-                if (size !== undefined) setTimeout(() => saveConfig("uploadMaxSize", size), 500);
+                const entries: { key: string; value: string }[] = [];
+                if (settingsConfig.uploadTypes !== undefined) entries.push({ key: "uploadTypes", value: settingsConfig.uploadTypes });
+                if (settingsConfig.uploadMaxSize !== undefined) entries.push({ key: "uploadMaxSize", value: settingsConfig.uploadMaxSize });
+                if (entries.length > 0) saveConfigs(entries);
               }}
             >
               Save Upload Settings
@@ -642,11 +663,10 @@ export default function AdminPage() {
               <button
                 className="btn primary sm"
                 onClick={() => {
-                  const keys = ["smtpHost", "smtpPort", "smtpUser", "smtpPass", "smtpFrom"] as const;
-                  for (const k of keys) {
-                    const v = settingsConfig[k];
-                    if (v !== undefined) saveConfig(k, v);
-                  }
+                  const entries = (["smtpHost", "smtpPort", "smtpUser", "smtpPass", "smtpFrom"] as const)
+                    .filter((k) => settingsConfig[k] !== undefined)
+                    .map((k) => ({ key: k, value: settingsConfig[k]! }));
+                  if (entries.length > 0) saveConfigs(entries);
                 }}
               >
                 Save SMTP Settings
