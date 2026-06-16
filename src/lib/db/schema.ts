@@ -569,6 +569,32 @@ export const auditLogRelations = relations(auditLog, ({ one }) => ({
   }),
 }));
 
+export const notification = pgTable(
+  "notification",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").references(() => user.id, { onDelete: "cascade" }).notNull(),
+    type: text("type").notNull(),
+    title: text("title").notNull(),
+    message: text("message").notNull(),
+    link: text("link"),
+    isRead: boolean("is_read").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    notifUserIdIdx: index("notif_userId_idx").on(table.userId),
+    notifIsReadIdx: index("notif_isRead_idx").on(table.isRead),
+    notifCreatedAtIdx: index("notif_createdAt_idx").on(table.createdAt),
+  })
+);
+
+export const notificationRelations = relations(notification, ({ one }) => ({
+  user: one(user, {
+    fields: [notification.userId],
+    references: [user.id],
+  }),
+}));
+
 export const webhookRelations = relations(webhook, ({ one }) => ({
   workspace: one(workspace, {
     fields: [webhook.workspaceId],

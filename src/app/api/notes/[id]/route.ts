@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { getEventBus } from "@/lib/realtime/event-bus";
 import { logAction } from "@/lib/audit";
 import { triggerWebhooks } from "@/lib/webhooks";
+import { createNotification } from "@/lib/notifications";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -158,6 +159,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         { id: session.user.id, name: session.user.name, email: session.user.email }
       );
     } catch {}
+
+    if (updated.createdById && updated.createdById !== session.user.id) {
+      await createNotification({
+        userId: updated.createdById,
+        type: "note_updated",
+        title: `Note updated: ${updated.title}`,
+        message: `${session.user.name} edited your note`,
+        link: `/dashboard/w/[slug]/notes/${updated.id}`,
+      });
+    }
   }
 
   return NextResponse.json({ note: updated });

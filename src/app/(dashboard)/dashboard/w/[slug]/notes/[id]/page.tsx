@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Save, Trash2, Tag, Heading1, Heading2, Heading3, Bold, Italic, Code, Link2, List, CheckSquare, Table, Image as ImageIcon, Share2, Globe } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Tag, Heading1, Heading2, Heading3, Bold, Italic, Code, Link2, List, CheckSquare, Table, Image as ImageIcon, Share2, Globe, Printer } from "lucide-react";
 import Link from "next/link";
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
@@ -220,6 +220,18 @@ export default function NoteEditorPage() {
     }, 2000);
     return () => clearTimeout(timer);
   }, [content, note, save]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onResize = () => {
+      if (window.innerWidth < 768) {
+        if (layout === "split") setLayout("edit");
+      }
+    };
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [layout]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -571,6 +583,13 @@ export default function NoteEditorPage() {
 
           <button className="btn danger sm flex align-center gap-1" onClick={deleteNote}>
             <Trash2 size={14} />
+          </button>
+          <button
+            className="btn secondary sm flex align-center gap-1"
+            onClick={() => window.open(`/api/export?workspaceId=${note.workspaceId}&format=pdf`, "_blank")}
+            title="Export as PDF"
+          >
+            <Printer size={14} />
           </button>
         </div>
       </div>

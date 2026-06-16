@@ -2,9 +2,10 @@
 
 import { authClient } from "@/lib/auth-client";
 import { useRouter, usePathname } from "next/navigation";
-import { BookOpen, LogOut, Search, Settings, Folders, ShieldCheck, Sun, Moon, Tag, type LucideIcon } from "lucide-react";
+import { BookOpen, LogOut, Search, Settings, Folders, ShieldCheck, Sun, Moon, Tag, Menu, X, type LucideIcon } from "lucide-react";
 import { SearchOverlay } from "@/components/search/search-overlay";
 import { Avatar } from "@/components/ui/avatar";
+import { NotificationBell } from "@/components/ui/notification-bell";
 import { getIcon } from "@/lib/icons";
 import { useTheme } from "@/components/theme/theme-provider";
 import Link from "next/link";
@@ -46,6 +47,7 @@ export default function DashboardLayout({
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [user, setUser] = useState<UserInfo | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const [showFolders, setShowFolders] = useState(false);
   const [showTags, setShowTags] = useState(false);
 
@@ -189,9 +191,32 @@ export default function DashboardLayout({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) setSidebarOpen(false);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <div style={{ display: "flex", height: "100vh" }}>
       {/* Sidebar */}
+      {isMobile && sidebarOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            zIndex: 99,
+          }}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
       <aside
         style={{
           width: sidebarOpen ? "260px" : "0px",
@@ -202,6 +227,7 @@ export default function DashboardLayout({
           display: "flex",
           flexDirection: "column",
           flexShrink: 0,
+          ...(isMobile ? { position: "fixed" as const, left: 0, top: 0, bottom: 0, zIndex: 100 } : {}),
         }}
       >
         <Link
@@ -434,8 +460,13 @@ export default function DashboardLayout({
           }}
         >
           <div className="flex align-center gap-2">
-            {!sidebarOpen && (
-              <button
+            {isMobile && (
+              <button className="btn ghost sm" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                {sidebarOpen ? <X size={16} /> : <Menu size={16} />}
+              </button>
+            )}
+            {!isMobile && !sidebarOpen && (
+            <button
                 className="btn ghost sm"
                 onClick={() => setSidebarOpen(true)}
               >
@@ -465,6 +496,7 @@ export default function DashboardLayout({
           </div>
 
           <div className="flex align-center gap-1">
+            <NotificationBell />
             <button 
               className="btn ghost sm" 
               onClick={toggleTheme} 

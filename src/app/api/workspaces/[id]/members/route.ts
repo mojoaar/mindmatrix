@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { db, workspaceMember, user } from "@/lib/db";
+import { db, workspaceMember, user, workspace } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { logAction } from "@/lib/audit";
+import { createNotification } from "@/lib/notifications";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -63,6 +64,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     .returning();
 
   await logAction(session.user.id, "WORKSPACE_MEMBER_ADDED", `Added ${targetUser.email} as ${role || "member"} to workspace`, request);
+
+  const ws = await db.query.workspace.findFirst({ where: eq(workspaceMember.workspaceId, id), columns: { name: true, slug: true } });
+  await createNotification({
+    userId: targetUser.id,
+    type: "workspace_joined",
+    title: `Added to ${ws?.name || "a workspace"}`,
+    message: `${session.user.name} added you as ${role || "member"}`,
+    link: `/dashboard/w/${ws?.slug || id}`,
+  });
 
   return NextResponse.json({ member }, { status: 201 });
 }
