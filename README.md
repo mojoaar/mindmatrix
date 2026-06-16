@@ -126,6 +126,24 @@ Built by [mojoaar](https://github.com/mojoaar)
 ## Changelog
 
 ### v0.3.0 — 2026-06-16
+- **Landing Page** — unauthenticated responsive landing page with theme toggle and presets
+- **Webhooks** — HMAC-SHA256 signed HTTP callbacks on note, folder, and tag events with SSRF protection
+- **Git Sync Plugin** — pull/commit workspace notes to any Git repository (SSH/HTTPS)
+- **TOTP Two-Factor Auth** — opt-in MFA with QR setup, backup codes, and trusted devices
+- **CRDT Realtime Co-authoring** — Y.js-based collaborative editing with delta sync (upgrade from last-write-wins)
+- **Public Note Sharing** — one-click read-only public document links with SEO preview cards
+- **Markdown Formatting Toolbar** — headings, lists, links, tables, code blocks in the editor
+- **Drag & Drop Image Upload** — drop images directly into the editor for instant upload
+- **Sidebar Folders & Tags** — interactive folder and tag navigation with live note counts
+- **Proxy Cookie Fix** — `__Secure-` prefix added for HTTPS production compatibility
+- **Customizable Email** — users can change their email address with uniqueness validation
+- **Date Format Preference** — choose browser, ISO, US, EU, long, or short date display format
+- **Admin Email Settings** — SMTP configuration, markdown email templates, test email button
+- **Dynamic System Config** — admin UI for upload file types, max size, landing page toggle
+- **Server-Side Preferences** — theme, font, editor layout, and sidebar visibility stored in user profile
+- **Folder Icons** — 400+ Lucide icons selectable per folder alongside workspace icons
+
+### v0.2.0 — 2026-06-14
 - **Backlinks** — `[[note-slug]]` detection with incoming/outgoing links panel
 - **Version History** — auto-snapshot on save, restore from history
 - **Realtime Collaboration** — presence avatars, live update notifications (SSE + PG NOTIFY)
@@ -148,22 +166,6 @@ Built by [mojoaar](https://github.com/mojoaar)
 - **Audit Logging** — all CRUD operations tracked with searchable trail
 - **OpenCode Zen Plugin** — multi-model AI chat (GPT, Claude, DeepSeek)
 - **Security Hardening** — AES-256-GCM encryption for plugin credentials, BOLA fixes
-- **Landing Page** — unauthenticated responsive landing page with theme toggle
-- **Webhooks** — HMAC-SHA256 signed HTTP callbacks on note, folder, and tag events with SSRF protection
-- **Git Sync Plugin** — pull/commit workspace notes to any Git repository (SSH/HTTPS)
-- **TOTP Two-Factor Auth** — opt-in MFA with QR setup, backup codes, and trusted devices
-- **CRDT Realtime Co-authoring** — Y.js-based collaborative editing with delta sync (upgrade from last-write-wins)
-- **Public Note Sharing** — one-click read-only public document links with SEO preview cards
-- **Markdown Formatting Toolbar** — headings, lists, links, tables, code blocks in the editor
-- **Drag & Drop Image Upload** — drop images directly into the editor for instant upload
-- **Sidebar Folders & Tags** — interactive folder and tag navigation with note counts
-- **Proxy Cookie Fix** — `__Secure-` prefix added for HTTPS production compatibility
-- **Customizable Email** — users can change their email address with uniqueness validation
-- **Date Format Preference** — choose browser, ISO, US, EU, long, or short date display format
-- **Admin Email Settings** — SMTP configuration, markdown email templates, test email button
-- **Dynamic System Config** — admin UI for upload file types, max size, landing page toggle
-- **Server-Side Preferences** — theme, font, editor layout, and sidebar visibility stored in user profile
-- **Folder Icons** — 400+ Lucide icons selectable per folder alongside workspace icons
 
 ### v0.1.0 — 2026-06-13
 - Initial release: workspaces, notes, folders, tags, search, themes, Docker deployment
