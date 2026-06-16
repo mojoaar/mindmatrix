@@ -21,6 +21,11 @@ export async function GET(request: Request) {
       timeFormat: true,
       role: true,
       twoFactorEnabled: true,
+      theme: true,
+      font: true,
+      sidebarFolders: true,
+      sidebarTags: true,
+      editorLayout: true,
       createdAt: true,
     },
   });
@@ -38,7 +43,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { name, timezone, timeFormat, email } = await request.json();
+  const { name, timezone, timeFormat, email, theme, font, sidebarFolders, sidebarTags, editorLayout } = await request.json();
 
   const update: Record<string, unknown> = {};
   if (name !== undefined && typeof name === "string" && name.trim().length > 0) {
@@ -46,6 +51,11 @@ export async function PATCH(request: Request) {
   }
   if (timezone !== undefined) update.timezone = timezone;
   if (timeFormat !== undefined) update.timeFormat = timeFormat;
+  if (theme !== undefined && typeof theme === "string") update.theme = theme;
+  if (font !== undefined && typeof font === "string") update.font = font;
+  if (sidebarFolders !== undefined && typeof sidebarFolders === "boolean") update.sidebarFolders = sidebarFolders;
+  if (sidebarTags !== undefined && typeof sidebarTags === "boolean") update.sidebarTags = sidebarTags;
+  if (editorLayout !== undefined && typeof editorLayout === "string") update.editorLayout = editorLayout;
 
   if (email !== undefined && typeof email === "string") {
     const trimmedEmail = email.trim();
@@ -85,6 +95,11 @@ export async function PATCH(request: Request) {
       timeFormat: user.timeFormat,
       role: user.role,
       twoFactorEnabled: user.twoFactorEnabled,
+      theme: user.theme,
+      font: user.font,
+      sidebarFolders: user.sidebarFolders,
+      sidebarTags: user.sidebarTags,
+      editorLayout: user.editorLayout,
       createdAt: user.createdAt,
     });
 

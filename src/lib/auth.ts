@@ -49,6 +49,31 @@ const authInstance = betterAuth({
         required: false,
         defaultValue: false,
       },
+      theme: {
+        type: "string",
+        required: false,
+        defaultValue: "nord-dark",
+      },
+      font: {
+        type: "string",
+        required: false,
+        defaultValue: "jetbrains-mono",
+      },
+      sidebarFolders: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+      },
+      sidebarTags: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+      },
+      editorLayout: {
+        type: "string",
+        required: false,
+        defaultValue: "split",
+      },
     },
   },
   emailAndPassword: {

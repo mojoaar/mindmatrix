@@ -36,6 +36,11 @@ export const user = pgTable("user", {
   timeFormat: text("time_format").default("browser").notNull(),
   role: text("role").default("user").notNull(),
   twoFactorEnabled: boolean("two_factor_enabled").default(false).notNull(),
+  theme: text("theme").default("nord-dark").notNull(),
+  font: text("font").default("jetbrains-mono").notNull(),
+  sidebarFolders: boolean("sidebar_folders").default(false).notNull(),
+  sidebarTags: boolean("sidebar_tags").default(false).notNull(),
+  editorLayout: text("editor_layout").default("split").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

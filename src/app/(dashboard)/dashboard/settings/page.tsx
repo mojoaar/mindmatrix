@@ -98,16 +98,30 @@ export default function UserSettingsPage() {
     return false;
   });
 
+  async function syncPref(fields: Record<string, unknown>) {
+    try {
+      await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+      });
+    } catch {
+      // silent — localStorage is the source of truth, server is cache
+    }
+  }
+
   const handleToggleSidebarFolders = (val: boolean) => {
     setSidebarShowFolders(val);
     localStorage.setItem("mindmatrix-show-sidebar-folders", val ? "true" : "false");
     window.dispatchEvent(new CustomEvent("mindmatrix:sidebar-prefs-updated"));
+    syncPref({ sidebarFolders: val });
   };
 
   const handleToggleSidebarTags = (val: boolean) => {
     setSidebarShowTags(val);
     localStorage.setItem("mindmatrix-show-sidebar-tags", val ? "true" : "false");
     window.dispatchEvent(new CustomEvent("mindmatrix:sidebar-prefs-updated"));
+    syncPref({ sidebarTags: val });
   };
 
   const [mfaEnabled, setMfaEnabled] = useState(false);
@@ -235,6 +249,21 @@ export default function UserSettingsPage() {
           setTimezone(data.profile.timezone || "browser");
           setTimeFormat(data.profile.timeFormat || "browser");
           setMfaEnabled(data.profile.twoFactorEnabled || false);
+          if (data.profile.theme) {
+            setTheme(data.profile.theme);
+          }
+          if (data.profile.font) {
+            setSelectedFont(data.profile.font);
+          }
+          if (data.profile.editorLayout) {
+            setEditorLayout(data.profile.editorLayout);
+          }
+          if (typeof data.profile.sidebarFolders === "boolean") {
+            setSidebarShowFolders(data.profile.sidebarFolders);
+          }
+          if (typeof data.profile.sidebarTags === "boolean") {
+            setSidebarShowTags(data.profile.sidebarTags);
+          }
         }
       })
       .catch(() => {})
@@ -310,12 +339,14 @@ export default function UserSettingsPage() {
   function setAndSaveLayout(layout: string) {
     setEditorLayout(layout);
     localStorage.setItem("mindmatrix-editor-layout", layout);
+    syncPref({ editorLayout: layout });
   }
 
   function setAndSaveFont(fontId: string) {
     setSelectedFont(fontId);
     localStorage.setItem(FONT_STORAGE_KEY, fontId);
     document.documentElement.setAttribute("data-font", fontId);
+    syncPref({ font: fontId });
   }
 
   if (loading || !profile) {
@@ -444,7 +475,7 @@ export default function UserSettingsPage() {
               <button
                 key={t}
                 className={`btn ${theme === t ? "primary" : "secondary"} sm`}
-                onClick={() => setTheme(t)}
+                onClick={() => { setTheme(t); syncPref({ theme: t }); }}
               >
                 {t}
               </button>

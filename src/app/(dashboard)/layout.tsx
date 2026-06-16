@@ -25,6 +25,8 @@ interface UserInfo {
   email: string;
   image: string | null;
   role?: string;
+  sidebarFolders?: boolean;
+  sidebarTags?: boolean;
 }
 
 const navItems: { href: string; label: string; icon: LucideIcon }[] = [
@@ -49,8 +51,10 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const loadPrefs = () => {
-      setShowFolders(localStorage.getItem("mindmatrix-show-sidebar-folders") === "true");
-      setShowTags(localStorage.getItem("mindmatrix-show-sidebar-tags") === "true");
+      const lsFolders = localStorage.getItem("mindmatrix-show-sidebar-folders");
+      const lsTags = localStorage.getItem("mindmatrix-show-sidebar-tags");
+      setShowFolders(lsFolders === "true");
+      setShowTags(lsTags === "true");
     };
     loadPrefs();
     window.addEventListener("mindmatrix:sidebar-prefs-updated", loadPrefs);
@@ -58,6 +62,17 @@ export default function DashboardLayout({
       window.removeEventListener("mindmatrix:sidebar-prefs-updated", loadPrefs);
     };
   }, []);
+
+  useEffect(() => {
+    if (user?.sidebarFolders !== undefined) {
+      setShowFolders(user.sidebarFolders);
+      localStorage.setItem("mindmatrix-show-sidebar-folders", user.sidebarFolders ? "true" : "false");
+    }
+    if (user?.sidebarTags !== undefined) {
+      setShowTags(user.sidebarTags);
+      localStorage.setItem("mindmatrix-show-sidebar-tags", user.sidebarTags ? "true" : "false");
+    }
+  }, [user?.sidebarFolders, user?.sidebarTags]);
 
   const toggleTheme = () => {
     if (theme.endsWith("-dark")) {
