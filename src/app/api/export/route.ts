@@ -3,10 +3,6 @@ import { db, note, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { generateNotePdf } from "@/lib/export-pdf";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-
-const EXPORT_DIR = path.join(process.cwd(), "public", "exports");
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -37,7 +33,7 @@ export async function GET(request: Request) {
     });
 
     try {
-      const pdfBytes = await generateNotePdf(
+      const html = await generateNotePdf(
         `${notes.length} Notes`,
         notes.map((n) => {
           let frontmatter = `# ${n.title}\n\n`;
@@ -49,11 +45,12 @@ export async function GET(request: Request) {
         session.user.name
       );
 
-      await mkdir(EXPORT_DIR, { recursive: true });
-      const filename = `export-${crypto.randomUUID()}.pdf`;
-      await writeFile(path.join(EXPORT_DIR, filename), pdfBytes);
-
-      return NextResponse.json({ url: `/exports/${filename}` });
+      return new NextResponse(html, {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Content-Disposition": 'attachment; filename="mindmatrix-export.html"',
+        },
+      });
     } catch (err) {
       console.error("PDF export error:", err);
       return NextResponse.json({ error: "Failed to generate PDF" }, { status: 500 });

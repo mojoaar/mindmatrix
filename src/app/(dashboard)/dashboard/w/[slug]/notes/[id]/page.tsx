@@ -581,28 +581,17 @@ export default function NoteEditorPage() {
             )}
           </div>
 
-          <button className="btn danger sm flex align-center gap-1" onClick={deleteNote}>
-            <Trash2 size={14} />
-          </button>
           <button
             className="btn secondary sm flex align-center gap-1"
-            onClick={async () => {
-              try {
-                toastSuccess("Generating PDF...");
-                const res = await fetch(`/api/export?workspaceId=${note.workspaceId}&format=pdf`);
-                const data = await res.json();
-                if (data.url) {
-                  window.open(data.url, "_blank");
-                } else {
-                  toastError(data.error || "Failed to generate PDF");
-                }
-              } catch {
-                toastError("Failed to generate PDF");
-              }
+            onClick={() => {
+              window.open(`/api/export?workspaceId=${note.workspaceId}&format=pdf`, "_blank");
             }}
             title="Export as PDF"
           >
             <Printer size={14} />
+          </button>
+          <button className="btn danger sm flex align-center gap-1" onClick={deleteNote}>
+            <Trash2 size={14} />
           </button>
         </div>
       </div>
