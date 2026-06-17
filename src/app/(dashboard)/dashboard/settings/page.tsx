@@ -85,6 +85,10 @@ export default function UserSettingsPage() {
     return "jetbrains-mono";
   });
 
+  const [apiTokens, setApiTokens] = useState<any[]>([]);
+  const [apiTokenName, setApiTokenName] = useState("");
+  const [apiTokenCreating, setApiTokenCreating] = useState(false);
+
   const [sidebarShowFolders, setSidebarShowFolders] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("mindmatrix-show-sidebar-folders") === "true";
@@ -273,7 +277,7 @@ export default function UserSettingsPage() {
         }
       })
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => { setLoading(false); fetchApiTokens(); });
   }, []);
 
   async function saveProfile() {
@@ -352,7 +356,36 @@ export default function UserSettingsPage() {
     setSelectedFont(fontId);
     localStorage.setItem(FONT_STORAGE_KEY, fontId);
     document.documentElement.setAttribute("data-font", fontId);
-    syncPref({ font: fontId });
+  }
+
+  async function fetchApiTokens() {
+    try {
+      const res = await fetch("/api/tokens");
+      const data = await res.json();
+      if (data.tokens) setApiTokens(data.tokens);
+    } catch {}
+  }
+
+  async function createApiToken() {
+    if (!apiTokenName.trim()) return;
+    setApiTokenCreating(true);
+    try {
+      await fetch("/api/tokens", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: apiTokenName }),
+      });
+      setApiTokenName("");
+      fetchApiTokens();
+    } catch {}
+    setApiTokenCreating(false);
+  }
+
+  async function revokeApiToken(id: string) {
+    try {
+      await fetch(`/api/tokens/${id}`, { method: "DELETE" });
+      fetchApiTokens();
+    } catch {}
   }
 
   if (loading || !profile) {
@@ -744,6 +777,48 @@ export default function UserSettingsPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* API Tokens */}
+      <div className="card" style={{ marginBottom: "1.5rem" }}>
+        <h3>API Tokens</h3>
+        <p className="text-muted text-sm" style={{ marginBottom: "1rem" }}>
+          Create tokens for CLI tools and third-party integrations. Tokens are only shown once.
+        </p>
+
+        <div className="flex gap-1" style={{ marginBottom: "1rem" }}>
+          <input
+            placeholder="Token name..."
+            value={apiTokenName}
+            onChange={(e) => setApiTokenName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") createApiToken(); }}
+            style={{ flex: 1 }}
+          />
+          <button className="btn primary sm" onClick={createApiToken} disabled={apiTokenCreating}>
+            {apiTokenCreating ? "Creating..." : "Create Token"}
+          </button>
+        </div>
+
+        {apiTokens.length > 0 && (
+          <div className="table-wrapper">
+            <table>
+              <thead>
+                <tr><th>Name</th><th>Token</th><th>Last Used</th><th>Created</th><th></th></tr>
+              </thead>
+              <tbody>
+                {apiTokens.map((t: any) => (
+                  <tr key={t.id}>
+                    <td className="text-sm">{t.name}</td>
+                    <td className="text-xs"><code>{t.token}</code></td>
+                    <td className="text-xs text-muted">{t.lastUsedAt ? new Date(t.lastUsedAt).toLocaleDateString() : "Never"}</td>
+                    <td className="text-xs text-muted">{new Date(t.createdAt).toLocaleDateString()}</td>
+                    <td><button className="btn danger sm" onClick={() => revokeApiToken(t.id)}>Revoke</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* About */}

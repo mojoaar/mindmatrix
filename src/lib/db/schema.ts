@@ -607,3 +607,27 @@ export const systemConfig = pgTable("system_config", {
   value: text("value").notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const apiToken = pgTable(
+  "api_token",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").references(() => user.id, { onDelete: "cascade" }).notNull(),
+    name: text("name").notNull(),
+    token: text("token").unique().notNull(),
+    lastUsedAt: timestamp("last_used_at"),
+    expiresAt: timestamp("expires_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    apiTokenUserIdIdx: index("api_token_userId_idx").on(table.userId),
+    apiTokenTokenIdx: uniqueIndex("api_token_token_idx").on(table.token),
+  })
+);
+
+export const apiTokenRelations = relations(apiToken, ({ one }) => ({
+  user: one(user, {
+    fields: [apiToken.userId],
+    references: [user.id],
+  }),
+}));
