@@ -139,6 +139,9 @@ Built by [mojoaar](https://github.com/mojoaar)
 - **@mentions in Comments** — mention workspace members in comments (`@username`) to trigger notifications
 - **API Tokens** — Bearer token auth for CLI and third-party integrations (Create/Revoke UI)
 - **Multi-Layer Security Hardening** — complete audit pass adding BOLA guards, Stored XSS filters, DNS-rebinding-safe SSRF webhooks, AES-256-GCM credentials encryption, and sliding-window rate limiting on comments/tokens
+- **Interactive Notes Sorting** — click table headers in workspace notes view to sort dynamically by Title (alphabetical) or Updated (chronological, newest first)
+- **Visual Search in Docs & API Reference** — added a visual Search button matching the main dashboard layout to both `/docs` and `/apidocs` routes
+- **Interactive Multi-Language API Examples** — added a sticky language selector bar (cURL, PowerShell, Python, JavaScript) to `/apidocs` with collapsible PrismJS-highlighted code integration snippets
 
 ### v0.3.0 — 2026-06-16
 - **Landing Page** — unauthenticated responsive landing page with theme toggle and presets

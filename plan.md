@@ -372,6 +372,9 @@ Stored in `localStorage` key `mindmatrix-theme` and `mindmatrix-font`. Applied v
 - **Threaded Comments** — comment on shared notes with SSE real-time delivery
 - **@mentions in Comments** — workspace member notification when mentioned
 - **API Tokens** — Bearer token auth for CLI and third-party integrations
+- **Interactive Notes Sorting** — click table headers in workspace notes view to sort dynamically by Title or Updated
+- **Visual Search in Docs & API Reference** — added search triggers and overlays to `/docs` and `/apidocs` routes
+- **Interactive Multi-Language API Examples** — added a sticky language selector bar with collapsible PrismJS snippets to `/apidocs`
 
 ### Ideas Backlog
 
