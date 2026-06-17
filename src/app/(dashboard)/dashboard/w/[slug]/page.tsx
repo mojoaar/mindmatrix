@@ -66,6 +66,8 @@ export default function WorkspacePage() {
   const slug = params.slug as string;
   const [workspace, setWorkspace] = useState<{ id: string; name: string } | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
+  const [sortBy, setSortBy] = useState<"title" | "updatedAt">("updatedAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [folders, setFolders] = useState<Folder[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -756,24 +758,70 @@ export default function WorkspacePage() {
       )}
 
       {/* Notes list */}
-      <div className="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Tags</th>
-              <th>Updated</th>
-            </tr>
-          </thead>
-          <tbody>
-            {notes.length === 0 && (
-              <tr>
-                <td colSpan={3} className="text-muted text-sm" style={{ textAlign: "center" }}>
-                  No notes yet. Create your first note!
-                </td>
-              </tr>
-            )}
-            {notes.map((note) => (
+      {(() => {
+        const sortedNotes = [...notes].sort((a, b) => {
+          if (sortBy === "title") {
+            const valA = (a.title || "").toLowerCase();
+            const valB = (b.title || "").toLowerCase();
+            if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+            if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+            return 0;
+          } else {
+            const valA = new Date(a.updatedAt || 0).getTime();
+            const valB = new Date(b.updatedAt || 0).getTime();
+            return sortOrder === "asc" ? valA - valB : valB - valA;
+          }
+        });
+
+        return (
+          <div className="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th
+                    onClick={() => {
+                      if (sortBy === "title") {
+                        setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                      } else {
+                        setSortBy("title");
+                        setSortOrder("asc");
+                      }
+                    }}
+                    style={{ cursor: "pointer", userSelect: "none" }}
+                    title="Click to sort by Title"
+                  >
+                    <div className="flex align-center" style={{ gap: "0.25rem" }}>
+                      Title {sortBy === "title" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                    </div>
+                  </th >
+                  <th>Tags</th>
+                  <th
+                    onClick={() => {
+                      if (sortBy === "updatedAt") {
+                        setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                      } else {
+                        setSortBy("updatedAt");
+                        setSortOrder("desc");
+                      }
+                    }}
+                    style={{ cursor: "pointer", userSelect: "none" }}
+                    title="Click to sort by Last Updated"
+                  >
+                    <div className="flex align-center" style={{ gap: "0.25rem" }}>
+                      Updated {sortBy === "updatedAt" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedNotes.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="text-muted text-sm" style={{ textAlign: "center" }}>
+                      No notes yet. Create your first note!
+                    </td>
+                  </tr>
+                )}
+                {sortedNotes.map((note) => (
               <tr key={note.id}>
                 <td>
                   <div className="flex align-center" style={{ gap: "0.25rem", flexWrap: "wrap" }}>
@@ -825,6 +873,8 @@ export default function WorkspacePage() {
           </tbody>
         </table>
       </div>
-    </div>
-  );
+    );
+  })()}
+  </div>
+);
 }
