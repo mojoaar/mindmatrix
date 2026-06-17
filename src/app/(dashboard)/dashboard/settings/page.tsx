@@ -750,35 +750,6 @@ export default function UserSettingsPage() {
         )}
       </div>
 
-      {/* Keyboard Shortcuts */}
-      <div className="card">
-        <h3>Keyboard Shortcuts</h3>
-        <div className="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Action</th>
-                <th>macOS</th>
-                <th>Windows / Linux</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>Search</td><td><kbd>Cmd+K</kbd></td><td><kbd>Ctrl+K</kbd></td></tr>
-              <tr><td>New Note</td><td><kbd>Opt+N</kbd></td><td><kbd>Alt+N</kbd></td></tr>
-              <tr><td>New Folder</td><td><kbd>Opt+Shift+F</kbd></td><td><kbd>Alt+Shift+F</kbd></td></tr>
-              <tr><td>Save Note</td><td><kbd>Cmd+Enter</kbd></td><td><kbd>Ctrl+Enter</kbd></td></tr>
-              <tr><td>Toggle Sidebar</td><td><kbd>Cmd+B</kbd></td><td><kbd>Ctrl+B</kbd></td></tr>
-              <tr><td>Settings</td><td><kbd>Cmd+,</kbd></td><td><kbd>Ctrl+,</kbd></td></tr>
-              <tr><td>Toggle Preview</td><td><kbd>Cmd+\</kbd></td><td><kbd>Ctrl+\</kbd></td></tr>
-              <tr><td>Delete Note</td><td><kbd>Cmd+Shift+Backspace</kbd></td><td><kbd>Ctrl+Shift+Backspace</kbd></td></tr>
-              <tr><td>Back to Workspace</td><td><kbd>Cmd+Opt+[</kbd></td><td><kbd>Ctrl+Alt+[</kbd></td></tr>
-              <tr><td>Toggle Public Share</td><td><kbd>Cmd+Shift+P</kbd></td><td><kbd>Ctrl+Shift+P</kbd></td></tr>
-              <tr><td>Close Dialog</td><td><kbd>Escape</kbd></td><td><kbd>Escape</kbd></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
       {/* API Tokens */}
       <div className="card" style={{ marginBottom: "1.5rem" }}>
         <h3>API Tokens</h3>
@@ -819,6 +790,35 @@ export default function UserSettingsPage() {
             </table>
           </div>
         )}
+      </div>
+
+      {/* Keyboard Shortcuts */}
+      <div className="card">
+        <h3>Keyboard Shortcuts</h3>
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>macOS</th>
+                <th>Windows / Linux</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Search</td><td><kbd>Cmd+K</kbd></td><td><kbd>Ctrl+K</kbd></td></tr>
+              <tr><td>New Note</td><td><kbd>Opt+N</kbd></td><td><kbd>Alt+N</kbd></td></tr>
+              <tr><td>New Folder</td><td><kbd>Opt+Shift+F</kbd></td><td><kbd>Alt+Shift+F</kbd></td></tr>
+              <tr><td>Save Note</td><td><kbd>Cmd+Enter</kbd></td><td><kbd>Ctrl+Enter</kbd></td></tr>
+              <tr><td>Toggle Sidebar</td><td><kbd>Cmd+B</kbd></td><td><kbd>Ctrl+B</kbd></td></tr>
+              <tr><td>Settings</td><td><kbd>Cmd+,</kbd></td><td><kbd>Ctrl+,</kbd></td></tr>
+              <tr><td>Toggle Preview</td><td><kbd>Cmd+\</kbd></td><td><kbd>Ctrl+\</kbd></td></tr>
+              <tr><td>Delete Note</td><td><kbd>Cmd+Shift+Backspace</kbd></td><td><kbd>Ctrl+Shift+Backspace</kbd></td></tr>
+              <tr><td>Back to Workspace</td><td><kbd>Cmd+Opt+[</kbd></td><td><kbd>Ctrl+Alt+[</kbd></td></tr>
+              <tr><td>Toggle Public Share</td><td><kbd>Cmd+Shift+P</kbd></td><td><kbd>Ctrl+Shift+P</kbd></td></tr>
+              <tr><td>Close Dialog</td><td><kbd>Escape</kbd></td><td><kbd>Escape</kbd></td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* About */}
