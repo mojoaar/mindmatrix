@@ -54,18 +54,22 @@ src/
 │   ├── theme/                       # ThemeProvider, ThemeToggle
 │   ├── search/                      # SearchOverlay (Cmd+K)
 │   ├── editor/                      # BacklinksPanel, VersionPanel, PresenceAvatars
-│   └── ui/                          # Avatar, Toast, IconPicker, PluginCard, etc.
+│   └── ui/                          # Avatar, Toast, IconPicker, PluginCard, NotificationBell, CommentSection, etc.
 ├── plugins/
 │   ├── metadata.ts                  # Client-safe plugin registry (names, IDs)
 │   ├── index.ts                     # Server-side plugin registry
 │   ├── opencode-ai/                 # OpenCode Go AI plugin
+│   ├── opencode-zen/                # OpenCode Zen multi-model AI plugin
 │   ├── proxmox-inventory/           # Proxmox VE scanner plugin
 │   ├── unifi-topology/              # Unifi network scanner plugin
 │   ├── sync-pcloud/                 # pCloud sync plugin
-│   └── sync-google-drive/           # Google Drive sync plugin
+│   ├── sync-google-drive/           # Google Drive sync plugin
+│   └── git-sync/                    # Git repository sync plugin
 ├── lib/
 │   ├── auth.ts                      # Better Auth server config
-│   ├── auth-client.ts              # Better Auth client config
+│   ├── auth-client.ts               # Better Auth client config
+│   ├── auth-helper.ts               # getAuthUser() with Bearer token fallback
+│   ├── api-token-auth.ts            # validateApiToken() for CLI/integrations
 │   ├── db/
 │   │   ├── schema.ts                # All Drizzle table definitions
 │   │   └── index.ts                 # Drizzle client + postgres pool
@@ -74,13 +78,21 @@ src/
 │   ├── icons.ts                     # 400+ Lucide icon registry
 │   ├── slug.ts                      # Slug generation utilities
 │   ├── email.ts                     # Nodemailer transport
-  │   ├── email-templates.ts           # Markdown email templates (verify, password reset)
-  │   ├── date-format.ts               # Shared date formatting utility
-  │   ├── export-pdf.ts                # Print-friendly HTML export page
-  │   └── notifications.ts             # createNotification() with SSE push via event-bus
-  │   └── validations.ts               # Zod schemas for all API routes
+│   ├── email-templates.ts           # Markdown email templates (verify, password reset)
+│   ├── date-format.ts               # Shared date formatting utility
+│   ├── export-pdf.ts                # Print-friendly HTML export page
+│   ├── notifications.ts             # createNotification() with SSE push via event-bus
+│   ├── mentions.ts                  # @mention resolver for comments
+│   ├── validations.ts               # Zod schemas for all API routes
+│   ├── security.ts                  # SSRF validation for webhooks
+│   ├── rate-limit.ts                # Sliding-window rate limiter
+│   ├── crypto.ts                    # AES-256-GCM encryption/decryption
+│   ├── webhooks.ts                  # HMAC-SHA256 webhook dispatch engine
+│   └── audit.ts                     # logAction() helper for audit logging
 ├── hooks/
-│   └── use-realtime-note.ts         # SSE + presence heartbeat hook
+│   ├── use-realtime-note.ts         # SSE + presence heartbeat hook
+│   ├── use-prism.ts                 # PrismJS autoloader syntax highlighting
+│   └── use-mermaid.ts               # Mermaid.js CDN diagram renderer
 ├── middleware.ts                    # Route protection via cookie check
 └── __tests__/                       # Vitest tests
 ```
@@ -151,6 +163,10 @@ All routes under `/api/` require auth (except `/api/auth/*`). Auth checked via `
 - `/api/notes/upload` — Drag & drop file uploads (configurable types/size)
 - `/api/workspaces/[id]/webhooks` — Webhook CRUD per workspace
 - `/api/oauth/pcloud`, `/api/oauth/google-drive` — OAuth callback handlers
+- `/api/tokens` — API token CRUD for CLI and third-party integrations
+- `/api/notes/by-slug` — Note lookup by workspace + slug (used for ![[embeds]])
+- `/api/notes/[id]/comments` — Threaded comments on notes (GET/POST)
+- `/api/comments/[id]` — Delete a comment (author-only)
 - `/api/notifications` — List, create, mark all read (GET/POST/PATCH)
 - `/api/notifications/[id]` — Mark single notification as read (PATCH)
 - `/api/notifications/events` — SSE stream for real-time notification delivery
