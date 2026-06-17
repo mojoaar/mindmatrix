@@ -41,3 +41,36 @@ export async function isSafeUrl(urlStr: string): Promise<boolean> {
     return false; // Abort on invalid URL/DNS parse failures
   }
 }
+
+export async function getSafeResolvedUrl(urlStr: string): Promise<{ url: string; host: string } | null> {
+  if (process.env.ALLOW_PRIVATE_IP_WEBHOOKS === "true") {
+    try {
+      const url = new URL(urlStr);
+      return { url: urlStr, host: url.hostname };
+    } catch {
+      return null;
+    }
+  }
+
+  try {
+    const url = new URL(urlStr);
+    const hostname = url.hostname;
+
+    // Resolve hostname to IP address
+    const lookup = await lookupAsync(hostname);
+    const ip = lookup.address;
+
+    // Check against all private/reserved ranges
+    for (const range of PRIVATE_IP_RANGES) {
+      if (range.test(ip)) {
+        return null; // Forbidden IP target
+      }
+    }
+
+    // Rewrite the host to the resolved safe IP to prevent DNS rebinding TOCTOU
+    const secureUrl = `${url.protocol}//${ip}${url.pathname}${url.search}`;
+    return { url: secureUrl, host: hostname };
+  } catch {
+    return null; // Abort on invalid URL/DNS parse failures
+  }
+}

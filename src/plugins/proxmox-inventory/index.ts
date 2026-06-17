@@ -1,5 +1,6 @@
 import type { Plugin } from "@/plugins/types";
 import { requirePluginAccess } from "@/plugins";
+import { isSafeUrl } from "@/lib/security";
 
 export const proxmoxInventoryPlugin: Plugin = {
   id: "proxmox-inventory",
@@ -22,6 +23,11 @@ export const proxmoxInventoryPlugin: Plugin = {
 
         if (!host || !tokenId || !secret) {
           return Response.json({ error: "Host, tokenId, and secret required" }, { status: 400 });
+        }
+
+        const isAllowed = await isSafeUrl(`https://${host}`);
+        if (!isAllowed) {
+          return Response.json({ error: "Proxmox host forbidden by system security policy" }, { status: 403 });
         }
 
         const base = `https://${host}:${port}/api2/json`;

@@ -2,7 +2,7 @@ import { db, webhook } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
 import { decrypt } from "@/lib/crypto";
-import { isSafeUrl } from "@/lib/security";
+import { isSafeUrl, getSafeResolvedUrl } from "@/lib/security";
 
 export interface WebhookOperator {
   id: string;
@@ -47,14 +47,16 @@ export async function triggerWebhooks(
       await Promise.all(
         eligibleHooks.map(async (wh) => {
           try {
-            if (!(await isSafeUrl(wh.url))) {
+            const resolved = await getSafeResolvedUrl(wh.url);
+            if (!resolved) {
               console.warn(`SSRF Prevention: Aborted webhook dispatch to internal/private target URL: ${wh.url}`);
               return;
             }
 
             const headers: Record<string, string> = {
               "Content-Type": "application/json",
-              "User-Agent": "MindMatrix-Webhook-Engine/0.3.0",
+              "User-Agent": "MindMatrix-Webhook-Engine/0.4.0",
+              "Host": resolved.host,
             };
 
             if (wh.secret) {
@@ -68,7 +70,7 @@ export async function triggerWebhooks(
               }
             }
 
-            const response = await fetch(wh.url, {
+            const response = await fetch(resolved.url, {
               method: "POST",
               headers,
               body,

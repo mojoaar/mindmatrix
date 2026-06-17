@@ -16,8 +16,10 @@ const SENSITIVE_KEYS = [
   "passphrase",
 ];
 
-function getKey(): Buffer | null {
-  if (!ENCRYPTION_KEY) return null;
+function getKey(): Buffer {
+  if (!ENCRYPTION_KEY || ENCRYPTION_KEY.trim().length < 16) {
+    throw new Error("System configuration failure: ENCRYPTION_KEY is unconfigured or possesses insufficient entropy (min 16 chars required).");
+  }
   return crypto.scryptSync(ENCRYPTION_KEY, "mindmatrix-salt", 32);
 }
 

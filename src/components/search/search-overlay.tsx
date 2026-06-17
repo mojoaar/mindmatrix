@@ -14,6 +14,15 @@ interface SearchResult {
   updatedAt: string;
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export function SearchOverlay() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -204,7 +213,7 @@ export function SearchOverlay() {
                       className="text-muted text-xs truncate"
                       style={{ marginTop: "4px" }}
                       dangerouslySetInnerHTML={{
-                        __html: r.snippet.replace(
+                        __html: escapeHtml(r.snippet).replace(
                           new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"),
                           "<mark>$1</mark>"
                         ),

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, pluginConfig, workspace } from "@/lib/db";
+import { db, pluginConfig, workspace, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { encryptConfig, decryptConfig } from "@/lib/crypto";
@@ -26,6 +26,17 @@ export async function GET(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session?.user) {
     return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  const member = await db.query.workspaceMember.findFirst({
+    where: and(
+      eq(workspaceMember.workspaceId, workspaceId),
+      eq(workspaceMember.userId, session.user.id)
+    ),
+  });
+
+  if (!member || (member.role !== "owner" && member.role !== "admin")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const config = await db.query.pluginConfig.findFirst({

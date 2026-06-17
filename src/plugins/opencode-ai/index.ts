@@ -34,8 +34,14 @@ export const opencodeAiPlugin: Plugin = {
       }
     },
 
-    "GET /api/plugins/opencode-ai/models": async () => {
+    "GET /api/plugins/opencode-ai/models": async (req: Request) => {
       try {
+        const auth = await import("@/lib/auth");
+        const session = await auth.auth.api.getSession({ headers: req.headers });
+        if (!session?.user) {
+          return Response.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         const models = await client.getModels();
         return Response.json({ models });
       } catch {

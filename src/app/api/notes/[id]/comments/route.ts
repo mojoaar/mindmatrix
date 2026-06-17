@@ -5,6 +5,7 @@ import { eq, and, asc } from "drizzle-orm";
 import { getEventBus } from "@/lib/realtime/event-bus";
 import { resolveMentions } from "@/lib/mentions";
 import { createNotification } from "@/lib/notifications";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function GET(
   request: Request,
@@ -57,6 +58,12 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
+  const allowed = await rateLimit(`comments:${ip}`, 15, 60000); // 15 comments per minute
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const { id: noteId } = await params;
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session?.user) {
