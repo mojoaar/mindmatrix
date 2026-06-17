@@ -97,7 +97,15 @@ export function CommentSection({ noteId }: { noteId: string }) {
                   </button>
                 )}
               </div>
-              <p className="text-sm" style={{ paddingLeft: "1.75rem" }}>{c.body}</p>
+              <p className="text-sm" style={{ paddingLeft: "1.75rem" }}>
+                {c.body.split(/\s+/).map((word, i) =>
+                  word.startsWith("@") ? (
+                    <span key={i} className="mention">{word}</span>
+                  ) : (
+                    <span key={i}>{word} </span>
+                  )
+                )}
+              </p>
             </div>
           ))}
 

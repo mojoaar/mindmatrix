@@ -2,7 +2,7 @@
 
 Markdown-first, self-hosted, multi-user knowledge hub for teams and thinkers.
 
-**Version**: 0.3.0 | **License**: AGPL-3.0
+**Version**: 0.4.0 | **License**: AGPL-3.0
 
 ## Quick Start
 
@@ -131,6 +131,11 @@ MindMatrix is licensed under the GNU Affero General Public License v3.0. See [LI
 Built by [mojoaar](https://github.com/mojoaar)
 
 ## Changelog
+
+### v0.4.0 — 2026-06-17
+- **Mermaid.js Diagrams** — render ` ```mermaid ` blocks as SVG diagrams in markdown preview
+- **Note Embeds** — `![[note-slug]]` Obsidian-style transclusion with nested rendering (max 3 levels)
+- **Threaded Comments** — comment on shared notes/workspaces with real-time delivery via SSE
 
 ### v0.3.0 — 2026-06-16
 - **Landing Page** — unauthenticated responsive landing page with theme toggle and presets

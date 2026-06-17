@@ -8,7 +8,7 @@ describe("MindMatrix", () => {
 
   it("should have correct version", () => {
     const pkg = require("../../package.json");
-    expect(pkg.version).toBe("0.3.0");
+    expect(pkg.version).toBe("0.4.0");
   });
 
   it("should have required dependencies", () => {

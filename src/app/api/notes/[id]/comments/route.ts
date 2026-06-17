@@ -3,6 +3,8 @@ import { db, note, noteComment, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and, asc } from "drizzle-orm";
 import { getEventBus } from "@/lib/realtime/event-bus";
+import { resolveMentions } from "@/lib/mentions";
+import { createNotification } from "@/lib/notifications";
 
 export async function GET(
   request: Request,
@@ -93,6 +95,19 @@ export async function POST(
     .insert(noteComment)
     .values({ id: commentId, noteId, userId: session.user.id, parentId: parentId || null, body: body.trim() })
     .returning();
+
+  const { mentions } = await resolveMentions(body.trim(), found.workspaceId);
+  for (const mentionedUserId of mentions) {
+    if (mentionedUserId !== session.user.id) {
+      await createNotification({
+        userId: mentionedUserId,
+        type: "comment_mention",
+        title: `Mentioned in a comment`,
+        message: `${session.user.name} mentioned you on "${found.title}"`,
+        link: `/dashboard/w/[slug]/notes/${noteId}`,
+      });
+    }
+  }
 
   const withUser = await db.query.noteComment.findFirst({
     where: eq(noteComment.id, comment.id),

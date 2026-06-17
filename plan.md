@@ -1,4 +1,4 @@
-# MindMatrix v0.3.0 — Implementation Plan
+# MindMatrix v0.4.0 — Implementation Plan
 
 Markdown-first, self-hosted, multi-user knowledge hub.
 **License**: AGPL-3.0 | **Repo**: git@github.com:mojoaar/mindmatrix.git
@@ -366,9 +366,35 @@ Stored in `localStorage` key `mindmatrix-theme` and `mindmatrix-font`. Applied v
 - XSS sanitization via rehype-sanitize in note editor and public share pages
 - Avatar cache-busting (timestamped filenames) and Better Auth additionalFields sync
 
-### Future (v0.4+)
-- **CLI** — `mindmatrix` terminal command: create notes, search, manage
-- **AI search** — Vector embeddings + semantic search across notes
+### v0.4 Features (Completed ✓)
+- **Mermaid.js Diagrams** — ` ```mermaid ` blocks rendered as SVG in preview (CDN-loaded)
+- **Note Embeds** — `![[note-slug]]` transclusion with nested ReactMarkdown, 3-level depth limit
+- **Threaded Comments** — comment on shared notes with SSE real-time delivery
+- **@mentions in Comments** — workspace member notification when mentioned
+- **API Tokens** — Bearer token auth for CLI and third-party integrations
+
+### Ideas Backlog
+
+| #   | Feature                 | Description                                                                             |
+| --- | ----------------------- | --------------------------------------------------------------------------------------- |
+| 1   | CLI                     | `mindmatrix` terminal tool: auth, search, create/list/get notes, export                  |
+| 2   | Note move               | Move a note between workspaces — dropdown in editor, PATCH workspaceId                 |
+| 3   | AI search               | Vector embeddings + semantic search across notes                                         |
+| 4   | Star/favorite notes     | Bookmark important notes, pinned list in sidebar                                         |
+| 5   | Bulk operations         | Multi-select notes → batch tag, move, or delete                                          |
+| 6   | Graph view              | Visualize `[[backlinks]]` as interactive force-directed graph                              |
+| 7   | Calendar view           | Notes displayed on a timeline/calendar by created/updated date                         |
+| 8   | API keys for plugins    | Per-plugin API keys for external services                                                 |
+| 9   | SSO / OIDC              | Single sign-on via Google, GitHub, or OIDC provider                                     |
+| 10  | Activity feed           | Per-workspace feed: who created/edited/deleted what                                     |
+| 11  | Knowledge graph AI      | Auto-suggest related notes, tag gaps, duplicate detection                               |
+| 12  | OCR for images          | Extract text from uploaded images, make searchable                                      |
+| 13  | Custom dashboards       | Per-user dashboard widgets: recent notes, stats, pinned folders                         |
+| 14  | Scheduled publishing    | Set a future publish date for notes                                                      |
+| 15  | SSH-based plugin runner | Plugins can run on remote machines via SSH                                                |
+| 16  | Dark editor theme only  | Independent editor theme toggle separate from UI theme                                     |
+| 17  | Bookmark manager        | Browser-style bookmark list of external URLs pinned inside a workspace                     |
+| 18  | Contact form plugin     | Configurable contact form embedded in public shared note pages                             |
 
 ## Security Hardening Plan (Completed ✓)
 

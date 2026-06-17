@@ -118,7 +118,7 @@ export function LandingClient() {
       {/* Hero presentation area */}
       <section className="landing-hero">
         <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.375rem 1rem", borderRadius: "100px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", marginBottom: "1.5rem" }}>
-          <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--accent-purple)", textTransform: "uppercase", letterSpacing: "0.05em" }}>v0.3.0 is live</span>
+          <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--accent-purple)", textTransform: "uppercase", letterSpacing: "0.05em" }}>v0.4.0 is live</span>
           <span style={{ width: "4px", height: "4px", borderRadius: "50%", backgroundColor: "var(--border-color)" }}></span>
           <span style={{ fontSize: "0.8rem", color: "var(--fg-muted)" }}>Fully Self-Hosted & Secure</span>
         </div>
