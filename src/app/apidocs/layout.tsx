@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SearchOverlay } from "@/components/search/search-overlay";
 
 export const metadata: Metadata = {
   title: "API Reference",
@@ -10,5 +11,10 @@ export default function ApiDocsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <SearchOverlay />
+    </>
+  );
 }

@@ -1,5 +1,8 @@
+"use client";
+
 import { SearchOverlay } from "@/components/search/search-overlay";
 import { DocsPrismHighlight } from "@/components/ui/docs-prism-highlight";
+import { Search } from "lucide-react";
 
 export default function DocsLayout({
   children,
@@ -21,6 +24,34 @@ export default function DocsLayout({
           <h3 style={{ fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--fg-muted)", marginBottom: "1rem" }}>
             Documentation
           </h3>
+          <button
+            className="btn secondary sm"
+            onClick={() => window.dispatchEvent(new CustomEvent("mindmatrix:search"))}
+            style={{ 
+              width: "100%", 
+              justifyContent: "flex-start", 
+              marginBottom: "1rem",
+              opacity: 0.8,
+              cursor: "pointer",
+              padding: "0.5rem",
+              borderColor: "var(--border-color)",
+            }}
+          >
+            <Search size={14} style={{ marginRight: "0.5rem" }} />
+            <span style={{ fontSize: "0.85rem" }}>Search...</span>
+            <kbd
+              style={{
+                marginLeft: "auto",
+                padding: "0 0.25rem",
+                borderRadius: "3px",
+                backgroundColor: "var(--bg-tertiary)",
+                fontSize: "0.65rem",
+                fontWeight: 600,
+              }}
+            >
+              Cmd+K
+            </kbd>
+          </button>
           <nav style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
             <a href="/docs" style={{ padding: "0.35rem 0.5rem", borderRadius: "var(--border-radius)", color: "var(--fg-muted)", fontSize: "0.875rem" }}>
               Introduction

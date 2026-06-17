@@ -1,22 +1,117 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
+import { usePrism } from "@/hooks/use-prism";
+
+interface CodeExampleProps {
+  activeLang: "curl" | "powershell" | "python" | "js";
+  curl: string;
+  powershell: string;
+  python: string;
+  js: string;
+}
+
+function CodeExample({ activeLang, curl, powershell, python, js }: CodeExampleProps) {
+  const getCode = () => {
+    switch (activeLang) {
+      case "curl":
+        return { code: curl.trim(), lang: "bash" };
+      case "powershell":
+        return { code: powershell.trim(), lang: "powershell" };
+      case "python":
+        return { code: python.trim(), lang: "python" };
+      case "js":
+        return { code: js.trim(), lang: "javascript" };
+    }
+  };
+
+  const { code, lang } = getCode();
+
+  return (
+    <details className="card" style={{ marginTop: "1rem", backgroundColor: "var(--bg-tertiary)", padding: "1rem" }}>
+      <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: "0.875rem", userSelect: "none" }}>
+        Show Integration Example ({activeLang === "curl" ? "cURL" : activeLang === "powershell" ? "PowerShell" : activeLang === "python" ? "Python" : "JavaScript"})
+      </summary>
+      <pre style={{ marginTop: "0.75rem", padding: "0.75rem", borderRadius: "var(--border-radius)", overflowX: "auto" }}>
+        <code className={`language-${lang}`}>{code}</code>
+      </pre>
+    </details>
+  );
+}
 
 export default function ApiDocsPage() {
+  const [activeLang, setActiveLang] = useState<"curl" | "powershell" | "python" | "js">("curl");
+  usePrism([activeLang]);
+
   return (
     <div className="container">
-      <div style={{ marginBottom: "1.5rem" }}>
+      <div className="flex align-center justify-between" style={{ marginBottom: "1.5rem" }}>
         <Link href="/dashboard" className="btn ghost sm flex align-center gap-1" style={{ display: "inline-flex" }}>
           <ArrowLeft size={14} />
           Back to Dashboard
         </Link>
+        <button
+          className="btn secondary sm"
+          onClick={() => window.dispatchEvent(new CustomEvent("mindmatrix:search"))}
+          style={{ opacity: 0.8, cursor: "pointer", display: "inline-flex", alignItems: "center" }}
+        >
+          <Search size={14} style={{ marginRight: "0.5rem" }} />
+          Search...
+          <kbd
+            style={{
+              marginLeft: "0.5rem",
+              padding: "0 0.25rem",
+              borderRadius: "3px",
+              backgroundColor: "var(--bg-tertiary)",
+              fontSize: "0.65rem",
+              fontWeight: 600,
+            }}
+          >
+            Cmd+K
+          </kbd>
+        </button>
       </div>
       <h1>API Reference</h1>
-      <p className="text-muted" style={{ marginBottom: "2rem" }}>
+      <p className="text-muted" style={{ marginBottom: "1.5rem" }}>
         Full API documentation for MindMatrix. All endpoints require authentication
         unless marked otherwise.
       </p>
+
+      <div 
+        className="card flex align-center justify-between" 
+        style={{ 
+          position: "sticky", 
+          top: "1rem", 
+          zIndex: 50, 
+          padding: "0.5rem 1rem", 
+          marginBottom: "2rem",
+          backgroundColor: "var(--bg-secondary)",
+          borderColor: "var(--border-color)",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+        }}
+      >
+        <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--fg-secondary)" }}>
+          Active Integration Examples:
+        </span>
+        <div className="flex gap-1">
+          {([
+            { id: "curl", label: "cURL" },
+            { id: "powershell", label: "PowerShell" },
+            { id: "python", label: "Python" },
+            { id: "js", label: "JavaScript" }
+          ] as const).map((l) => (
+            <button
+              key={l.id}
+              className={`btn ${activeLang === l.id ? "primary" : "secondary"} sm`}
+              onClick={() => setActiveLang(l.id)}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="card" style={{ marginBottom: "1.5rem" }}>
         <h2>Authentication</h2>
@@ -43,6 +138,49 @@ export default function ApiDocsPage() {
             </tbody>
           </table>
         </div>
+
+        <CodeExample
+          activeLang={activeLang}
+          curl={`
+curl -X POST https://mindmatrix.johansen.foo/api/auth/sign-in/email \\
+  -H "Content-Type: application/json" \\
+  -d '{"email": "user@example.com", "password": "your_password"}'
+`}
+          powershell={`
+$body = @{
+  email = "user@example.com"
+  password = "your_password"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "https://mindmatrix.johansen.foo/api/auth/sign-in/email" -Method Post -ContentType "application/json" -Body $body
+`}
+          python={`
+import requests
+
+payload = {
+    "email": "user@example.com",
+    "password": "your_password"
+}
+
+response = requests.post(
+    "https://mindmatrix.johansen.foo/api/auth/sign-in/email",
+    json=payload
+)
+print(response.json())
+`}
+          js={`
+const response = await fetch("https://mindmatrix.johansen.foo/api/auth/sign-in/email", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    email: "user@example.com",
+    password: "your_password"
+  })
+});
+const data = await response.json();
+console.log(data);
+`}
+        />
       </div>
 
       <div className="card" style={{ marginBottom: "1.5rem" }}>
@@ -71,6 +209,71 @@ export default function ApiDocsPage() {
             </tbody>
           </table>
         </div>
+
+        <CodeExample
+          activeLang={activeLang}
+          curl={`
+# List workspaces
+curl -H "Authorization: Bearer your_api_token_here" \\
+  https://mindmatrix.johansen.foo/api/workspaces
+
+# Create a workspace
+curl -X POST https://mindmatrix.johansen.foo/api/workspaces \\
+  -H "Authorization: Bearer your_api_token_here" \\
+  -H "Content-Type: application/json" \\
+  -d '{"name": "New Team", "description": "Collaborative hub", "icon": "Users"}'
+`}
+          powershell={`
+# List workspaces
+$headers = @{ "Authorization" = "Bearer your_api_token_here" }
+Invoke-RestMethod -Uri "https://mindmatrix.johansen.foo/api/workspaces" -Headers $headers
+
+# Create a workspace
+$body = @{
+  name = "New Team"
+  description = "Collaborative hub"
+  icon = "Users"
+} | ConvertTo-Json
+Invoke-RestMethod -Uri "https://mindmatrix.johansen.foo/api/workspaces" -Method Post -Headers $headers -ContentType "application/json" -Body $body
+`}
+          python={`
+import requests
+
+headers = { "Authorization": "Bearer your_api_token_here" }
+
+# List workspaces
+response = requests.get("https://mindmatrix.johansen.foo/api/workspaces", headers=headers)
+print(response.json())
+
+# Create a workspace
+payload = {
+    "name": "New Team",
+    "description": "Collaborative hub",
+    "icon": "Users"
+}
+response = requests.post("https://mindmatrix.johansen.foo/api/workspaces", headers=headers, json=payload)
+print(response.json())
+`}
+          js={`
+const headers = { "Authorization": "Bearer your_api_token_here" };
+
+// List workspaces
+const res = await fetch("https://mindmatrix.johansen.foo/api/workspaces", { headers });
+console.log(await res.json());
+
+// Create a workspace
+const createRes = await fetch("https://mindmatrix.johansen.foo/api/workspaces", {
+  method: "POST",
+  headers: { ...headers, "Content-Type": "application/json" },
+  body: JSON.stringify({
+    name: "New Team",
+    description: "Collaborative hub",
+    icon: "Users"
+  })
+});
+console.log(await createRes.json());
+`}
+        />
       </div>
 
       <div className="card" style={{ marginBottom: "1.5rem" }}>
@@ -94,6 +297,78 @@ export default function ApiDocsPage() {
             </tbody>
           </table>
         </div>
+
+        <CodeExample
+          activeLang={activeLang}
+          curl={`
+# List notes in workspace
+curl -H "Authorization: Bearer your_api_token_here" \\
+  "https://mindmatrix.johansen.foo/api/notes?workspaceId=your_workspace_uuid"
+
+# Create a note
+curl -X POST https://mindmatrix.johansen.foo/api/notes \\
+  -H "Authorization: Bearer your_api_token_here" \\
+  -H "Content-Type: application/json" \\
+  -d '{"title": "Note Title", "content": "# My Content", "workspaceId": "your_workspace_uuid"}'
+`}
+          powershell={`
+# List notes in workspace
+$headers = @{ "Authorization" = "Bearer your_api_token_here" }
+Invoke-RestMethod -Uri "https://mindmatrix.johansen.foo/api/notes?workspaceId=your_workspace_uuid" -Headers $headers
+
+# Create a note
+$body = @{
+  title = "Note Title"
+  content = "# My Content"
+  workspaceId = "your_workspace_uuid"
+} | ConvertTo-Json
+Invoke-RestMethod -Uri "https://mindmatrix.johansen.foo/api/notes" -Method Post -Headers $headers -ContentType "application/json" -Body $body
+`}
+          python={`
+import requests
+
+headers = { "Authorization": "Bearer your_api_token_here" }
+
+# List notes in workspace
+response = requests.get(
+    "https://mindmatrix.johansen.foo/api/notes?workspaceId=your_workspace_uuid",
+    headers=headers
+)
+print(response.json())
+
+# Create a note
+payload = {
+    "title": "Note Title",
+    "content": "# My Content",
+    "workspaceId": "your_workspace_uuid"
+}
+response = requests.post(
+    "https://mindmatrix.johansen.foo/api/notes",
+    headers=headers,
+    json=payload
+)
+print(response.json())
+`}
+          js={`
+const headers = { "Authorization": "Bearer your_api_token_here" };
+
+// List notes in workspace
+const res = await fetch("https://mindmatrix.johansen.foo/api/notes?workspaceId=your_workspace_uuid", { headers });
+console.log(await res.json());
+
+// Create a note
+const createRes = await fetch("https://mindmatrix.johansen.foo/api/notes", {
+  method: "POST",
+  headers: { ...headers, "Content-Type": "application/json" },
+  body: JSON.stringify({
+    title: "Note Title",
+    content: "# My Content",
+    workspaceId: "your_workspace_uuid"
+  })
+});
+console.log(await createRes.json());
+`}
+        />
       </div>
 
       <div className="card" style={{ marginBottom: "1.5rem" }}>
@@ -211,6 +486,63 @@ export default function ApiDocsPage() {
             </tbody>
           </table>
         </div>
+
+        <CodeExample
+          activeLang={activeLang}
+          curl={`
+# Listen to Note Realtime Collaboration Stream
+curl -H "Authorization: Bearer your_api_token_here" \\
+  -H "Accept: text/event-stream" \\
+  https://mindmatrix.johansen.foo/api/notes/your_note_uuid/events
+`}
+          powershell={`
+# Connect to Realtime SSE Stream
+$headers = @{
+  "Authorization" = "Bearer your_api_token_here"
+  "Accept" = "text/event-stream"
+}
+$request = [System.Net.WebRequest]::Create("https://mindmatrix.johansen.foo/api/notes/your_note_uuid/events")
+foreach ($key in $headers.Keys) { $request.Headers.Add($key, $headers[$key]) }
+$response = $request.GetResponse()
+$reader = [System.IO.StreamReader]($response.GetResponseStream())
+while (-not $reader.EndOfStream) {
+    Write-Output $reader.ReadLine()
+}
+`}
+          python={`
+import requests
+
+headers = {
+    "Authorization": "Bearer your_api_token_here",
+    "Accept": "text/event-stream"
+}
+
+# Stream real-time SSE events
+response = requests.get(
+    "https://mindmatrix.johansen.foo/api/notes/your_note_uuid/events",
+    headers=headers,
+    stream=True
+)
+
+for line in response.iter_lines():
+    if line:
+        print(line.decode('utf-8'))
+`}
+          js={`
+// In JavaScript (Browser), use standard EventSource
+const eventSource = new EventSource("/api/notes/your_note_uuid/events");
+
+eventSource.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log("Realtime event received:", data);
+};
+
+eventSource.onerror = (err) => {
+  console.error("Stream error:", err);
+  eventSource.close();
+};
+`}
+        />
       </div>
 
       <div className="card" style={{ marginBottom: "1.5rem" }}>
