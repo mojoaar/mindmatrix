@@ -19,6 +19,8 @@ import { VersionPanel } from "@/components/editor/version-panel";
 import { PresenceAvatars } from "@/components/editor/presence-avatars";
 import { useToast } from "@/components/ui/toast";
 import { usePrism } from "@/hooks/use-prism";
+import { useMermaid } from "@/hooks/use-mermaid";
+import { CommentSection } from "@/components/ui/comment-section";
 import { Avatar } from "@/components/ui/avatar";
 import { useTheme } from "@/components/theme/theme-provider";
 
@@ -113,6 +115,7 @@ export default function NoteEditorPage() {
   }, [lastUpdate, toastSuccess, clearUpdate]);
 
   usePrism([content, layout]);
+  const mermaidRef = useMermaid([content, layout]);
 
   useEffect(() => {
     const savedLayout = localStorage.getItem("mindmatrix-editor-layout") as EditorLayout;
@@ -834,13 +837,16 @@ export default function NoteEditorPage() {
               padding: "1.5rem",
             }}
           >
+            <div ref={mermaidRef}>
             <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[[rehypeSanitize, rehypeSanitizeOptions]]}>
               {content || "*No content yet*"}
             </ReactMarkdown>
+            </div>
           </div>
         )}
       </div>
       <BacklinksPanel noteId={note.id} workspaceSlug={slug} />
+      <CommentSection noteId={note.id} />
       <VersionPanel noteId={note.id} />
     </div>
   );

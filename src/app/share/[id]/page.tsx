@@ -8,6 +8,7 @@ import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import { defaultSchema } from "hast-util-sanitize";
 import { DocsPrismHighlight } from "@/components/ui/docs-prism-highlight";
+import { PublicShareContent } from "@/components/ui/public-share-content";
 import { Globe, BookOpen } from "lucide-react";
 
 const rehypeSanitizeOptions = { ...defaultSchema };
@@ -92,11 +93,13 @@ export default async function PublicSharePage({ params }: { params: Promise<{ id
         </div>
 
         <div className="markdown-body" style={{ lineHeight: 1.7, fontSize: "1rem" }}>
+          <PublicShareContent content={found.content || ""} noteId={found.id}>
           <DocsPrismHighlight>
-             <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[[rehypeSanitize, rehypeSanitizeOptions]]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[[rehypeSanitize, rehypeSanitizeOptions]]}>
               {found.content || "*Empty note*"}
             </ReactMarkdown>
           </DocsPrismHighlight>
+          </PublicShareContent>
         </div>
       </div>
     </div>

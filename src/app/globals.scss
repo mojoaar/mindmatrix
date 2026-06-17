@@ -993,6 +993,34 @@ code[class*="language-"] {
   }
 }
 
+/* ---- Mermaid Diagrams ---- */
+.mermaid-container {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* ---- Note Embeds ---- */
+.note-embed {
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--accent-indigo);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  margin: 1rem 0;
+  background-color: var(--bg-tertiary);
+
+  h4 {
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+  }
+}
+
 .landing-footer {
   padding: 3rem 2rem;
   text-align: center;

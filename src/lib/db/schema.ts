@@ -631,3 +631,26 @@ export const apiTokenRelations = relations(apiToken, ({ one }) => ({
     references: [user.id],
   }),
 }));
+
+export const noteComment = pgTable(
+  "note_comment",
+  {
+    id: text("id").primaryKey(),
+    noteId: text("note_id").references(() => note.id, { onDelete: "cascade" }).notNull(),
+    userId: text("user_id").references(() => user.id, { onDelete: "cascade" }).notNull(),
+    parentId: text("parent_id").references((): any => noteComment.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    commentNoteIdx: index("comment_note_idx").on(table.noteId),
+    commentCreatedAtIdx: index("comment_createdAt_idx").on(table.createdAt),
+  })
+);
+
+export const noteCommentRelations = relations(noteComment, ({ one, many }) => ({
+  note: one(note, { fields: [noteComment.noteId], references: [note.id] }),
+  user: one(user, { fields: [noteComment.userId], references: [user.id] }),
+  parent: one(noteComment, { fields: [noteComment.parentId], references: [noteComment.id], relationName: "replies" }),
+  replies: many(noteComment, { relationName: "replies" }),
+}));
