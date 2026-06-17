@@ -133,9 +133,12 @@ Built by [mojoaar](https://github.com/mojoaar)
 ## Changelog
 
 ### v0.4.0 — 2026-06-17
-- **Mermaid.js Diagrams** — render ` ```mermaid ` blocks as SVG diagrams in markdown preview
+- **Mermaid.js Diagrams** — render ` ```mermaid ` blocks as SVG diagrams in markdown preview (CDN-loaded, no local dependencies)
 - **Note Embeds** — `![[note-slug]]` Obsidian-style transclusion with nested rendering (max 3 levels)
 - **Threaded Comments** — comment on shared notes/workspaces with real-time delivery via SSE
+- **@mentions in Comments** — mention workspace members in comments (`@username`) to trigger notifications
+- **API Tokens** — Bearer token auth for CLI and third-party integrations (Create/Revoke UI)
+- **Multi-Layer Security Hardening** — complete audit pass adding BOLA guards, Stored XSS filters, DNS-rebinding-safe SSRF webhooks, AES-256-GCM credentials encryption, and sliding-window rate limiting on comments/tokens
 
 ### v0.3.0 — 2026-06-16
 - **Landing Page** — unauthenticated responsive landing page with theme toggle and presets
