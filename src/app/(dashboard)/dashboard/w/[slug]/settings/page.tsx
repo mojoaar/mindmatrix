@@ -486,9 +486,52 @@ export default function WorkspaceSettingsPage() {
       </div>
 
       {/* Plugins */}
-      {pluginMetadata.map((plugin) => (
-        <PluginCard key={plugin.id} plugin={plugin} workspaceId={workspace.id} />
-      ))}
+      <h2 style={{ marginTop: "2rem", marginBottom: "1.5rem" }}>Workspace Modules</h2>
+      
+      {/* AI Group */}
+      <div style={{ marginBottom: "2rem" }}>
+        <h4 style={{ color: "var(--accent-purple)", marginBottom: "0.25rem", textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.05em" }}>
+          Artificial Intelligence
+        </h4>
+        <p className="text-muted text-xs" style={{ marginBottom: "1rem" }}>
+          Leverage AI to assist, rewrite, and query note contexts.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {pluginMetadata.filter(p => ["opencode-ai", "opencode-zen"].includes(p.id)).map((plugin) => (
+            <PluginCard key={plugin.id} plugin={plugin} workspaceId={workspace.id} />
+          ))}
+        </div>
+      </div>
+
+      {/* Sync Group */}
+      <div style={{ marginBottom: "2rem" }}>
+        <h4 style={{ color: "var(--accent-indigo)", marginBottom: "0.25rem", textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.05em" }}>
+          Synchronisation
+        </h4>
+        <p className="text-muted text-xs" style={{ marginBottom: "1rem" }}>
+          Backup and synchronize notes to cloud storage or git repositories.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {pluginMetadata.filter(p => ["sync-pcloud", "sync-google-drive", "git-sync"].includes(p.id)).map((plugin) => (
+            <PluginCard key={plugin.id} plugin={plugin} workspaceId={workspace.id} />
+          ))}
+        </div>
+      </div>
+
+      {/* Scanners Group */}
+      <div style={{ marginBottom: "2.5rem" }}>
+        <h4 style={{ color: "var(--accent-yellow)", marginBottom: "0.25rem", textTransform: "uppercase", fontSize: "0.8rem", letterSpacing: "0.05em" }}>
+          Infrastructure Scanners
+        </h4>
+        <p className="text-muted text-xs" style={{ marginBottom: "1rem" }}>
+          Scan server VM details and network topology directly into note tables.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {pluginMetadata.filter(p => ["proxmox-inventory", "unifi-topology"].includes(p.id)).map((plugin) => (
+            <PluginCard key={plugin.id} plugin={plugin} workspaceId={workspace.id} />
+          ))}
+        </div>
+      </div>
 
       <div className="card" style={{ borderColor: "var(--accent-red)" }}>
         <h3 style={{ color: "var(--accent-red)" }}>Danger Zone</h3>
