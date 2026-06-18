@@ -21,10 +21,15 @@ export const opencodeZenPlugin: Plugin = {
         const apiKey = access.config?.apiKey;
         if (!apiKey) return Response.json({ error: "API key not configured" }, { status: 400 });
 
+        let systemPrompt = access.config?.systemPrompt || "You are a helpful assistant.";
+        if (noteContent) {
+          systemPrompt = `${systemPrompt}\n\nHere is the current note content for reference:\n\`\`\`markdown\n${noteContent}\n\`\`\``;
+        }
+
         const result = await client.chat({
           apiKey,
           model: access.config?.model || "deepseek-v4-pro",
-          systemPrompt: access.config?.systemPrompt || "You are a helpful assistant.",
+          systemPrompt,
           messages: messages || [{ role: "user", content: noteContent || "Help me with this note." }],
         });
 
