@@ -18,37 +18,67 @@
 <p align="center">
   <table>
     <tr>
-      <td width="33%" align="center">
-        <strong>1. Public Landing Page</strong><br/>
-        <img src="public/screenshots/landing-page.png" alt="Landing Page" width="100%"/>
-        <br/><em>Responsive presentation with dynamic dark/light theme presets.</em>
+      <!-- Column 1 -->
+      <td width="33%" align="center" valign="top">
+        <h4>1. Public Landing Page</h4>
+        <p><em>The Gateway to Your Hub</em></p>
+        <img src="public/screenshots/landing-page.png" alt="Landing Page" width="100%" height="160"/>
+        <br/><br/>
+        <p align="left" style="font-size: 0.85em; color: gray;">
+          An elegant, responsive landing page featuring an interactive split-view workspace mockup, script-copying quick helpers, and a dynamic Theme Preset Quick Switcher.
+        </p>
       </td>
-      <td width="33%" align="center">
-        <strong>2. 2-Column AI Workspace</strong><br/>
-        <img src="public/screenshots/editor-ai.png" alt="2-Column AI Editor" width="100%"/>
-        <br/><em>Dual-pane markdown editor with docked context-aware AI assistant.</em>
+      <!-- Column 2 -->
+      <td width="33%" align="center" valign="top">
+        <h4>2. 2-Column AI Workspace</h4>
+        <p><em>Context-Aware AI Prompting</em></p>
+        <img src="public/screenshots/editor-ai.png" alt="2-Column AI Editor" width="100%" height="160"/>
+        <br/><br/>
+        <p align="left" style="font-size: 0.85em; color: gray;">
+          A premium split-screen layout that lets you edit CodeMirror Markdown on the left while holding context-aware AI conversations with active profile avatars and 3-attempt exponential backoff on the right.
+        </p>
       </td>
-      <td width="33%" align="center">
-        <strong>3. Workspace Dashboard</strong><br/>
-        <img src="public/screenshots/dashboard.png" alt="Workspace Dashboard" width="100%"/>
-        <br/><em>Full workspace table view with live search, tags, and sidebar folders.</em>
+      <!-- Column 3 -->
+      <td width="33%" align="center" valign="top">
+        <h4>3. Workspace Dashboard</h4>
+        <p><em>Centralized Knowledge Control</em></p>
+        <img src="public/screenshots/dashboard.png" alt="Workspace Dashboard" width="100%" height="160"/>
+        <br/><br/>
+        <p align="left" style="font-size: 0.85em; color: gray;">
+          A robust, multi-tenant workspace dashboard showing dynamic color-coded tags, sidebar folder filtering, realtime member presence, and responsive notes table column-sorting.
+        </p>
       </td>
     </tr>
     <tr>
-      <td width="33%" align="center">
-        <strong>4. Categorized Plugins</strong><br/>
-        <img src="public/screenshots/settings-plugins.png" alt="Categorized Settings" width="100%"/>
-        <br/><em>Modular grid organizing AI tools, scanners, and syncing helpers.</em>
+      <!-- Column 4 -->
+      <td width="33%" align="center" valign="top">
+        <h4>4. Categorized Plugins</h4>
+        <p><em>Modular Extension Hub</em></p>
+        <img src="public/screenshots/settings-plugins.png" alt="Categorized Settings" width="100%" height="160"/>
+        <br/><br/>
+        <p align="left" style="font-size: 0.85em; color: gray;">
+          A beautiful workspace settings panel organized into categorized grids (AI Assistants, Sync tools, and Infrastructure Scanners) secured with AES-256-GCM credentials encryption.
+        </p>
       </td>
-      <td width="33%" align="center">
-        <strong>5. Interactive Documentation</strong><br/>
-        <img src="public/screenshots/docs.png" alt="In-App Docs" width="100%"/>
-        <br/><em>Full-featured documentation space with custom search & code examples.</em>
+      <!-- Column 5 -->
+      <td width="33%" align="center" valign="top">
+        <h4>5. In-App Documentation</h4>
+        <p><em>Comprehensive Guides & APIs</em></p>
+        <img src="public/screenshots/docs.png" alt="In-App Docs" width="100%" height="160"/>
+        <br/><br/>
+        <p align="left" style="font-size: 0.85em; color: gray;">
+          Interactive in-app documentation featuring quick global search, language-specific integration snippets (cURL, Python, JS), and your new dedicated v0.5.0 release history log.
+        </p>
       </td>
-      <td width="33%" align="center">
-        <strong>6. Super Admin Panel</strong><br/>
-        <img src="public/screenshots/admin-panel.png" alt="Super Admin Dashboard" width="100%"/>
-        <br/><em>Global tracking metrics, audit logs, SMTP setup, and user controls.</em>
+      <!-- Column 6 -->
+      <td width="33%" align="center" valign="top">
+        <h4>6. Super Admin Panel</h4>
+        <p><em>Global Instance Orchestration</em></p>
+        <img src="public/screenshots/admin-panel.png" alt="Super Admin Dashboard" width="100%" height="160"/>
+        <br/><br/>
+        <p align="left" style="font-size: 0.85em; color: gray;">
+          An advanced gated control console mapping system-wide usage statistics, global workspaces, dynamic upload configurations, SMTP setups, and searchable operational audit logging.
+        </p>
       </td>
     </tr>
   </table>
@@ -232,7 +262,10 @@ Built by [mojoaar](https://github.com/mojoaar)
 - **Double-Encryption Key Correction & Config Preservation** — Fixed a silent data-overwrite bug in the workspace plugin configurations where toggling enabled/disabled states without submitting configuration JSON would strip existing database configurations. Restored decryption of masked `••••••••` values prior to form submission, preventing double-encryption key corruption on subsequent edits.
 - **Defensive API Error Bubbling** — Added strict JSON body inspection inside downstream OpenCode Go (`opencode-ai`) and OpenCode Zen (`opencode-zen`) clients. When downstream endpoints return API error payloads inside standard successful `200 OK` status responses, the clients now throw and bubble up the correct API error message to render as a red toast alert, rather than rendering empty chat bubbles.
 
-### v0.4.0 — 2026-06-17
+<details>
+  <summary><strong>📁 v0.4.0 — 2026-06-17 (Click to expand)</strong></summary>
+  <br/>
+
 - **Mermaid.js Diagrams** — render ` ```mermaid ` blocks as SVG diagrams in markdown preview (CDN-loaded, no local dependencies)
 - **Note Embeds** — `![[note-slug]]` Obsidian-style transclusion with nested rendering (max 3 levels)
 - **Threaded Comments** — comment on shared notes/workspaces with real-time delivery via SSE
@@ -245,8 +278,12 @@ Built by [mojoaar](https://github.com/mojoaar)
 - **Client Cache Invalidation** — resolved stale notes list and out-of-sync sidebar folder note counts on soft navigations by appending `{ cache: "no-store" }` headers to all dynamic GET fetch requests
 - **Workspace Plugins Loading Fix** — fixed a data-binding bug in the generic `PluginCard` component (`d.config?.enabled` → `d.enabled`) that failed to bind active states on reload, restoring persistent status displays for all 7 plugins
 - **OpenCode Naming Alignment** — renamed the OpenCode AI plugin to **OpenCode Go** across all server plugins, metadata registries, and documentations to create clean, distinctive naming alignment with your subscriptions
+</details>
 
-### v0.3.0 — 2026-06-16
+<details>
+  <summary><strong>📁 v0.3.0 — 2026-06-16 (Click to expand)</strong></summary>
+  <br/>
+
 - **Landing Page** — unauthenticated responsive landing page with theme toggle and presets
 - **Webhooks** — HMAC-SHA256 signed HTTP callbacks on note, folder, and tag events with SSRF protection
 - **Git Sync Plugin** — pull/commit workspace notes to any Git repository (SSH/HTTPS)
@@ -266,8 +303,12 @@ Built by [mojoaar](https://github.com/mojoaar)
 - **PDF Export** — one-click HTML print page using browser&rsquo;s native &ldquo;Save as PDF&rdquo;
 - **Notifications Center** — bell icon with unread badge, SSE real-time delivery for invites and edits
 - **Mobile Responsive** — hamburger menu, auto-collapse sidebar at 768px, touch-friendly sizing
+</details>
 
-### v0.2.0 — 2026-06-14
+<details>
+  <summary><strong>📁 v0.2.0 — 2026-06-14 (Click to expand)</strong></summary>
+  <br/>
+
 - **Backlinks** — `[[note-slug]]` detection with incoming/outgoing links panel
 - **Version History** — auto-snapshot on save, restore from history
 - **Realtime Collaboration** — presence avatars, live update notifications (SSE + PG NOTIFY)
@@ -290,6 +331,11 @@ Built by [mojoaar](https://github.com/mojoaar)
 - **Audit Logging** — all CRUD operations tracked with searchable trail
 - **OpenCode Zen Plugin** — multi-model AI chat (GPT, Claude, DeepSeek)
 - **Security Hardening** — AES-256-GCM encryption for plugin credentials, BOLA fixes
+</details>
 
-### v0.1.0 — 2026-06-13
+<details>
+  <summary><strong>📁 v0.1.0 — 2026-06-13 (Click to expand)</strong></summary>
+  <br/>
+
 - Initial release: workspaces, notes, folders, tags, search, themes, Docker deployment
+</details>
