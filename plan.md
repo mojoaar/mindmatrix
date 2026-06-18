@@ -420,3 +420,21 @@ Stored in `localStorage` key `mindmatrix-theme` and `mindmatrix-font`. Applied v
 
 ### 3. UI Zero-Secrets-Leak Handlers
 - Support masked password/token state fields in settings components.
+
+---
+
+## v0.6.0 — Workspace-Level AI Roadmap
+
+As MindMatrix transitions from single-note prompting to workspace-wide context, we lay out the architectural blueprints for **Workspace-Level AI** to be built in v0.6.0:
+
+### 1. Marquee Use Cases
+- **Taxonomy & Tag Auditor** — Scans note themes, identifies un-tagged semantic matches, flags redundant or synonymous tags (e.g., `#devops` vs `#infra`), and suggests consolidations.
+- **Title-Content Alignment Auditor** — Detects generic titles ("Untitled", "Draft") and generates descriptive titles based on content summaries. Flags file-title mismatches.
+- **Semantic Link Discovery (PKM Graph Gaps)** — Scans all notes in a workspace to identify unlinked plain text mentions that match existing note slugs, suggesting `[[note-slug]]` transclusions with a single-click **[Auto-Link]** trigger.
+- **Workspace-Wide Semantic Search & QA** — Interrogates the entire knowledge base (e.g., *"What are our server prerequisites?"*), retrieves relevant context chunks from multiple notes, compiles a consolidated answer, and lists cited sources.
+- **Weekly Workspace Digest** — Generates a global summary of updated, created, and scanned data across the team's shared directory.
+
+### 2. Proposed System Architecture (Hybrid RAG + Background Worker)
+- **Database vector support** — Introduce `pgvector` extension to our PostgreSQL container schema to store high-dimensional semantic vectors for note blocks.
+- **Incremental Asynchronous Auditor** — Implement an asynchronous background queue (using pg-boss or lightweight Postgres LISTEN/NOTIFY workers) that process note updates incrementally, rather than running expensive LLM scans on active page loads.
+- **Centralized AI Copilot Console** — A new Workspace settings tab grouping audit logs into categorized filter tabs (**[Taxonomy Gaps]**, **[Link Discoveries]**, and **[Title Fixes]**) with direct database bulk updates.
