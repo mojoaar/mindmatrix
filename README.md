@@ -2,7 +2,7 @@
 
 Markdown-first, self-hosted, multi-user knowledge hub for teams and thinkers.
 
-**Version**: 0.4.0 | **License**: AGPL-3.0
+**Version**: 0.5.0 | **License**: AGPL-3.0
 
 ## Quick Start
 
@@ -131,6 +131,15 @@ MindMatrix is licensed under the GNU Affero General Public License v3.0. See [LI
 Built by [mojoaar](https://github.com/mojoaar)
 
 ## Changelog
+
+### v0.5.0 — 2026-06-18
+- **Spatially Docked 2-Column AI Layout** — A split-screen vertical AI Assistant panel that lets you edit your CodeMirror notes on the left and chat/interact with the AI on the right, toggled seamlessly via a note header Sparkles button.
+- **Dynamic Active Profile Avatars in AI Chat** — Replaced generic fallback user icons inside the AI chat bubbles with the user's active custom profile photo or clean colored initials avatar, creating a high-fidelity visual experience.
+- **Dynamic Note-Content Context Injection** — Resolved a context-gap where the editor note's active contents were omitted during subsequent chat interactions. Dynamically injects up-to-date note content directly inside the model's system prompt block on every chat turn.
+- **Markdown Formatting Extension** — Added 5 brand new rich editing actions to the markdown toolbar: Mermaid Diagram block insertion, Note Embed (`![[]]`), Blockquote (`> `), Strikethrough (`~~`), and Horizontal Rule (`---`).
+- **Workspace Settings Grouped Modules** — Reorganized the workspace settings plugins into distinct categorized grid structures (AI Assistants, Synchronisation, Infrastructure Scanners) while keeping Webhooks cleanly styled as its own independent card.
+- **Double-Encryption Key Correction & Config Preservation** — Fixed a silent data-overwrite bug in the workspace plugin configurations where toggling enabled/disabled states without submitting configuration JSON would strip existing database configurations. Restored decryption of masked `••••••••` values prior to form submission, preventing double-encryption key corruption on subsequent edits.
+- **Defensive API Error Bubbling** — Added strict JSON body inspection inside downstream OpenCode Go (`opencode-ai`) and OpenCode Zen (`opencode-zen`) clients. When downstream endpoints return API error payloads inside standard successful `200 OK` status responses, the clients now throw and bubble up the correct API error message to render as a red toast alert, rather than rendering empty chat bubbles.
 
 ### v0.4.0 — 2026-06-17
 - **Mermaid.js Diagrams** — render ` ```mermaid ` blocks as SVG diagrams in markdown preview (CDN-loaded, no local dependencies)

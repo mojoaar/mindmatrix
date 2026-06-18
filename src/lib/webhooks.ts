@@ -55,7 +55,7 @@ export async function triggerWebhooks(
 
             const headers: Record<string, string> = {
               "Content-Type": "application/json",
-              "User-Agent": "MindMatrix-Webhook-Engine/0.4.0",
+              "User-Agent": "MindMatrix-Webhook-Engine/0.5.0",
               "Host": resolved.host,
             };
 

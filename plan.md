@@ -1,4 +1,4 @@
-# MindMatrix v0.4.0 — Implementation Plan
+# MindMatrix v0.5.0 — Implementation Plan
 
 Markdown-first, self-hosted, multi-user knowledge hub.
 **License**: AGPL-3.0 | **Repo**: git@github.com:mojoaar/mindmatrix.git
