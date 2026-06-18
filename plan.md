@@ -296,7 +296,7 @@ Stored in `localStorage` key `mindmatrix-theme` and `mindmatrix-font`. Applied v
 - `PluginCard` component — enable toggle + lazy-load settings
 - `GET/POST /api/plugins/config` — enable/disable + save config
 - `POST/GET /api/plugins/[...plugin]` — dynamic route dispatcher
-- 5 built-in plugins: OpenCode AI, Proxmox Inventory, Unifi Topology, pCloud, Google Drive
+- 5 built-in plugins: OpenCode Go, Proxmox Inventory, Unifi Topology, pCloud, Google Drive
 
 ### v0.2 Polish
 - 400+ workspace icons with searchable IconPicker

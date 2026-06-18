@@ -62,7 +62,7 @@ npm run dev
 - **Editor** — CodeMirror 6 with configurable layout (split/edit/preview), **Markdown formatting toolbar, inline tag builder, and drag & drop image uploads**
 - **Public Sharing** — Share distraction-free, read-only note views with one click, or instantly toggle back to private
 - **Import/Export** — Export notes as markdown, JSON, or PDF with formatted content; import from markdown
-- **Plugin System** — Togglable plugins per workspace: OpenCode AI, OpenCode Zen, Proxmox, Unifi, pCloud, Google Drive, Git Sync
+- **Plugin System** — Togglable plugins per workspace: OpenCode Go, OpenCode Zen, Proxmox, Unifi, pCloud, Google Drive, Git Sync
 - **Profile & Avatar** — Upload avatar, set timezone, date format (ISO/US/EU/long/short), 12h/24h time format
 - **Workspace Icons** — 400+ Lucide icons per workspace and folder
 - **Admin Settings** — SMTP email configuration, upload type/size limits, landing page toggle, markdown email templates
@@ -106,7 +106,7 @@ npm run dev
 
 Toggle plugins per workspace in Settings. Available:
 
-- **OpenCode AI** — Chat with notes via OpenCode Go (cloud subscription)
+- **OpenCode Go** — Chat with notes via OpenCode Go (cloud subscription)
 - **OpenCode Zen** — AI chat with multiple model families (GPT, Claude, DeepSeek)
 - **Proxmox Inventory** — Scan VMs, containers, storage into a note
 - **Unifi Topology** — Scan network devices, WiFi, clients into a note
@@ -169,7 +169,7 @@ Built by [mojoaar](https://github.com/mojoaar)
 - **Version History** — auto-snapshot on save, restore from history
 - **Realtime Collaboration** — presence avatars, live update notifications (SSE + PG NOTIFY)
 - **Plugin System** — extendable plugin infrastructure, 5 built-in plugins
-- **OpenCode AI Plugin** — chat with notes via OpenCode Go (13 models, live picker)
+- **OpenCode Go Plugin** — chat with notes via OpenCode Go (13 models, live picker)
 - **Proxmox Inventory Plugin** — scan PVE VMs/CTs/storage into a structured note
 - **Unifi Topology Plugin** — scan Unifi devices/WiFi/clients into a topology note
 - **Note Templates** — workspace-level templates with "New from Template" dropdown

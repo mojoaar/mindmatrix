@@ -49,7 +49,7 @@ export function PluginCard({ plugin, workspaceId }: { plugin: PluginMeta; worksp
     fetch(`/api/plugins/config?pluginId=${plugin.id}&workspaceId=${workspaceId}`)
       .then((r) => r.json())
       .then((d) => {
-        if (d.config?.enabled) setEnabled(d.config.enabled);
+        if (d.enabled !== undefined) setEnabled(d.enabled);
       })
       .catch(() => {});
   }, [plugin.id, workspaceId]);

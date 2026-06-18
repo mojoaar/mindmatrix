@@ -33,7 +33,7 @@ export default function DocsPage() {
           <li>Note templates — create from ADR, runbook, meeting notes, or custom templates</li>
           <li>Realtime collaboration — CRDT-based co-authoring (Y.js), presence avatars, live update notifications</li>
           <li>Notifications center — bell icon with unread badge, SSE real-time delivery for invites and note edits</li>
-          <li>Plugin system — toggle per-workspace: OpenCode AI, OpenCode Zen, Proxmox, Unifi, pCloud, Google Drive, Git Sync</li>
+          <li>Plugin system — toggle per-workspace: OpenCode Go, OpenCode Zen, Proxmox, Unifi, pCloud, Google Drive, Git Sync</li>
           <li>Webhooks — HTTP callbacks with HMAC-SHA256 signing on note, folder, and tag events</li>
           <li>TOTP two-factor authentication — opt-in MFA with QR setup and backup codes</li>
           <li>Public note sharing — one-click toggle to create read-only public document links</li>

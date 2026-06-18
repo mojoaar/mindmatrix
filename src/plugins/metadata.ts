@@ -13,7 +13,7 @@ export const pluginMetadata = [
   },
   {
     id: "opencode-ai",
-    name: "OpenCode AI",
+    name: "OpenCode Go",
     description: "AI-powered note assistance via OpenCode Go",
     version: "0.1.0",
   },
