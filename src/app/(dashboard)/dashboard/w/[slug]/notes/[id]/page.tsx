@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Save, Trash2, Tag, Heading1, Heading2, Heading3, Bold, Italic, Code, Link2, List, CheckSquare, Table, Image as ImageIcon, Share2, Globe, Printer, GitFork, Bookmark, Quote, Strikethrough, Minus } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Tag, Heading1, Heading2, Heading3, Bold, Italic, Code, Link2, List, CheckSquare, Table, Image as ImageIcon, Share2, Globe, Printer, GitFork, Bookmark, Quote, Strikethrough, Minus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
@@ -78,6 +78,8 @@ export default function NoteEditorPage() {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string>("");
   const [layout, setLayout] = useState<EditorLayout>("split");
+  const [showAi, setShowAi] = useState(false);
+  const [aiActive, setAiActive] = useState(false);
   const [showTagPicker, setShowTagPicker] = useState(false);
   const [showCreatorCard, setShowCreatorCard] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
@@ -566,6 +568,23 @@ export default function NoteEditorPage() {
             ))}
           </div>
 
+          {aiActive && (
+            <button
+              className={`btn sm ${showAi ? "primary" : "secondary"} flex align-center gap-1`}
+              onClick={() => {
+                const nextState = !showAi;
+                setShowAi(nextState);
+                if (nextState && layout === "preview") {
+                  setLayoutAndPersist("split");
+                }
+              }}
+              title="Toggle AI Assistant"
+            >
+              <Sparkles size={14} style={{ color: showAi ? "#fff" : "var(--accent-purple)" }} />
+              <span className="text-sm">AI Assistant</span>
+            </button>
+          )}
+
           <button className="btn primary sm flex align-center gap-1" onClick={() => save()} disabled={saving}>
             <Save size={14} />
             {saving ? "Saving..." : savedAt ? "Saved" : "Save"}
@@ -776,7 +795,7 @@ export default function NoteEditorPage() {
 
       {/* Editor area */}
       <div style={{ display: "flex", gap: "1rem", minHeight: "calc(100vh - 250px)", alignItems: "stretch" }}>
-        {(layout === "split" || layout === "edit") && (
+        {((!showAi && (layout === "split" || layout === "edit")) || (showAi && layout !== "preview")) && (
           <div 
             style={{ 
               flex: 1, 
@@ -882,7 +901,7 @@ export default function NoteEditorPage() {
           </div>
         )}
 
-        {(layout === "split" || layout === "preview") && (
+        {!showAi && (layout === "split" || layout === "preview") && (
           <div
             className="markdown-body"
             style={{
@@ -901,17 +920,38 @@ export default function NoteEditorPage() {
             </div>
           </div>
         )}
+
+        {showAi && (
+          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            <AIAssistantPanel
+              noteId={note.id}
+              workspaceId={note.workspaceId}
+              noteContent={content}
+              setContent={setContent}
+              insertAtCursor={insertAtCursor}
+              onClose={() => setShowAi(false)}
+              onStatusLoaded={(go, zen) => setAiActive(go || zen)}
+            />
+          </div>
+        )}
       </div>
       <BacklinksPanel noteId={note.id} workspaceSlug={slug} />
       <CommentSection noteId={note.id} />
       <VersionPanel noteId={note.id} />
-      <AIAssistantPanel
-        noteId={note.id}
-        workspaceId={note.workspaceId}
-        noteContent={content}
-        setContent={setContent}
-        insertAtCursor={insertAtCursor}
-      />
+
+      {!showAi && (
+        <div style={{ display: "none" }}>
+          <AIAssistantPanel
+            noteId={note.id}
+            workspaceId={note.workspaceId}
+            noteContent={content}
+            setContent={setContent}
+            insertAtCursor={insertAtCursor}
+            onClose={() => {}}
+            onStatusLoaded={(go, zen) => setAiActive(go || zen)}
+          />
+        </div>
+      )}
     </div>
   );
 }
