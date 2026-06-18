@@ -17,10 +17,10 @@ export function PCloudSettings({ workspaceId }: { workspaceId: string }) {
     fetch(`/api/plugins/config?pluginId=sync-pcloud&workspaceId=${workspaceId}`)
       .then((r) => r.json())
       .then((d) => {
-        if (d.config?.config) {
-          setClientId(d.config.config.clientId || "");
-          setClientSecret(d.config.config.clientSecret || "");
-          setConnected(!!d.config.config.accessToken);
+        if (d.config) {
+          setClientId(d.config.clientId || "");
+          setClientSecret(d.config.clientSecret || "");
+          setConnected(!!d.config.accessToken);
         }
       })
       .catch(() => {});

@@ -17,13 +17,13 @@ export function GitSettings({ workspaceId }: { workspaceId: string }) {
     fetch(`/api/plugins/config?pluginId=git-sync&workspaceId=${workspaceId}`)
       .then((r) => r.json())
       .then((d) => {
-        if (d.config?.config) {
-          setRepoUrl(d.config.config.repoUrl || "");
-          setBranch(d.config.config.branch || "main");
-          setAuthType(d.config.config.authType || "https");
-          setUsername(d.config.config.username || "");
-          setPassword(d.config.config.password || "");
-          setPrivateKey(d.config.config.privateKey || "");
+        if (d.config) {
+          setRepoUrl(d.config.repoUrl || "");
+          setBranch(d.config.branch || "main");
+          setAuthType(d.config.authType || "https");
+          setUsername(d.config.username || "");
+          setPassword(d.config.password || "");
+          setPrivateKey(d.config.privateKey || "");
         }
       })
       .catch(() => {});

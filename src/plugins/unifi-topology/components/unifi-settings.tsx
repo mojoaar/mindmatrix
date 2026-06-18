@@ -16,12 +16,12 @@ export function UnifiSettings({ workspaceId }: { workspaceId: string }) {
     fetch(`/api/plugins/config?pluginId=unifi-topology&workspaceId=${workspaceId}`)
       .then((r) => r.json())
       .then((d) => {
-        if (d.config?.config) {
-          setHost(d.config.config.host || "");
-          setPort(d.config.config.port || "443");
-          setUsername(d.config.config.username || "");
-          setPassword(d.config.config.password || "");
-          setSite(d.config.config.site || "default");
+        if (d.config) {
+          setHost(d.config.host || "");
+          setPort(d.config.port || "443");
+          setUsername(d.config.username || "");
+          setPassword(d.config.password || "");
+          setSite(d.config.site || "default");
         }
       })
       .catch(() => {});

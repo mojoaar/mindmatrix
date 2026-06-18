@@ -24,10 +24,10 @@ export function ZenSettings({ workspaceId }: { workspaceId: string }) {
     fetch(`/api/plugins/config?pluginId=opencode-zen&workspaceId=${workspaceId}`)
       .then((r) => r.json())
       .then((d) => {
-        if (d.config?.config) {
-          setApiKey(d.config.config.apiKey || "");
-          setModel(d.config.config.model || "deepseek-v4-pro");
-          setSystemPrompt(d.config.config.systemPrompt || "");
+        if (d.config) {
+          setApiKey(d.config.apiKey || "");
+          setModel(d.config.model || "deepseek-v4-pro");
+          setSystemPrompt(d.config.systemPrompt || "");
         }
       })
       .catch(() => {});

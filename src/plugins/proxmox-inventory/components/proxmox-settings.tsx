@@ -16,12 +16,12 @@ export function ProxmoxSettings({ workspaceId }: { workspaceId: string }) {
     fetch(`/api/plugins/config?pluginId=proxmox-inventory&workspaceId=${workspaceId}`)
       .then((r) => r.json())
       .then((d) => {
-        if (d.config?.config) {
-          setHost(d.config.config.host || "");
-          setPort(d.config.config.port || "8006");
-          setTokenId(d.config.config.tokenId || "");
-          setSecret(d.config.config.secret || "");
-          setVerifySSL(d.config.config.verifySSL !== false);
+        if (d.config) {
+          setHost(d.config.host || "");
+          setPort(d.config.port || "8006");
+          setTokenId(d.config.tokenId || "");
+          setSecret(d.config.secret || "");
+          setVerifySSL(d.config.verifySSL !== false);
         }
       })
       .catch(() => {});
