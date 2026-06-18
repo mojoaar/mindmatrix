@@ -87,7 +87,7 @@ export default function DashboardLayout({
   useEffect(() => {
     let cancelled = false;
 
-    fetch("/api/workspaces")
+    fetch("/api/workspaces", { cache: "no-store" })
       .then((res) => {
         if (res.status === 401) { router.push("/login"); return; }
         return res.json();
@@ -97,7 +97,7 @@ export default function DashboardLayout({
       })
       .catch(() => {});
 
-    fetch("/api/profile")
+    fetch("/api/profile", { cache: "no-store" })
       .then((res) => {
         if (res.status === 401) { router.push("/login"); return; }
         return res.json();
@@ -116,7 +116,7 @@ export default function DashboardLayout({
       setUser((prev) => (prev ? { ...prev, ...detail } : prev));
     };
     const handleWorkspaceUpdate = () => {
-      fetch("/api/workspaces")
+      fetch("/api/workspaces", { cache: "no-store" })
         .then((res) => res.json())
         .then((data) => {
           if (data.workspaces) setWorkspaces(data.workspaces);

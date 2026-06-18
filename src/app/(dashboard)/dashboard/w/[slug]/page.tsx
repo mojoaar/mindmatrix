@@ -111,14 +111,14 @@ export default function WorkspacePage() {
     const folderToUse = customFolderId !== undefined ? customFolderId : activeFolderId;
     if (folderToUse) params.set("folderId", folderToUse);
 
-    const res = await fetch(`/api/notes?${params}`);
+    const res = await fetch(`/api/notes?${params}`, { cache: "no-store" });
     const data = await res.json();
     if (data.notes) setNotes(data.notes);
   }
 
   async function loadFolders(workspaceId: string) {
     try {
-      const res = await fetch(`/api/folders?workspaceId=${workspaceId}`);
+      const res = await fetch(`/api/folders?workspaceId=${workspaceId}`, { cache: "no-store" });
       if (!res.ok) return;
       const data = await res.json();
       if (data.folders) setFolders(data.folders);
@@ -126,20 +126,20 @@ export default function WorkspacePage() {
   }
 
   async function loadTags(workspaceId: string) {
-    const res = await fetch(`/api/tags?workspaceId=${workspaceId}`);
+    const res = await fetch(`/api/tags?workspaceId=${workspaceId}`, { cache: "no-store" });
     const data = await res.json();
     if (data.tags) setTags(data.tags);
   }
 
   async function loadTemplates(workspaceId: string) {
-    const res = await fetch(`/api/templates?workspaceId=${workspaceId}`);
+    const res = await fetch(`/api/templates?workspaceId=${workspaceId}`, { cache: "no-store" });
     const data = await res.json();
     if (data.templates) setTemplates(data.templates);
   }
 
   const loadData = useCallback(async () => {
     try {
-      const wsRes = await fetch("/api/workspaces");
+      const wsRes = await fetch("/api/workspaces", { cache: "no-store" });
       const wsData = await wsRes.json();
       if (wsData.workspaces) {
         const ws = wsData.workspaces.find((w: { slug: string }) => w.slug === slug);
