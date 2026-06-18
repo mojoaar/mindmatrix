@@ -1,8 +1,76 @@
 # MindMatrix
 
-Markdown-first, self-hosted, multi-user knowledge hub for teams and thinkers.
+<p align="center">
+  <img src="https://img.shields.io/badge/version-0.5.0-blue.svg?style=flat-square" alt="Version"/>
+  <img src="https://img.shields.io/badge/license-AGPL--3.0-green.svg?style=flat-square" alt="License"/>
+  <img src="https://img.shields.io/badge/tests-60%20passed-brightgreen.svg?style=flat-square" alt="Tests"/>
+  <img src="https://img.shields.io/badge/built%20with-Next.js%20%7C%20TS%20%7C%20Postgres-blueviolet.svg?style=flat-square" alt="Tech Stack"/>
+</p>
 
-**Version**: 0.5.0 | **License**: AGPL-3.0
+<p align="center">
+  <strong>Markdown-first, self-hosted, multi-user knowledge hub for teams and thinkers.</strong>
+</p>
+
+---
+
+## Application Showcase
+
+<p align="center">
+  <table>
+    <tr>
+      <td width="33%" align="center">
+        <strong>1. Public Landing Page</strong><br/>
+        <img src="public/screenshots/landing-page.png" alt="Landing Page" width="100%"/>
+        <br/><em>Responsive presentation with dynamic dark/light theme presets.</em>
+      </td>
+      <td width="33%" align="center">
+        <strong>2. 2-Column AI Workspace</strong><br/>
+        <img src="public/screenshots/editor-ai.png" alt="2-Column AI Editor" width="100%"/>
+        <br/><em>Dual-pane markdown editor with docked context-aware AI assistant.</em>
+      </td>
+      <td width="33%" align="center">
+        <strong>3. Workspace Dashboard</strong><br/>
+        <img src="public/screenshots/dashboard.png" alt="Workspace Dashboard" width="100%"/>
+        <br/><em>Full workspace table view with live search, tags, and sidebar folders.</em>
+      </td>
+    </tr>
+    <tr>
+      <td width="33%" align="center">
+        <strong>4. Categorized Plugins</strong><br/>
+        <img src="public/screenshots/settings-plugins.png" alt="Categorized Settings" width="100%"/>
+        <br/><em>Modular grid organizing AI tools, scanners, and syncing helpers.</em>
+      </td>
+      <td width="33%" align="center">
+        <strong>5. Interactive Documentation</strong><br/>
+        <img src="public/screenshots/docs.png" alt="In-App Docs" width="100%"/>
+        <br/><em>Full-featured documentation space with custom search & code examples.</em>
+      </td>
+      <td width="33%" align="center">
+        <strong>6. Super Admin Panel</strong><br/>
+        <img src="public/screenshots/admin-panel.png" alt="Super Admin Dashboard" width="100%"/>
+        <br/><em>Global tracking metrics, audit logs, SMTP setup, and user controls.</em>
+      </td>
+    </tr>
+  </table>
+</p>
+
+---
+
+## Realtime Architecture (SSE + PostgreSQL NOTIFY)
+
+MindMatrix utilizes a highly optimized, state-of-the-art realtime architecture built entirely with native web primitives. Instead of relying on heavy, resource-intensive WebSockets or external message brokers, we utilize Server-Sent Events (SSE) coupled with PostgreSQL's high-speed, built-in asynchronous channel subscription (`LISTEN`/`NOTIFY`):
+
+```text
+  [ Browser (Editor) ]   <--- (SSE event-stream) ---   [ Next.js API Route ]
+            │                                                    ▲
+      (Heartbeat/Save)                                           │ (Event Bus LISTEN)
+            ▼                                                    │
+[ PATCH /api/notes/[id] ] --- (Save to DB) ---> [ Postgres NOTIFY 'note:<id>' ]
+```
+
+This ensures zero-overhead, sub-millisecond collaboration, viewing-presence heartbeats, and live notification pushes across the entire system.
+
+---
 
 ## Quick Start
 
@@ -34,6 +102,8 @@ npm run start
 
 See `deploy/mindmatrix.service` for a systemd unit file.
 
+---
+
 ## Development
 
 ```bash
@@ -43,6 +113,8 @@ cp .env.example .env
 npm run db:push
 npm run dev
 ```
+
+---
 
 ## Features
 
@@ -73,18 +145,27 @@ npm run dev
 - **Mobile Responsive** — Hamburger menu, auto-collapse sidebar at 768px, touch-friendly sizing
 - **Self-hosted** — Docker Compose or systemd deployment
 
-## Tech Stack
+---
 
-- [Next.js 16](https://nextjs.org/) — App Router
-- [TypeScript](https://www.typescriptlang.org/)
-- [PostgreSQL](https://www.postgresql.org/) + [Drizzle ORM](https://orm.drizzle.team/)
-- [Better Auth](https://www.better-auth.com/) — Authentication
-- [CodeMirror 6](https://codemirror.net/) — Editor
-- [Radix UI](https://www.radix-ui.com/) — Accessible components
-- [PrismJS](https://prismjs.com/) — Syntax highlighting (297 languages)
-- [Vitest](https://vitest.dev/) — Testing
-- [Sass/SCSS](https://sass-lang.com/) — Styling
-- [Vitest](https://vitest.dev/) — Testing
+## Tech Stack & Open-Source Credits
+
+MindMatrix is built entirely on top of cutting-edge open-source software and robust developer tools. We are incredibly grateful to the maintainers of these projects:
+
+- **[Next.js 16](https://nextjs.org/)** — Fullstack App Router framework powering our SSR & static generation.
+- **[React 19](https://react.dev/)** — Declarative, component-driven user interface library.
+- **[PostgreSQL](https://www.postgresql.org/)** + **[Drizzle ORM](https://orm.drizzle.team/)** — For hot-reload safe, type-safe database queries and migrations.
+- **[Better Auth](https://www.better-auth.com/)** — For industry-standard multi-user credentials management and DB adapter.
+- **[CodeMirror 6](https://codemirror.net/)** (via `@uiw/react-codemirror`) — Powering our highly customizable, plain-text markdown code editor.
+- **[Y.js](https://yjs.dev/)** — Facilitating offline-capable, real-time collaborative editing with delta synchronization.
+- **[Sass/SCSS](https://sass-lang.com/)** — Allowing robust design token mapping and 12 custom themes via CSS variables.
+- **[PrismJS](https://prismjs.com/)** — Handling syntax highlighting for 297 programming languages via dynamic CDN autoloading.
+- **[Radix UI Primitives](https://www.radix-ui.com/)** — Providing accessible UI components (Dialog, Toast, Dropdown, Tabs).
+- **[Lucide React](https://lucide.dev/)** — For our rich searchable library of 400+ dynamic workspace, folder, and system icons.
+- **[Zod](https://zod.dev/)** — Empowering runtime schema validation for secure, type-safe REST API endpoints.
+- **[Nodemailer](https://nodemailer.com/)** — Running transactional, markdown-templated email delivery.
+- **[Vitest](https://vitest.dev/)** — Running our highly parallelized unit and component test suites.
+
+---
 
 ## Keyboard Shortcuts
 
@@ -102,6 +183,8 @@ npm run dev
 | Toggle Public Share  | Cmd+Shift+P           | Ctrl+Shift+P             |
 | Close Dialogs        | Escape                | Escape                   |
 
+---
+
 ## Plugin System
 
 Toggle plugins per workspace in Settings. Available:
@@ -114,9 +197,13 @@ Toggle plugins per workspace in Settings. Available:
 - **Google Drive Sync** — Sync notes as .md files to Google Drive
 - **Git Sync** — Pull and commit workspace notes to any Git repository (SSH or HTTPS)
 
+---
+
 ## API Documentation
 
 Full API docs available at `/apidocs` when the app is running.
+
+---
 
 ## Testing
 
@@ -124,11 +211,15 @@ Full API docs available at `/apidocs` when the app is running.
 npm run test
 ```
 
+---
+
 ## License
 
 MindMatrix is licensed under the GNU Affero General Public License v3.0. See [LICENSE](./LICENSE) for details.
 
 Built by [mojoaar](https://github.com/mojoaar)
+
+---
 
 ## Changelog
 
