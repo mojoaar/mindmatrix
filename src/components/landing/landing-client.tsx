@@ -14,6 +14,9 @@ import {
   Sun,
   Moon,
   ArrowRight,
+  Copy,
+  Check,
+  Sparkles,
 } from "lucide-react";
 
 const VALID_THEMES = [
@@ -25,8 +28,18 @@ const VALID_THEMES = [
   "one-dark", "one-light",
 ];
 
+const THEME_PRESETS = [
+  { name: "Dracula", id: "dracula-dark", color: "#bd93f9" },
+  { name: "Nord Dark", id: "nord-dark", color: "#81a1c1" },
+  { name: "One Dark", id: "one-dark", color: "#61afef" },
+  { name: "GitHub Dark", id: "github-dark", color: "#30363d" },
+  { name: "Cyberpunk", id: "cyberpunk-dark", color: "#fcee0a" },
+  { name: "Nord Light", id: "nord-light", color: "#5e81ac" },
+];
+
 export function LandingClient() {
   const [theme, setTheme] = useState("dracula-dark");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     try {
@@ -34,7 +47,6 @@ export function LandingClient() {
       if (savedTheme && VALID_THEMES.includes(savedTheme)) {
         setTheme(savedTheme);
       } else {
-        // Default landing page theme to dracula-dark if none is saved
         localStorage.setItem("mindmatrix-theme", "dracula-dark");
         document.documentElement.setAttribute("data-theme", "dracula-dark");
         setTheme("dracula-dark");
@@ -44,6 +56,14 @@ export function LandingClient() {
     }
   }, []);
 
+  const changeTheme = (themeId: string) => {
+    setTheme(themeId);
+    try {
+      localStorage.setItem("mindmatrix-theme", themeId);
+    } catch {}
+    document.documentElement.setAttribute("data-theme", themeId);
+  };
+
   const toggleTheme = () => {
     let nextTheme = "dracula-dark";
     if (theme.endsWith("-dark")) {
@@ -51,11 +71,14 @@ export function LandingClient() {
     } else if (theme.endsWith("-light")) {
       nextTheme = theme.replace("-light", "-dark");
     }
-    setTheme(nextTheme);
-    try {
-      localStorage.setItem("mindmatrix-theme", nextTheme);
-    } catch {}
-    document.documentElement.setAttribute("data-theme", nextTheme);
+    changeTheme(nextTheme);
+  };
+
+  const copyScript = () => {
+    const text = `git clone git@github.com:mojoaar/mindmatrix.git\nopenssl rand -base64 48\ndocker compose -f deploy/docker-compose.yml up -d`;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -104,7 +127,7 @@ export function LandingClient() {
             style={{ padding: "0.5rem", borderRadius: "50%" }}
             title="Toggle Dracula Light/Dark"
           >
-            {theme === "dracula-dark" ? <Sun size={18} /> : <Moon size={18} />}
+            {theme.endsWith("-dark") ? <Sun size={18} /> : <Moon size={18} />}
           </button>
           <Link href="/login" className="btn secondary sm">
             Sign In
@@ -137,6 +160,32 @@ export function LandingClient() {
         </div>
       </section>
 
+      {/* Theme Presets Quick Switch Bar */}
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "1rem", flexWrap: "wrap", margin: "1rem auto 2.5rem" }}>
+        <span style={{ fontSize: "0.85rem", color: "var(--fg-muted)", fontWeight: 600 }}>Preview Theme Preset:</span>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          {THEME_PRESETS.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => changeTheme(p.id)}
+              className="btn ghost sm"
+              style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "50%",
+                backgroundColor: p.color,
+                border: theme === p.id ? "2px solid var(--accent-purple)" : "1px solid var(--border-color)",
+                padding: 0,
+                cursor: "pointer",
+                boxShadow: theme === p.id ? "0 0 8px var(--accent-purple)" : "none",
+                transition: "all 0.2s"
+              }}
+              title={`Switch to ${p.name}`}
+            />
+          ))}
+        </div>
+      </div>
+
       {/* Interactive Mockup */}
       <div className="landing-mockup-wrapper">
         <div className="landing-mockup">
@@ -157,7 +206,7 @@ export function LandingClient() {
 
           <div style={{ display: "flex", height: "380px" }}>
             {/* Mock Sidebar */}
-            <div style={{ width: "220px", borderRight: "1px solid var(--border-color)", padding: "1rem", backgroundColor: "rgba(var(--bg-tertiary), 0.5)", display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div style={{ width: "200px", borderRight: "1px solid var(--border-color)", padding: "1rem", backgroundColor: "rgba(var(--bg-tertiary), 0.5)", display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div>
                 <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", color: "var(--fg-muted)", marginBottom: "0.5rem" }}>Folders</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", fontSize: "0.85rem" }}>
@@ -177,10 +226,10 @@ export function LandingClient() {
               </div>
             </div>
 
-            {/* Mock Editor */}
-            <div style={{ flex: 1, padding: "1.5rem", overflow: "hidden", display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {/* Mock Editor - Left Column */}
+            <div style={{ flex: 1, padding: "1.2rem", overflow: "hidden", display: "flex", flexDirection: "column", gap: "1rem", borderRight: "1px solid var(--border-color)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--fg-secondary)" }}>
+                <div style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--fg-secondary)" }}>
                   Campaign Strategy
                 </div>
                 <div style={{ display: "flex", gap: "0.375rem" }}>
@@ -189,13 +238,36 @@ export function LandingClient() {
                 </div>
               </div>
 
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.9rem", color: "var(--fg-primary)", lineHeight: 1.6, flex: 1 }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.8rem", color: "var(--fg-primary)", lineHeight: 1.5, flex: 1 }}>
                 <p><span style={{ color: "var(--accent-cyan)" }}># Product Launch Strategy</span></p>
-                <p style={{ marginTop: "0.5rem" }}>This campaign focuses on the v0.2 roll-out of <span style={{ color: "var(--accent-purple)" }}>[[marketing-blast]]</span>.</p>
-                <p style={{ marginTop: "0.5rem" }}>Key Milestones:</p>
+                <p style={{ marginTop: "0.3rem" }}>This campaign focuses on the v0.5 roll-out of <span style={{ color: "var(--accent-purple)" }}>[[marketing-blast]]</span>.</p>
+                <p style={{ marginTop: "0.3rem" }}>Key Milestones:</p>
                 <p>- [x] Sync cloud backup structures to Google Drive & pCloud.</p>
-                <p>- [ ] Dispatch webhook triggers on launch updates <span style={{ backgroundColor: "rgba(235, 203, 139, 0.15)", color: "var(--accent-yellow)", padding: "0.125rem 0.25rem", borderRadius: "3px" }}>| user typing...</span></p>
+                <p>- [ ] Dispatch webhook triggers on launch updates.</p>
                 <p>- [ ] Scan cluster health indicators via Proxmox endpoints.</p>
+              </div>
+            </div>
+
+            {/* Mock AI Assistant - Right Column */}
+            <div style={{ width: "240px", padding: "1rem", backgroundColor: "rgba(180, 142, 173, 0.04)", display: "flex", flexDirection: "column", gap: "0.75rem", overflowY: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.4rem" }}>
+                <Sparkles size={12} style={{ color: "var(--accent-purple)" }} />
+                <span style={{ fontWeight: 600, fontSize: "0.75rem" }}>AI Assistant (Zen)</span>
+              </div>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1, fontSize: "0.75rem" }}>
+                {/* User message */}
+                <div style={{ alignSelf: "flex-end", backgroundColor: "var(--bg-tertiary)", padding: "0.4rem 0.6rem", borderRadius: "var(--border-radius)", maxWidth: "90%", border: "1px solid var(--border-color)" }}>
+                  Is this note ready to deploy?
+                </div>
+                {/* Bot message */}
+                <div style={{ alignSelf: "flex-start", backgroundColor: "rgba(180, 142, 173, 0.08)", padding: "0.4rem 0.6rem", borderRadius: "var(--border-radius)", maxWidth: "90%", border: "1px dashed rgba(180, 142, 173, 0.25)" }}>
+                  💡 Yes! Your Proxmox and pCloud checkpoints are mapped. I recommend adding a final <code>---</code> line before syncing.
+                </div>
+              </div>
+
+              <div style={{ fontSize: "0.7rem", color: "var(--fg-muted)", borderTop: "1px solid var(--border-color)", paddingTop: "0.4rem" }}>
+                ⚡ Press Save to trigger Webhooks
               </div>
             </div>
           </div>
@@ -241,16 +313,16 @@ export function LandingClient() {
           {/* Card 3 */}
           <div className="landing-feature-card">
             <div className="icon-wrapper">
-              <GitBranch size={24} />
+              <Sparkles size={24} style={{ color: "var(--accent-purple)" }} />
             </div>
-            <h3>Gated Plugin Marketplace</h3>
+            <h3>Dual-Pane AI Assistant</h3>
             <p>
-              Extend workspaces dynamically with secure integrations for Git-Sync repositories, OpenCode Zen LLMs, Proxmox clustering scanners, or Unifi controller topology mappings.
+              Write on the left, hold an interactive chat on the right. Leverages deep note context, automatic 3-attempt exponential retries, and inline action buttons (Insert, Append, Copy) to assist your workflow.
             </p>
             <div className="landing-tags-wrapper">
-              <span className="badge">AES-256-GCM</span>
-              <span className="badge">Git Pull/Push</span>
-              <span className="badge">Proxmox scan</span>
+              <span className="badge">DeepSeek v4</span>
+              <span className="badge">Context-Aware</span>
+              <span className="badge">3x Auto-Retry</span>
             </div>
           </div>
 
@@ -317,6 +389,25 @@ export function LandingClient() {
             <span style={{ width: "12px", height: "12px", borderRadius: "50%", backgroundColor: "var(--accent-orange)" }}></span>
             <span style={{ width: "12px", height: "12px", borderRadius: "50%", backgroundColor: "var(--accent-green)" }}></span>
             <span style={{ marginLeft: "0.5rem", fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--fg-muted)" }}>setup.sh</span>
+            
+            <button
+              onClick={copyScript}
+              className="btn ghost sm"
+              style={{ marginLeft: "auto", padding: "0.2rem 0.5rem", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.25rem", color: "var(--fg-muted)" }}
+              title="Copy setup commands"
+            >
+              {copied ? (
+                <>
+                  <Check size={12} style={{ color: "var(--accent-green)" }} />
+                  <span>Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy size={12} />
+                  <span>Copy</span>
+                </>
+              )}
+            </button>
           </div>
           <div style={{ padding: "1.5rem", fontFamily: "var(--font-mono)", fontSize: "0.9rem", lineHeight: 1.6, overflowX: "auto" }}>
             <p><span style={{ color: "var(--accent-cyan)" }}># Clone the repository</span></p>
