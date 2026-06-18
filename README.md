@@ -142,6 +142,9 @@ Built by [mojoaar](https://github.com/mojoaar)
 - **Interactive Notes Sorting** — click table headers in workspace notes view to sort dynamically by Title (alphabetical) or Updated (chronological, newest first)
 - **Visual Search in Docs & API Reference** — added a visual Search button matching the main dashboard layout to both `/docs` and `/apidocs` routes
 - **Interactive Multi-Language API Examples** — added a sticky language selector bar (cURL, PowerShell, Python, JavaScript) to `/apidocs` with collapsible PrismJS-highlighted code integration snippets
+- **Client Cache Invalidation** — resolved stale notes list and out-of-sync sidebar folder note counts on soft navigations by appending `{ cache: "no-store" }` headers to all dynamic GET fetch requests
+- **Workspace Plugins Loading Fix** — fixed a data-binding bug in the generic `PluginCard` component (`d.config?.enabled` → `d.enabled`) that failed to bind active states on reload, restoring persistent status displays for all 7 plugins
+- **OpenCode Naming Alignment** — renamed the OpenCode AI plugin to **OpenCode Go** across all server plugins, metadata registries, and documentations to create clean, distinctive naming alignment with your subscriptions
 
 ### v0.3.0 — 2026-06-16
 - **Landing Page** — unauthenticated responsive landing page with theme toggle and presets

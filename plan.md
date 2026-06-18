@@ -375,6 +375,9 @@ Stored in `localStorage` key `mindmatrix-theme` and `mindmatrix-font`. Applied v
 - **Interactive Notes Sorting** — click table headers in workspace notes view to sort dynamically by Title or Updated
 - **Visual Search in Docs & API Reference** — added search triggers and overlays to `/docs` and `/apidocs` routes
 - **Interactive Multi-Language API Examples** — added a sticky language selector bar with collapsible PrismJS snippets to `/apidocs`
+- **Client Cache Invalidation** — resolved stale notes list and out-of-sync sidebar folder note counts on soft navigations by appending `{ cache: "no-store" }` headers to all dynamic GET fetch requests
+- **Workspace Plugins Loading Fix** — fixed a data-binding bug in the generic `PluginCard` component (`d.config?.enabled` → `d.enabled`) that failed to bind active states on reload, restoring persistent status displays for all 7 plugins
+- **OpenCode Naming Alignment** — renamed the OpenCode AI plugin to **OpenCode Go** across all server plugins, metadata registries, and documentations to create clean, distinctive naming alignment with your subscriptions
 
 ### Ideas Backlog
 
