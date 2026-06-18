@@ -77,44 +77,66 @@ export function AIAssistantPanel({
   if (loadingConfig) return null;
   if (!goEnabled && !zenEnabled) return null;
 
+  async function performChat(nextMsgs: Message[]) {
+    setLoading(true);
+    const targetEndpoint = provider === "go" ? "opencode-ai" : "opencode-zen";
+
+    let attempts = 3;
+    let res: Response | null = null;
+    let lastError: any = null;
+
+    for (let i = 0; i < attempts; i++) {
+      try {
+        res = await fetch(`/api/plugins/${targetEndpoint}/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            workspaceId,
+            noteContent,
+            messages: nextMsgs,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.content && data.content.trim() !== "") {
+            setMessages((prev) => [...prev, { role: "assistant", content: data.content }]);
+            setLoading(false);
+            return;
+          } else {
+            lastError = new Error("Empty response from AI server.");
+          }
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          lastError = new Error(errData.error || `AI assist failed with status ${res.status}`);
+        }
+      } catch (e: any) {
+        lastError = e;
+      }
+
+      if (i < attempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+      }
+    }
+
+    toastError(lastError?.message || "AI assist failed after 3 attempts");
+    setLoading(false);
+  }
+
   async function submit() {
     if (!input.trim() || loading) return;
     const userMsg: Message = { role: "user", content: input.trim() };
     const nextMsgs = [...messages, userMsg];
     setMessages(nextMsgs);
     setBody("");
-    setLoading(true);
+    await performChat(nextMsgs);
+  }
 
-    const targetEndpoint = provider === "go" ? "opencode-ai" : "opencode-zen";
-
-    try {
-      const res = await fetch(`/api/plugins/${targetEndpoint}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          workspaceId,
-          noteContent,
-          messages: nextMsgs,
-        }),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        toastError(errData.error || "AI assist failed");
-        setMessages((prev) => prev.slice(0, -1)); // remove last user message on fail
-      } else {
-        const data = await res.json();
-        if (data.content !== undefined) {
-          setMessages((prev) => [...prev, { role: "assistant", content: data.content }]);
-        } else {
-          toastError("No content returned");
-        }
-      }
-    } catch {
-      toastError("Network error. AI assist failed.");
-    } finally {
-      setLoading(false);
-    }
+  async function retryLast() {
+    if (loading) return;
+    const lastUserMsg = messages[messages.length - 1];
+    if (!lastUserMsg || lastUserMsg.role !== "user") return;
+    await performChat(messages);
   }
 
   function appendContent(text: string) {
@@ -264,6 +286,20 @@ export function AIAssistantPanel({
             )}
           </div>
         ))}
+
+        {!loading && messages.length > 0 && messages[messages.length - 1].role === "user" && (
+          <div className="flex gap-2 align-center" style={{ backgroundColor: "rgba(235, 203, 139, 0.1)", border: "1px dashed var(--accent-yellow)", borderRadius: "var(--border-radius)", padding: "0.5rem 0.75rem", margin: "0.5rem 0" }}>
+            <AlertCircle size={14} style={{ color: "var(--accent-yellow)", flexShrink: 0 }} />
+            <span style={{ fontSize: "0.8rem", color: "var(--fg-muted)" }}>AI failed to respond.</span>
+            <button
+              className="btn secondary sm"
+              style={{ padding: "0.15rem 0.5rem", fontSize: "0.75rem", marginLeft: "auto", height: "auto" }}
+              onClick={retryLast}
+            >
+              Retry
+            </button>
+          </div>
+        )}
 
         {loading && (
           <div className="flex gap-2 justify-start">
