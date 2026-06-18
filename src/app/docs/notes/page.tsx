@@ -44,6 +44,17 @@ export default function NotesDocPage() {
         <p>Workspace-level templates let you create new notes from predefined structures. Choose from built-in templates (ADR, runbook, meeting notes) or create your own. Select from the <strong>New from Template</strong> dropdown next to the New Note button.</p>
       </div>
       <div className="card">
+        <h2>Markdown Formatting Toolbar</h2>
+        <p>The editor includes an interactive formatting toolbar at the top of the CodeMirror container supporting rapid markup injection:</p>
+        <ul style={{ paddingLeft: "1.5rem" }}>
+          <li><strong>Headings</strong> — H1, H2, and H3 header tags</li>
+          <li><strong>Text Styles</strong> — Bold, Italic, and Strikethrough wrappers</li>
+          <li><strong>Inline Elements</strong> — Links, Code blocks, and Blockquotes</li>
+          <li><strong>Structures</strong> — Bullet Lists, Task Lists (Checkboxes), and Table Grid templates</li>
+          <li><strong>Power Tools</strong> — Insert Mermaid Flowcharts (renders dynamically as SVG) and Note Embeds (transcludes another note's content inline using <code>![[note-slug]]</code>)</li>
+        </ul>
+      </div>
+      <div className="card">
         <h2>Realtime Collaboration</h2>
         <p>See who else is viewing a note via presence avatars in the editor header. When someone else saves changes, you'll get a toast notification. No page refresh needed — powered by SSE and PostgreSQL LISTEN/NOTIFY.</p>
       </div>

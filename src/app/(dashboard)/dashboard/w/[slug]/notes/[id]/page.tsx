@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Save, Trash2, Tag, Heading1, Heading2, Heading3, Bold, Italic, Code, Link2, List, CheckSquare, Table, Image as ImageIcon, Share2, Globe, Printer } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Tag, Heading1, Heading2, Heading3, Bold, Italic, Code, Link2, List, CheckSquare, Table, Image as ImageIcon, Share2, Globe, Printer, GitFork, Bookmark, Quote, Strikethrough, Minus } from "lucide-react";
 import Link from "next/link";
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
@@ -320,6 +320,31 @@ export default function NoteEditorPage() {
         break;
       case "table":
         replacement = `\n| Header 1 | Header 2 |\n| -------- | -------- |\n| Cell 1   | Cell 2   |\n`;
+        selectionOffsetStart = 1;
+        selectionOffsetEnd = replacement.length - 1;
+        break;
+      case "diagram":
+        replacement = `\n\`\`\`mermaid\ngraph TD\n  A[Start] --> B(Process)\n  B --> C{Decision}\n  C -->|Yes| D[Result 1]\n  C -->|No| E[Result 2]\n\`\`\`\n`;
+        selectionOffsetStart = 1;
+        selectionOffsetEnd = replacement.length - 1;
+        break;
+      case "embed":
+        replacement = `![[${selectedText || "note-slug"}]]`;
+        selectionOffsetStart = 4;
+        selectionOffsetEnd = selectedText ? selectedText.length + 4 : 13;
+        break;
+      case "quote":
+        replacement = `> ${selectedText}`;
+        selectionOffsetStart = 2;
+        selectionOffsetEnd = selectedText.length + 2;
+        break;
+      case "strike":
+        replacement = `~~${selectedText}~~`;
+        selectionOffsetStart = 2;
+        selectionOffsetEnd = selectedText.length + 2;
+        break;
+      case "hr":
+        replacement = `\n---\n`;
         selectionOffsetStart = 1;
         selectionOffsetEnd = replacement.length - 1;
         break;
@@ -779,6 +804,9 @@ export default function NoteEditorPage() {
               <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Italic" onClick={() => handleFormat("italic")}>
                 <Italic size={14} />
               </button>
+              <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Strikethrough" onClick={() => handleFormat("strike")}>
+                <Strikethrough size={14} />
+              </button>
               <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Code" onClick={() => handleFormat("code")}>
                 <Code size={14} />
               </button>
@@ -786,6 +814,10 @@ export default function NoteEditorPage() {
               <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Link" onClick={() => handleFormat("link")}>
                 <Link2 size={14} />
               </button>
+              <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Blockquote" onClick={() => handleFormat("quote")}>
+                <Quote size={14} />
+              </button>
+              <span style={{ width: "1px", height: "16px", backgroundColor: "var(--border-color)", margin: "0 0.25rem" }} />
               <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Bullet List" onClick={() => handleFormat("list")}>
                 <List size={14} />
               </button>
@@ -794,6 +826,15 @@ export default function NoteEditorPage() {
               </button>
               <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Insert Table" onClick={() => handleFormat("table")}>
                 <Table size={14} />
+              </button>
+              <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Insert Diagram" onClick={() => handleFormat("diagram")}>
+                <GitFork size={14} />
+              </button>
+              <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Embed Note" onClick={() => handleFormat("embed")}>
+                <Bookmark size={14} />
+              </button>
+              <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Horizontal Line" onClick={() => handleFormat("hr")}>
+                <Minus size={14} />
               </button>
               <span style={{ width: "1px", height: "16px", backgroundColor: "var(--border-color)", margin: "0 0.25rem" }} />
               <button className="btn ghost sm" style={{ padding: "0.25rem" }} title="Insert Image" onClick={() => imageInputRef.current?.click()}>
