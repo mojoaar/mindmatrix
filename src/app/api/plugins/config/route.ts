@@ -65,19 +65,23 @@ export async function POST(request: Request) {
     where: and(eq(pluginConfig.pluginId, pluginId), eq(pluginConfig.workspaceId, workspaceId)),
   });
 
-  const newConfig = incomingConfig ?? {};
+  let encryptedConfig = existing ? existing.config : {};
 
-  // Merge with existing: preserve encrypted values when mask placeholder "••••••••" is sent
-  if (existing) {
-    const existingConfig = typeof existing.config === "object" ? (existing.config as Record<string, any>) : {};
-    for (const key of Object.keys(existingConfig)) {
-      if (newConfig[key] === "••••••••") {
-        newConfig[key] = existingConfig[key];
+  if (incomingConfig !== undefined && incomingConfig !== null) {
+    const newConfig = { ...incomingConfig };
+
+    // Merge with existing: preserve encrypted values when mask placeholder "••••••••" is sent
+    if (existing) {
+      const existingConfig = typeof existing.config === "object" ? (existing.config as Record<string, any>) : {};
+      for (const key of Object.keys(existingConfig)) {
+        if (newConfig[key] === "••••••••") {
+          newConfig[key] = existingConfig[key];
+        }
       }
     }
-  }
 
-  const encryptedConfig = encryptConfig(newConfig);
+    encryptedConfig = encryptConfig(newConfig);
+  }
 
   if (existing) {
     await db
