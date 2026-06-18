@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db, pluginConfig, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
-import { encryptConfig, decryptConfig, maskConfig } from "@/lib/crypto";
+import { encryptConfig, decryptConfig, maskConfig, decrypt } from "@/lib/crypto";
 import { logAction } from "@/lib/audit";
 
 export async function GET(request: Request) {
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       const existingConfig = typeof existing.config === "object" ? (existing.config as Record<string, any>) : {};
       for (const key of Object.keys(existingConfig)) {
         if (newConfig[key] === "••••••••") {
-          newConfig[key] = existingConfig[key];
+          newConfig[key] = decrypt(existingConfig[key]);
         }
       }
     }
