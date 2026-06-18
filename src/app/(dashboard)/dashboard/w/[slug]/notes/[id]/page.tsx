@@ -23,6 +23,7 @@ import { useMermaid } from "@/hooks/use-mermaid";
 import { CommentSection } from "@/components/ui/comment-section";
 import { Avatar } from "@/components/ui/avatar";
 import { useTheme } from "@/components/theme/theme-provider";
+import { AIAssistantPanel } from "@/components/editor/ai-assistant-panel";
 
 interface Note {
   id: string;
@@ -90,6 +91,21 @@ export default function NoteEditorPage() {
   const editorRef = useRef<any>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const { success: toastSuccess, error: toastError } = useToast();
+
+  const insertAtCursor = useCallback((text: string) => {
+    const view = editorRef.current?.view;
+    if (!view) return;
+    const { state, dispatch } = view;
+    const { from, to } = state.selection.main;
+    dispatch(
+      state.update({
+        changes: { from, to, insert: text },
+        selection: { anchor: from + text.length },
+        scrollIntoView: true,
+      })
+    );
+    view.focus();
+  }, []);
 
   useEffect(() => {
     fetch("/api/profile")
@@ -889,6 +905,13 @@ export default function NoteEditorPage() {
       <BacklinksPanel noteId={note.id} workspaceSlug={slug} />
       <CommentSection noteId={note.id} />
       <VersionPanel noteId={note.id} />
+      <AIAssistantPanel
+        noteId={note.id}
+        workspaceId={note.workspaceId}
+        noteContent={content}
+        setContent={setContent}
+        insertAtCursor={insertAtCursor}
+      />
     </div>
   );
 }
