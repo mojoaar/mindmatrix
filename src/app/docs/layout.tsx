@@ -74,6 +74,9 @@ export default function DocsLayout({
             <a href="/docs/self-hosting" style={{ padding: "0.35rem 0.5rem", borderRadius: "var(--border-radius)", color: "var(--fg-muted)", fontSize: "0.875rem" }}>
               Self-Hosting
             </a>
+            <a href="/docs/changelog" style={{ padding: "0.35rem 0.5rem", borderRadius: "var(--border-radius)", color: "var(--fg-muted)", fontSize: "0.875rem" }}>
+              Changelog
+            </a>
           </nav>
 
           <div style={{ marginTop: "2rem" }}>

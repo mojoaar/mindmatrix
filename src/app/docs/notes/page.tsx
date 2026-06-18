@@ -55,6 +55,21 @@ export default function NotesDocPage() {
         </ul>
       </div>
       <div className="card">
+        <h2>AI Assistant</h2>
+        <p>
+          Click the <strong>Sparkles</strong> (AI Assistant) button in the note editor header to dock a vertical split-screen AI panel on the right. 
+          This layout allows you to write or edit markdown on the left while holding an interactive conversation with the AI on the right.
+        </p>
+        <p style={{ marginTop: "0.5rem" }}>
+          The AI Assistant is fully context-aware; it dynamically receives the active content of your note on every prompt. You can ask for summaries, expansions, diagram designs, code suggestions, or copying edits.
+        </p>
+        <ul style={{ paddingLeft: "1.5rem", marginTop: "0.5rem" }}>
+          <li><strong>Copy Code</strong> — Quick click to copy AI-generated code snippets to your clipboard</li>
+          <li><strong>Insert at Cursor</strong> — Inject suggestions directly into the editor at your cursor position</li>
+          <li><strong>Append to Note</strong> — Instantly add the AI reply to the end of the note</li>
+        </ul>
+      </div>
+      <div className="card">
         <h2>Realtime Collaboration</h2>
         <p>See who else is viewing a note via presence avatars in the editor header. When someone else saves changes, you'll get a toast notification. No page refresh needed — powered by SSE and PostgreSQL LISTEN/NOTIFY.</p>
       </div>
