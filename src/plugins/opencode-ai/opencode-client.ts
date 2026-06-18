@@ -34,6 +34,10 @@ export class OpenCodeClient {
     }
 
     const data = await res.json();
+    if (data.error) {
+      throw new Error(data.error.message || "OpenCode API returned an error");
+    }
+
     return {
       content: data.choices?.[0]?.message?.content || "",
       model: data.model,

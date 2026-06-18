@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Sparkles, Send, Copy, ArrowDownToLine, AlertCircle, Bot, User, X } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
+import { Avatar } from "@/components/ui/avatar";
 
 interface Message {
   role: "user" | "assistant";
@@ -17,6 +18,8 @@ interface AIAssistantPanelProps {
   insertAtCursor: (text: string) => void;
   onClose: () => void;
   onStatusLoaded?: (goActive: boolean, zenActive: boolean) => void;
+  userName?: string;
+  userImage?: string | null;
 }
 
 export function AIAssistantPanel({
@@ -27,6 +30,8 @@ export function AIAssistantPanel({
   insertAtCursor,
   onClose,
   onStatusLoaded,
+  userName,
+  userImage,
 }: AIAssistantPanelProps) {
   const [goEnabled, setGoEnabled] = useState(false);
   const [zenEnabled, setZenEnabled] = useState(false);
@@ -253,19 +258,8 @@ export function AIAssistantPanel({
             </div>
 
             {m.role === "user" && (
-              <div
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: "50%",
-                  backgroundColor: "var(--bg-accent)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <User size={12} style={{ color: "var(--fg-secondary)" }} />
+              <div style={{ flexShrink: 0 }}>
+                <Avatar name={userName || "User"} email="" image={userImage} size={24} />
               </div>
             )}
           </div>

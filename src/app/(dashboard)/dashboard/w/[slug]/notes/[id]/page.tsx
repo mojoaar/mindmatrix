@@ -931,6 +931,8 @@ export default function NoteEditorPage() {
               insertAtCursor={insertAtCursor}
               onClose={() => setShowAi(false)}
               onStatusLoaded={(go, zen) => setAiActive(go || zen)}
+              userName={profile?.name}
+              userImage={profile?.image}
             />
           </div>
         )}
@@ -949,6 +951,8 @@ export default function NoteEditorPage() {
             insertAtCursor={insertAtCursor}
             onClose={() => {}}
             onStatusLoaded={(go, zen) => setAiActive(go || zen)}
+            userName={profile?.name}
+            userImage={profile?.image}
           />
         </div>
       )}

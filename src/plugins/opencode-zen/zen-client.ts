@@ -35,6 +35,10 @@ export class ZenClient {
     }
 
     const data = await res.json();
+    if (data.error) {
+      throw new Error(data.error.message || "Zen API returned an error");
+    }
+
     return {
       content: data.choices?.[0]?.message?.content || data.content?.[0]?.text || "",
       model: data.model,
