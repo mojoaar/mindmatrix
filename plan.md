@@ -476,3 +476,116 @@ As MindMatrix transitions from single-note prompting to workspace-wide context, 
 - **Database vector support** — Introduce `pgvector` extension to our PostgreSQL container schema to store high-dimensional semantic vectors for note blocks.
 - **Incremental Asynchronous Auditor** — Implement an asynchronous background queue (using pg-boss or lightweight Postgres LISTEN/NOTIFY workers) that process note updates incrementally, rather than running expensive LLM scans on active page loads.
 - **Centralized AI Copilot Console** — A new Workspace settings tab grouping audit logs into categorized filter tabs (**[Taxonomy Gaps]**, **[Link Discoveries]**, and **[Title Fixes]**) with direct database bulk updates.
+
+---
+
+## v0.5.0 — Pre-v0.6.0 Code & Security Audit
+
+A thorough four-part audit (security, code quality, test coverage, API completeness) conducted before beginning Desktop & Mobile Clients (v0.6.0). Findings are numbered for referencing during implementation.
+
+---
+
+### 🔴 Critical (1)
+
+| #   | Finding                                                                                                          | File                                     |
+| --- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| 1   | **`Buffer` used in client-side code** — `use-realtime-note.ts` is marked `"use client"` but calls `Buffer.from()` for base64 encoding/decoding. This throws `ReferenceError: Buffer is not defined` in any browser. | `src/hooks/use-realtime-note.ts:95,128`    |
+
+---
+
+### 🟠 High (7)
+
+| #   | Finding                                                                                                                                                                          | File                                                                              |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 2   | **Zod schemas defined but never used** — 11 schemas in `validations.ts`, zero imported by any route handler. All 49 routes do manual inline validation instead.                         | `src/lib/validations.ts`                                                            |
+| 3   | **Rate limiting missing on 45/49 routes** — only 4 endpoints rate-limited (auth, upload, comments, tokens). No protection on notes CRUD, search, import, admin, plugins.               | 45 route files                                                                    |
+| 4   | **Cross-user notification injection** — any authenticated user can POST a notification targeting an arbitrary `userId`. The route never checks `userId === session.user.id`.            | `src/app/api/notifications/route.ts:42-48`                                          |
+| 5   | **Plugin dispatcher no auth at gateway level** — `plugins/[...plugin]/route.ts` delegates entirely to handlers without its own auth check. A misconfigured or new plugin could be exposed. | `src/app/api/plugins/[...plugin]/route.ts`                                          |
+| 6   | **Upload route missing workspace permission check** — accepts `workspaceId` as a field but never validates it against workspace membership. Any authenticated user can upload files.      | `src/app/api/notes/upload/route.ts`                                                |
+| 7   | **`middleware.ts`/`proxy.ts` naming mismatch** — middleware listed in AGENTS.md as `middleware.ts` but the actual file is named `proxy.ts`. Route protection may not be loading correctly. | `src/proxy.ts`                                                                     |
+| 8   | **0% unit test coverage on 48 API route files**, 7 plugin indexes, 3 hooks, and 16/19 lib utilities. No vitest coverage provider configured. ~60 tests covering ~2% of logic.             | All source files                                                                  |
+
+---
+
+### 🟡 Medium (11)
+
+| #    | Finding                                                                                                                                                                           | File(s)                                                                                                                                                                                    |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 9    | **Duplicate inline slug logic in 6 files** — same regex string in every route. Should use `toSlug()` from `src/lib/slug.ts`.                                                             | `notes/route.ts:81`, `notes/[id]/route.ts:73`, `folders/route.ts:64`, `folders/[id]/route.ts:31`, `import/route.ts:33`, `plugins/git-sync/index.ts:208`                                          |
+| 10   | **98 ESLint errors — 32 `@typescript-eslint/no-explicit-any`** spread across 17 files. Top offenders: `git-sync`, `sync-google-drive`, `crypto.ts`. Catch blocks and config objects are the main patterns. | 17 files                                                                                                                                                                                   |
+| 11   | **No try/catch on 46/49 route handler files** — DB connection failures or unexpected errors will crash with Next.js raw 500 instead of a clean JSON error response.                     | All unguarded route files                                                                                                                                                                  |
+| 12   | **Inconsistent `NextResponse.json()` vs `Response.json()`** — some routes use one, some the other. Cosmetic but confusing for new contributors.                                            | Multiple files                                                                                                                                                                             |
+| 13   | **SSE notification events missing keepalive** — no heartbeat comment sent to the stream. Proxies and load balancers may drop the connection after idle timeout (often 60s).               | `src/app/api/notifications/events/route.ts`                                                                                                                                                  |
+| 14   | **Public API leaks metadata** — `GET /api/notes/[id]` for `isPublic` notes returns `workspaceId`, `creator`, and `folder` metadata beyond what the share page renders.                      | `src/app/api/notes/[id]/route.ts` (public path)                                                                                                                                              |
+| 15   | **Webhook: no retry, no delivery status** — failed dispatches are silently discarded. No event type registry exists. No delivery success/failure is stored for operators.                 | `src/lib/webhooks.ts`                                                                                                                                                                       |
+| 16   | **`verifySSL` dead code in proxmox-inventory** — variable assigned at `line 22` but never referenced again. The settings toggle has no effect on actual HTTP requests.                     | `src/plugins/proxmox-inventory/index.ts:22`                                                                                                                                                  |
+| 17   | **`getAccessToken` dead function in sync-pcloud** — exported module-level function at `lines 8-12`, never called. All routes access `config.accessToken` directly.                           | `src/plugins/sync-pcloud/index.ts:8-12`                                                                                                                                                      |
+| 18   | **DB fallback password with placeholder** — `db/index.ts:7` has a hardcoded fallback connection string with `CHANGE_ME_DB_PASSWORD`. If `DATABASE_URL` is ever unset, it silently connects with a predictable credential. | `src/lib/db/index.ts:7`                                                                                                                                                                     |
+| 19   | **`execSync` in git-sync blocks event loop** — synchronous `execSync()` calls for `git clone`, `git fetch`, `git commit`, and `git push` block all incoming Node.js requests during large repository operations. | `src/plugins/git-sync/index.ts`                                                                                                                                                              |
+
+---
+
+### 🟢 Low (14)
+
+| #    | Area            | Finding                                                                                                                                                                | File(s)                                                                                   |
+| ---- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 20   | Naming          | Plugin exports inconsistent: `syncPcloudPlugin` vs `opencodeAiPlugin` vs `unifiTopologyPlugin` vs `gitSyncPlugin`.                                                     | 7 plugin `index.ts` files                                                                   |
+| 21   | CORS            | No CORS configured anywhere — safe for self-hosted but required before Phase 1 of v0.6.0 Desktop/Mobile Clients.                                                       | `next.config.ts`, all API routes                                                          |
+| 22   | Console logging | 7 files with server-side `console.log`/`console.error` — should use a structured logger that respects `NODE_ENV`.                                                         | `email.ts`, `webhooks.ts`, `git-sync/index.ts`, `notes/[id]/route.ts`, `upload/route.ts`, `export/route.ts` |
+| 23   | Gitignore       | `.env.*` not fully gitignored — `.env.production` or `.env.staging` could be accidentally committed.                                                                      | `.gitignore`                                                                                |
+| 24   | Profile         | Theme and font values stored to DB but never validated against known lists (12 valid themes, 8 valid fonts).                                                           | `src/app/api/profile/route.ts`                                                              |
+| 25   | Comments        | Comment body has no max length validation — could accept arbitrarily large payloads up to Next.js's 4MB default.                                                       | `src/app/api/notes/[id]/comments/route.ts`                                                  |
+| 26   | Mermaid         | `innerHTML` assignment for Mermaid SVG output — low DOM XSS risk. Consider `securityLevel: 'strict'` config or DOMPurify sanitization.                                     | `src/hooks/use-mermaid.ts:40`                                                                |
+| 27   | Sync routes     | pCloud and Google Drive sync routes only check user auth, not workspace membership.                                                                                    | `src/app/api/sync/pcloud/route.ts`, `sync/google-drive/route.ts`                            |
+| 28   | Plugin imports  | 4 plugins use dynamic `import("@/lib/db")`, 3 use static imports — inconsistent pattern across plugin handlers.                                                         | `proxmox-inventory`, `unifi-topology`, `sync-pcloud`, `sync-google-drive`                    |
+| 29   | Screenshots     | README PNG screenshots at 35-40MB+ each in `public/screenshots/` — significantly bloats `git clone` time. Consider Git LFS, `.gitignore` exclusion, or WebP conversion. | `public/screenshots/*.png`                                                                  |
+| 30   | Server build    | Remote `npm run build` takes ~117s on the production server — consider `npm ci --prefer-offline` or caching node_modules to speed up deploys.                           | `scripts/deploy.sh`                                                                         |
+| 31   | Tests           | Top 5 security-critical untested files: `security.ts`, `crypto.ts`, `rate-limit.ts`, `auth-helper.ts`, `api-token-auth.ts`                                               | `src/lib/security.ts`, `crypto.ts`, `rate-limit.ts`, `auth-helper.ts`, `api-token-auth.ts`      |
+| 32   | Tests           | `webhooks.ts`, `email.ts`, `notifications.ts` — 0 tests on core infrastructure modules.                                                                                  | `src/lib/webhooks.ts`, `email.ts`, `notifications.ts`                                        |
+| 33   | Tests           | `ai-assistant-panel.tsx` — 0 tests on a complex 330-line component with 3-attempt exponential backoff retry logic.                                                       | `src/components/editor/ai-assistant-panel.tsx`                                               |
+
+---
+
+### 📊 Summary
+
+| Severity | Count |
+| -------- | ----- |
+| Critical | 1     |
+| High     | 7     |
+| Medium   | 11    |
+| Low      | 14    |
+| **Total**    | **33**    |
+
+---
+
+### 🎯 Recommended Fix Order (Top 10)
+
+| Priority | #   | Rationale                                                                             |
+| -------- | --- | ------------------------------------------------------------------------------------- |
+| 1        | 1   | `Buffer` crash is a browser runtime break — prevents realtime collaboration in prod     |
+| 2        | 7   | Middleware loading may be broken — means route protection is missing                   |
+| 3        | 4   | Cross-user notification injection is a security bug affecting all users                |
+| 4        | 5   | Plugin dispatcher needs gateway auth before new plugins are added in v0.6.0             |
+| 5        | 6   | Upload endpoint needs workspace permission validation                                  |
+| 6        | 3   | Rate limiting on all mutation endpoints (DoS protection)                               |
+| 7        | 2   | Zod schema integration in core routes (notes, workspaces, folders, tags) — enables consistent validation before PWA/Tauri clients connect |
+| 8        | 21  | CORS configuration required before Phase 1 of v0.6.0 Desktop/Mobile                    |
+| 9        | 9   | Replace all inline slug generation with `toSlug()` — reduces duplication ahead of v0.6.0 |
+| 10       | 31  | Add vitest coverage + tests for `crypto.ts` and `security.ts` (top 2 security-critical modules) |
+
+---
+
+### 📋 Test Coverage Gaps (Top 10, ranked by risk)
+
+| Priority | File                                                                     | Risk      | Reason                                                                                   |
+| -------- | ------------------------------------------------------------------------ | --------- | ---------------------------------------------------------------------------------------- |
+| 1        | `src/lib/security.ts`                                                      | Critical | Sole SSRF defense for webhooks. Bug = RCE or internal network access.                    |
+| 2        | `src/lib/crypto.ts`                                                        | Critical | Encrypts all plugin secrets, SMTP passwords, API keys, webhook secrets.                  |
+| 3        | `src/lib/auth-helper.ts`                                                   | Critical | `getAuthUser()` used by nearly every API route. Bug = unauthorized access.                 |
+| 4        | `src/lib/api-token-auth.ts`                                               | Critical | Validates all CLI/integration Bearer tokens. Bug = any token works.                      |
+| 5        | `src/lib/rate-limit.ts`                                                    | High     | Frontline DoS defense for all rate-limited endpoints.                                    |
+| 6        | `src/lib/webhooks.ts`                                                      | High     | Full webhook dispatch with SSRF, HMAC signatures, background execution.                  |
+| 7        | `src/lib/email.ts`                                                         | High     | Verification emails, password resets, SMTP transport. Templates + variable substitution. |
+| 8        | `src/hooks/use-realtime-note.ts`                                          | High     | Y.js CRDT + SSE + presence heartbeats — most complex client logic.                       |
+| 9        | `src/app/api/notes/route.ts`                                               | High     | Most-used API endpoint — note listing + creation + filtering + webhook triggering.       |
+| 10       | `src/app/api/workspaces/route.ts`                                          | High     | Workspace creation + slug uniqueness + membership setup.                                 |
