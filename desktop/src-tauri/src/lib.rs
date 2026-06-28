@@ -6,6 +6,48 @@ use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_fs::FsExt;
 use serde::Serialize;
 
+#[derive(Serialize)]
+struct AuthResult {
+    ok: bool,
+    set_cookie: Option<String>,
+    error: Option<String>,
+}
+
+#[tauri::command]
+async fn auth_signin(url: String, email: String, password: String) -> Result<AuthResult, String> {
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .map_err(|e| format!("{}", e))?;
+    let res = client
+        .post(format!("{}/api/auth/sign-in/email", url.trim_end_matches('/')))
+        .json(&serde_json::json!({"email": email, "password": password}))
+        .send()
+        .await
+        .map_err(|e| format!("{}", e))?;
+    let ok = res.status().is_success();
+    let set_cookie = res.headers().get("set-cookie").and_then(|v| v.to_str().ok()).map(|s| s.to_string());
+    Ok(AuthResult { ok, set_cookie, error: if !ok { Some("Invalid email or password.".into()) } else { None } })
+}
+
+#[tauri::command]
+async fn auth_verify_token(url: String, token: String) -> Result<AuthResult, String> {
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .map_err(|e| format!("{}", e))?;
+    let res = client
+        .get(format!("{}/api/profile", url.trim_end_matches('/')))
+        .header("Authorization", format!("Bearer {}", token))
+        .send()
+        .await
+        .map_err(|e| format!("{}", e))?;
+    let ok = res.status().is_success();
+    Ok(AuthResult { ok, set_cookie: None, error: if !ok { Some("Invalid API token.".into()) } else { None } })
+}
+
 #[derive(Serialize, Clone)]
 struct ImportNote {
     title: String,
@@ -66,6 +108,8 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
+            auth_signin,
+            auth_verify_token,
             import_markdown_files,
             export_note_file,
         ])

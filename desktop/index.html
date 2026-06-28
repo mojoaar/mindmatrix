@@ -1,24 +1,109 @@
 <!DOCTYPE html>
-<html><head>
+<html lang="en">
+<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>MindMatrix Desktop</title>
-</head><body>
-<script>
-  (function() {
-    var url = "http://localhost:3000";
-    try {
-      var saved = localStorage.getItem("mindmatrix-desktop-url");
-      if (saved) url = saved;
-    } catch(e) {}
-    try {
-      var token = localStorage.getItem("mindmatrix-desktop-authToken");
-      if (token) {
-        window.location.replace(url + "/dashboard");
-        return;
-      }
-    } catch(e) {}
-    window.location.replace(url + "/connect");
-  })();
-</script>
-</body></html>
+  <style>
+    :root {
+      --bg: #2e3440; --bg-card: #3b4252; --fg: #eceff4; --fg-muted: #81a1c1;
+      --accent: #5e81ac; --accent-hover: #81a1c1; --border: #4c566a;
+      --danger: #bf616a; --danger-bg: rgba(191,97,106,0.1); --input-bg: #434c5e; --radius: 8px;
+    }
+    * { margin:0;padding:0;box-sizing:border-box }
+    body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--fg);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem }
+    .card { background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:2.5rem 2rem;width:440px;max-width:100%;text-align:center }
+    .logo { margin-bottom:0.5rem }
+    h1 { font-size:1.4rem;font-weight:700;margin-bottom:0.25rem }
+    .subtitle { font-size:0.85rem;color:var(--fg-muted);margin-bottom:1.5rem }
+    label { display:block;text-align:left;font-size:0.8rem;font-weight:600;color:var(--fg-muted);margin-bottom:0.3rem }
+    input { width:100%;padding:0.6rem 0.75rem;font-size:0.9rem;color:var(--fg);background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius);outline:none }
+    input:focus { border-color:var(--accent) }
+    .field { margin-bottom:1rem }
+    .tabs { display:flex;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.25rem }
+    .tab { flex:1;padding:0.5rem;font-size:0.85rem;font-weight:600;background:var(--bg);color:var(--fg-muted);border:none;cursor:pointer }
+    .tab.active { background:var(--accent);color:#fff }
+    .tab:not(.active):hover { background:var(--input-bg) }
+    .btn { width:100%;padding:0.65rem;font-size:0.9rem;font-weight:700;color:#fff;background:var(--accent);border:none;border-radius:var(--radius);cursor:pointer;margin-top:0.25rem }
+    .btn:hover { background:var(--accent-hover) }
+    .btn:disabled { opacity:0.5;cursor:not-allowed }
+    .err { background:var(--danger-bg);border:1px solid var(--danger);border-radius:var(--radius);padding:0.5rem 0.75rem;font-size:0.8rem;color:var(--danger);margin-top:1rem;display:none;text-align:left;word-break:break-all }
+    .err.visible { display:block }
+    .hint { margin-top:1.5rem;font-size:0.75rem;color:var(--fg-muted);line-height:1.6 }
+    .spin { display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:s 0.6s linear infinite;margin-right:0.3rem;vertical-align:middle }
+    @keyframes s { to { transform:rotate(360deg) } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="48" height="48"><defs><linearGradient id="r1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#bf616a"/><stop offset="100%" stop-color="#b48ead"/></linearGradient><linearGradient id="r2" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#88c0d0"/><stop offset="100%" stop-color="#5e81ac"/></linearGradient><linearGradient id="r3" x1="100%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#a3be8c"/><stop offset="100%" stop-color="#ebcb8b"/></linearGradient></defs><rect width="512" height="512" rx="112" fill="#2e3440"/><path d="M100,380 L160,150 L220,150 L160,380 Z" fill="url(#r1)"/><path d="M160,150 L256,280 L290,260 L220,150 Z" fill="url(#r2)" opacity="0.95"/><path d="M256,280 L352,150 L392,165 L290,260 Z" fill="url(#r3)" opacity="0.9"/><path d="M352,150 L412,380 L352,380 L306,210 Z" fill="url(#r1)" opacity="0.85"/><path d="M160,380 L256,310 L352,380 L256,340 Z" fill="url(#r2)" style="mix-blend-mode:overlay"/></svg>
+    <h1>MindMatrix Desktop</h1>
+    <p class="subtitle">Connect to your self-hosted server</p>
+    <div class="field"><label for="sv">Server URL</label><input id="sv" type="url" placeholder="https://mindmatrix.johansen.foo" /></div>
+    <div class="tabs">
+      <button class="tab active" id="tbS" onclick="sw('signin')">Sign In</button>
+      <button class="tab" id="tbT" onclick="sw('token')">API Token</button>
+    </div>
+    <div id="fmS">
+      <div class="field"><label for="em">Email</label><input id="em" type="email" placeholder="you@example.com" /></div>
+      <div class="field"><label for="pw">Password</label><input id="pw" type="password" placeholder="••••••••" /></div>
+      <button class="btn" id="btS" onclick="doSignin()">Sign In</button>
+    </div>
+    <div id="fmT" style="display:none">
+      <div class="field"><label for="tk">API Token</label><input id="tk" type="password" placeholder="mm_xxxxxxxx..." /></div>
+      <button class="btn" id="btT" onclick="doToken()">Connect</button>
+    </div>
+    <div class="err" id="er"></div>
+    <p class="hint" id="hiS">Find your API token in <strong>Settings → API Tokens</strong> on the server.</p>
+    <p class="hint" id="hiT" style="display:none">Create an API token on your server, then paste it above.</p>
+  </div>
+  <script>
+    var ct = "signin";
+    function sh(m) { var e=document.getElementById("er");e.textContent=m;e.classList.add("visible") }
+    function cl() { document.getElementById("er").classList.remove("visible") }
+    function ld(v) {
+      var bs=document.querySelectorAll(".btn");
+      for(var i=0;i<bs.length;i++) { bs[i].disabled=v;bs[i].innerHTML=v?'<span class="spin"></span>Connecting...':bs[i].dataset.t||bs[i].textContent }
+      if(!v) for(var j=0;j<bs.length;j++) { var b=bs[j];if(!b.dataset.t)b.dataset.t=b.textContent }
+    }
+    function sw(t) { ct=t;document.getElementById("tbS").classList.toggle("active",t==="signin");document.getElementById("tbT").classList.toggle("active",t==="token");document.getElementById("fmS").style.display=t==="signin"?"":"none";document.getElementById("fmT").style.display=t==="token"?"":"none";document.getElementById("hiS").style.display=t==="signin"?"":"none";document.getElementById("hiT").style.display=t==="token"?"":"none";cl() }
+    function gs() { var r=document.getElementById("sv").value.trim();return r?r.replace(/\/+$/,""):"" }
+    async function doSignin() {
+      cl();var u=gs();if(!u)return sh("Enter your server URL.");
+      var e=document.getElementById("em").value.trim(),p=document.getElementById("pw").value;
+      if(!e||!p)return sh("Enter your email and password.");
+      ld(true);
+      try {
+        var r=await window.__TAURI__.invoke("auth_signin",{url:u,email:e,password:p});
+        if(!r.ok)return sh(r.error||"Invalid credentials.");
+        if(r.set_cookie)document.cookie=r.set_cookie;
+        sr(u,{authMethod:"session"});
+      } catch(x) { sh(String(x)) } finally { ld(false) }
+    }
+    async function doToken() {
+      cl();var u=gs();if(!u)return sh("Enter your server URL.");
+      var t=document.getElementById("tk").value.trim();if(!t)return sh("Enter your API token.");
+      ld(true);
+      try {
+        var r=await window.__TAURI__.invoke("auth_verify_token",{url:u,token:t});
+        if(!r.ok)return sh(r.error||"Invalid token.");
+        sr(u,{authToken:t,authMethod:"token"});
+      } catch(x) { sh(String(x)) } finally { ld(false) }
+    }
+    function sr(url,ad) {
+      try {
+        localStorage.setItem("mindmatrix-desktop-url",url);
+        for(var k in ad) localStorage.setItem("mindmatrix-desktop-"+k,ad[k]);
+      } catch(e) {}
+      window.location.replace(url+"/dashboard");
+    }
+    (function() {
+      try {
+        var u=localStorage.getItem("mindmatrix-desktop-url");
+        if(u) { document.getElementById("sv").value=u;var t=localStorage.getItem("mindmatrix-desktop-authToken");
+          if(t) window.__TAURI__.invoke("auth_verify_token",{url:u,token:t}).then(function(r){if(r.ok)window.location.replace(u+"/dashboard")}).catch(function(){}) }
+      } catch(e) {}
+    })();
+  </script>
+</body>
+</html>
