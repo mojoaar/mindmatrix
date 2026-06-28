@@ -65,19 +65,6 @@ export default function ConnectPage() {
   }
 
   async function saveAndRedirect(serverUrl: string, authData: Record<string, string>) {
-    if (typeof window !== "undefined" && window.__TAURI__) {
-      try {
-        const { load } = await import("@tauri-apps/plugin-store");
-        const store = await load("mindmatrix-config.json", { autoSave: true } as any);
-        await store.set("serverUrl", serverUrl);
-        for (const [key, value] of Object.entries(authData)) {
-          await store.set(key, value);
-        }
-      } catch {
-        // Fall through to localStorage fallback
-      }
-    }
-    // Always write to localStorage as a browser fallback (and Tauri uses it too)
     localStorage.setItem("mindmatrix-desktop-url", serverUrl);
     for (const [key, value] of Object.entries(authData)) {
       localStorage.setItem(`mindmatrix-desktop-${key}`, value);
