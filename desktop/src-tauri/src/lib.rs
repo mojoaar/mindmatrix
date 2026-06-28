@@ -21,9 +21,10 @@ async fn import_markdown_files(app: tauri::AppHandle) -> Result<Vec<ImportNote>,
         Some(paths) => {
             let mut notes = Vec::new();
             for path in paths {
-                let content = app.fs().read_text_file(path.clone())
-                    .map_err(|e| format!("Failed to read {}: {}", path.display(), e))?;
-                let title = path.file_stem()
+                let content = app.fs().read_to_string(path.clone())
+                    .map_err(|e| format!("Failed to read file: {}", e))?;
+                let title = path.as_path()
+                    .and_then(|p| p.file_stem())
                     .and_then(|s| s.to_str())
                     .unwrap_or("Untitled")
                     .to_string();
@@ -44,8 +45,10 @@ async fn export_note_file(app: tauri::AppHandle, content: String, default_name: 
 
     match file_path {
         Some(path) => {
-            app.fs().write_text_file(path, content)
-                .map_err(|e| format!("Failed to write: {}", e))?;
+            if let Some(p) = path.as_path() {
+                std::fs::write(p, content)
+                    .map_err(|e| format!("Failed to write: {}", e))?;
+            }
             Ok(true)
         }
         None => Ok(false),
@@ -123,7 +126,7 @@ pub fn run() {
             let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .on_menu_event(|app, event| {
-                    let _ = handle_menu_event(app.clone(), event.id().to_string());
+                    let _ = handle_menu_event(app.clone(), event.id().0.clone());
                 })
                 .on_tray_icon_event(|tray, event| {
                     if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
@@ -138,7 +141,7 @@ pub fn run() {
             Ok(())
         })
         .on_menu_event(|app, event| {
-            let _ = handle_menu_event(app.clone(), event.id().to_string());
+            let _ = handle_menu_event(app.clone(), event.id().0.clone());
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
