@@ -21,7 +21,7 @@
     input:focus { border-color:var(--accent) }
     .field { margin-bottom:1rem }
     .tabs { display:flex;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.25rem }
-    .tab { flex:1;padding:0.5rem;font-size:0.85rem;font-weight:600;background:var(--bg);color:var(--fg-muted);border:none;cursor:pointer }
+    .tab { flex:1;padding:0.5rem;font-size:0.85rem;font-weight:600;background:var(--bg);color:var(--fg-muted);border:none;cursor:pointer;-webkit-appearance:button;position:relative;z-index:1 }
     .tab.active { background:var(--accent);color:#fff }
     .tab:not(.active):hover { background:var(--input-bg) }
     .btn { width:100%;padding:0.65rem;font-size:0.9rem;font-weight:700;color:#fff;background:var(--accent);border:none;border-radius:var(--radius);cursor:pointer;margin-top:0.25rem }
@@ -41,8 +41,8 @@
     <p class="subtitle">Connect to your self-hosted server</p>
     <div class="field"><label for="sv">Server URL</label><input id="sv" type="url" placeholder="https://mindmatrix.johansen.foo" /></div>
     <div class="tabs">
-      <button class="tab active" id="tbS" onclick="sw('signin')">Sign In</button>
-      <button class="tab" id="tbT" onclick="sw('token')">API Token</button>
+      <button type="button" class="tab active" id="tbS">Sign In</button>
+      <button type="button" class="tab" id="tbT">API Token</button>
     </div>
     <div id="fmS">
       <div class="field"><label for="em">Email</label><input id="em" type="email" placeholder="you@example.com" /></div>
@@ -98,6 +98,8 @@
       window.location.replace(url+"/dashboard");
     }
     (function() {
+      document.getElementById("tbS").addEventListener("click",function(){sw("signin")});
+      document.getElementById("tbT").addEventListener("click",function(){sw("token")});
       try {
         var u=localStorage.getItem("mindmatrix-desktop-url");
         if(u) {
