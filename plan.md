@@ -401,6 +401,7 @@ Stored in `localStorage` key `mindmatrix-theme` and `mindmatrix-font`. Applied v
 | 16  | Dark editor theme only  | Independent editor theme toggle separate from UI theme                                     |
 | 17  | Bookmark manager        | Browser-style bookmark list of external URLs pinned inside a workspace                     |
 | 18  | Contact form plugin     | Configurable contact form embedded in public shared note pages                             |
+| 19  | MCP server support     | Expose MindMatrix as a Model Context Protocol (MCP) server — first-class OpenCode integration for querying notes, workspaces, folders, tags, search, and backlinks directly from AI tools. Authenticate via existing Bearer API tokens. |
 
 ## Security Hardening Plan (Completed ✓)
 
