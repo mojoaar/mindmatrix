@@ -10,14 +10,7 @@
 (function() {
   var url = "https://mindmatrix.johansen.foo";
   try { var s = localStorage.getItem("mindmatrix-desktop-url"); if (s) url = s; } catch(e) {}
-  var authToken = null;
-  try { authToken = localStorage.getItem("mindmatrix-desktop-authToken"); } catch(e) {}
-
-  if (authToken) {
-    window.location.replace(url + "/dashboard?" + Date.now());
-  } else {
-    window.location.replace(url + "/connect?" + Date.now());
-  }
+  window.location.replace(url + "/dashboard?" + Date.now());
 })();
 </script>
 </body>
