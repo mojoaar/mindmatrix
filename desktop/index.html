@@ -1,18 +1,24 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" /><title>MindMatrix Desktop</title></head><body><script type="module">
-import { load } from "@tauri-apps/plugin-store";
-(async () => {
-  try {
-    const store = await load("mindmatrix-config.json", { autoSave: true });
-    const serverUrl = await store.get("serverUrl");
-    if (serverUrl) {
-      window.location.replace(serverUrl + "/dashboard");
-    } else {
-      const fallback = "http://localhost:3000";
-      window.location.replace(fallback + "/connect");
-    }
-  } catch {
-    window.location.replace("http://localhost:3000/connect");
-  }
-})();
-</script></body></html>
+<html><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>MindMatrix Desktop</title>
+</head><body>
+<script>
+  (function() {
+    var serverUrl = "http://localhost:3000";
+    try {
+      var saved = localStorage.getItem("mindmatrix-desktop-url");
+      if (saved) serverUrl = saved;
+    } catch (e) {}
+    try {
+      var token = localStorage.getItem("mindmatrix-desktop-authToken");
+      if (token) {
+        window.location.replace(serverUrl + "/dashboard");
+        return;
+      }
+    } catch (e) {}
+    window.location.replace(serverUrl + "/connect");
+  })();
+</script>
+</body></html>
