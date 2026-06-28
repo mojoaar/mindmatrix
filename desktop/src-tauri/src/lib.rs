@@ -13,24 +13,31 @@ struct AuthResult {
     error: Option<String>,
 }
 
+fn la(msg: &str) {
+    let prev = std::fs::read_to_string("/tmp/tauri-auth.log").unwrap_or_default();
+    let _ = std::fs::write("/tmp/tauri-auth.log", format!("{}{}\n", prev, msg));
+}
+
 #[tauri::command]
 async fn auth_signin(url: String, email: String, password: String) -> Result<AuthResult, String> {
+    la("SIGNIN");
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .timeout(std::time::Duration::from_secs(15))
         .build()
-        .map_err(|e| format!("{}", e))?;
+        .map_err(|e| { la(&format!("CLIENT_ERR {}", e)); format!("{}", e) })?;
+    la("CLIENT_OK");
     let url_signed = format!("{}/api/auth/sign-in/email", url.trim_end_matches('/'));
-    eprintln!("[auth_signin] POST {}", url_signed);
     let res = client
         .post(&url_signed)
         .json(&serde_json::json!({"email": email, "password": password}))
         .send()
         .await
-        .map_err(|e| { eprintln!("[auth_signin] ERR: {}", e); format!("{}", e) })?;
-    eprintln!("[auth_signin] STATUS {}", res.status());
+        .map_err(|e| { la(&format!("FETCH_ERR {}", e)); format!("{}", e) })?;
+    la(&format!("STATUS {}", res.status()));
     let ok = res.status().is_success();
     let set_cookie = res.headers().get("set-cookie").and_then(|v| v.to_str().ok()).map(|s| s.to_string());
+    la(&format!("RETURN ok={}", ok));
     Ok(AuthResult { ok, set_cookie, error: if !ok { Some("Invalid email or password.".into()) } else { None } })
 }
 
