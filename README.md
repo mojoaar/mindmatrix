@@ -1,7 +1,7 @@
 # MindMatrix
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.5.0-blue.svg?style=flat-square" alt="Version"/>
+  <img src="https://img.shields.io/badge/version-0.6.0-blue.svg?style=flat-square" alt="Version"/>
   <img src="https://img.shields.io/badge/license-AGPL--3.0-green.svg?style=flat-square" alt="License"/>
   <img src="https://img.shields.io/badge/tests-60%20passed-brightgreen.svg?style=flat-square" alt="Tests"/>
   <img src="https://img.shields.io/badge/built%20with-Next.js%20%7C%20TS%20%7C%20Postgres-blueviolet.svg?style=flat-square" alt="Tech Stack"/>
@@ -67,7 +67,7 @@
         <img src="public/screenshots/docs.webp" alt="In-App Docs" width="100%" height="160"/>
         <br/><br/>
         <p align="left" style="font-size: 0.85em; color: gray;">
-          Interactive in-app documentation featuring quick global search, language-specific integration snippets (cURL, Python, JS), and your new dedicated v0.5.0 release history log.
+          Interactive in-app documentation featuring quick global search, language-specific integration snippets (cURL, Python, JS), and your new dedicated v0.6.0 release history log.
         </p>
       </td>
       <!-- Column 6 -->
@@ -252,6 +252,18 @@ Built by [mojoaar](https://github.com/mojoaar)
 ---
 
 ## Changelog
+
+### v0.6.0 — 2026-06-28
+- **Zero-Trust API Hardening** — Added Zod schema validation to all core write routes (notes, workspaces, folders, tags, import), replacing manual checks with type-safe runtime validation.
+- **Comprehensive Rate Limiting** — Extended sliding-window rate limiting from 4 to 11 endpoints, protecting notes CRUD, search, import, and admin operations.
+- **API Resilience Layer** — Wrapped 25 route handlers in try/catch blocks, ensuring clean JSON error responses for all database failures.
+- **Webhook Retry Engine** — Added 3-attempt exponential backoff retry logic with delivery status tracking in a new `webhook_delivery_log` table and typed `WebhookEvent` registry.
+- **Security Audit Remediation** — Resolved 33 findings across 3 priority levels: fixed cross-user notification injection, added auth guards to plugin dispatcher gateway, replaced `Buffer` with browser-safe base64 in realtime hook, enforced `securityLevel: "strict"` on Mermaid diagrams, stripped metadata from public API responses, and removed DB fallback password.
+- **CORS Middleware** — Added configurable `Access-Control-Allow-Origin` headers via `ALLOWED_ORIGINS` env var, unlocking desktop and mobile client integration.
+- **Structured JSON Logging** — Replaced scattered `console.log` calls with a centralized JSON logger, redacting PII from dev email output.
+- **ESLint & Code Quality** — Removed 34 `any` types, standardized 51 `Response.json()` → `NextResponse.json()` calls across 9 files, unified 6 inline slug generators to shared `toSlug()`, converted 4 plugins from dynamic to static imports, replaced `execSync` with async `exec` in git-sync.
+- **Test Suite Expansion** — Grew from 8 test files/60 tests to 17 files/133 tests (+122%), with new coverage for `crypto.ts`, `security.ts`, `rate-limit.ts`, `auth-helper.ts`, `api-token-auth.ts`, `webhooks.ts`, `email.ts`, `notifications.ts`, and `ai-assistant-panel.tsx`. Vitest v8 coverage provider enabled.
+- **Asset Optimization** — Converted README screenshots from PNG to WebP (3.90 MB → 385 KB, -90%).
 
 ### v0.5.0 — 2026-06-18
 - **Spatially Docked 2-Column AI Layout** — A split-screen vertical AI Assistant panel that lets you edit your CodeMirror notes on the left and chat/interact with the AI on the right, toggled seamlessly via a note header Sparkles button.

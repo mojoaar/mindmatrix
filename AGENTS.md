@@ -2,7 +2,7 @@
 
 ## Project Overview
 MindMatrix is a markdown-first, self-hosted, multi-user knowledge hub for teams and thinkers.
-- **Version**: 0.5.0
+- **Version**: 0.6.0
 - **License**: AGPL-3.0
 - **Repo**: git@github.com:mojoaar/mindmatrix.git
 

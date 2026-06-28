@@ -1,4 +1,4 @@
-# MindMatrix v0.5.0 — Implementation Plan
+# MindMatrix v0.6.0 — Implementation Plan
 
 Markdown-first, self-hosted, multi-user knowledge hub.
 **License**: AGPL-3.0 | **Repo**: git@github.com:mojoaar/mindmatrix.git
@@ -424,7 +424,7 @@ Stored in `localStorage` key `mindmatrix-theme` and `mindmatrix-font`. Applied v
 
 ---
 
-## v0.6.0 — Desktop & Mobile Clients Plan
+## v0.6.1 — Desktop & Mobile Clients Plan
 
 ### 1. Overview
 Build Tauri desktop and PWA Android clients. MindMatrix stays as the self-hosted backend (Docker, full REST API). Clients talk via existing REST API + SSE.
@@ -480,7 +480,7 @@ As MindMatrix transitions from single-note prompting to workspace-wide context, 
 
 ---
 
-## v0.5.0 — Pre-v0.6.0 Code & Security Audit
+## v0.5.0 — Pre-v0.6.0 Code & Security Audit (Completed ✓ — v0.6.0)
 
 A thorough four-part audit (security, code quality, test coverage, API completeness) conducted before beginning Desktop & Mobile Clients (v0.6.0). Findings are numbered for referencing during implementation.
 
