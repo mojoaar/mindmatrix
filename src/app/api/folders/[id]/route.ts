@@ -3,6 +3,7 @@ import { db, folder, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { logAction } from "@/lib/audit";
+import { toSlug } from "@/lib/slug" ;
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -28,7 +29,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const update: Record<string, unknown> = {};
   if (name !== undefined) {
     update.name = name;
-    update.slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    update.slug = toSlug(name);
   }
   if (parentId !== undefined) update.parentId = parentId || null;
   if (icon !== undefined) update.icon = icon;

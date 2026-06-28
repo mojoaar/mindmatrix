@@ -11,17 +11,22 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const users = await db.query.user.findMany({
-    columns: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      emailVerified: true,
-      createdAt: true,
-    },
-    orderBy: (u, { desc }) => [desc(u.createdAt)],
-  });
+  try {
+    const users = await db.query.user.findMany({
+      columns: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        emailVerified: true,
+        createdAt: true,
+      },
+      orderBy: (u, { desc }) => [desc(u.createdAt)],
+    });
 
-  return NextResponse.json({ users });
+    return NextResponse.json({ users });
+  } catch (error) {
+    console.error("GET /api/admin/users error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

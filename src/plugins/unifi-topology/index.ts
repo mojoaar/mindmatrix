@@ -1,6 +1,7 @@
 import type { Plugin } from "@/plugins/types";
 import { requirePluginAccess } from "@/plugins";
 import { isSafeUrl } from "@/lib/security";
+import { NextResponse } from "next/server";
 
 export const unifiTopologyPlugin: Plugin = {
   id: "unifi-topology",
@@ -22,12 +23,12 @@ export const unifiTopologyPlugin: Plugin = {
         const site = cfg?.site || "default";
 
         if (!host || !username || !password) {
-          return Response.json({ error: "Host, username, and password required" }, { status: 400 });
+          return NextResponse.json({ error: "Host, username, and password required" }, { status: 400 });
         }
 
         const isAllowed = await isSafeUrl(`https://${host}`);
         if (!isAllowed) {
-          return Response.json({ error: "Unifi host forbidden by system security policy" }, { status: 403 });
+          return NextResponse.json({ error: "Unifi host forbidden by system security policy" }, { status: 403 });
         }
 
         const base = `https://${host}:${port}`;
@@ -37,7 +38,7 @@ export const unifiTopologyPlugin: Plugin = {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, password }),
         });
-        if (!loginRes.ok) return Response.json({ error: "Unifi login failed" }, { status: 400 });
+        if (!loginRes.ok) return NextResponse.json({ error: "Unifi login failed" }, { status: 400 });
         const cookie = loginRes.headers.get("set-cookie") || "";
         const fetchOpts = { headers: { Cookie: cookie } } as RequestInit;
 
@@ -96,9 +97,9 @@ export const unifiTopologyPlugin: Plugin = {
           updatedById: access.userId,
         });
 
-        return Response.json({ noteId });
-      } catch (e: any) {
-        return Response.json({ error: e.message || "Scan failed" }, { status: 500 });
+        return NextResponse.json({ noteId });
+      } catch (e: unknown) {
+        return NextResponse.json({ error: e instanceof Error ? e.message : String(e) || "Scan failed" }, { status: 500 });
       }
     },
   },

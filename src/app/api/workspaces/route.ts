@@ -17,34 +17,39 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const memberships = await db.query.workspaceMember.findMany({
-    where: (wm, { eq }) => eq(wm.userId, session.user!.id),
-    columns: { workspaceId: true },
-  });
+  try {
+    const memberships = await db.query.workspaceMember.findMany({
+      where: (wm, { eq }) => eq(wm.userId, session.user!.id),
+      columns: { workspaceId: true },
+    });
 
-  const workspaceIds = memberships.map((m) => m.workspaceId);
+    const workspaceIds = memberships.map((m) => m.workspaceId);
 
-  if (workspaceIds.length === 0) {
-    return NextResponse.json({ workspaces: [] });
-  }
+    if (workspaceIds.length === 0) {
+      return NextResponse.json({ workspaces: [] });
+    }
 
-  const workspaces = await db.query.workspace.findMany({
-    where: inArray(workspace.id, workspaceIds),
-    with: {
-      members: true,
-      folders: true,
-      tags: true,
-      notes: {
-        columns: {
-          id: true,
-          folderId: true,
+    const workspaces = await db.query.workspace.findMany({
+      where: inArray(workspace.id, workspaceIds),
+      with: {
+        members: true,
+        folders: true,
+        tags: true,
+        notes: {
+          columns: {
+            id: true,
+            folderId: true,
+          },
         },
       },
-    },
-    orderBy: (ws, { asc }) => [asc(ws.name)],
-  });
+      orderBy: (ws, { asc }) => [asc(ws.name)],
+    });
 
-  return NextResponse.json({ workspaces });
+    return NextResponse.json({ workspaces });
+  } catch (error) {
+    console.error("GET /api/workspaces error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -68,38 +73,43 @@ export async function POST(request: Request) {
   }
   const { name, description, icon } = parsed.data;
 
-  const id = crypto.randomUUID();
-  const baseSlug = toSlug(name);
-  const slug = await ensureUniqueSlug(baseSlug, async (s) => {
-    const existing = await db.query.workspace.findFirst({ where: eq(workspace.slug, s) });
-    return !existing;
-  });
+  try {
+    const id = crypto.randomUUID();
+    const baseSlug = toSlug(name);
+    const slug = await ensureUniqueSlug(baseSlug, async (s) => {
+      const existing = await db.query.workspace.findFirst({ where: eq(workspace.slug, s) });
+      return !existing;
+    });
 
-  const [ws] = await db
-    .insert(workspace)
-    .values({
-      id,
-      name,
-      slug,
-      description: description || null,
-      icon: icon || "BookOpen",
-      createdById: session.user.id,
-    })
-    .returning();
+    const [ws] = await db
+      .insert(workspace)
+      .values({
+        id,
+        name,
+        slug,
+        description: description || null,
+        icon: icon || "BookOpen",
+        createdById: session.user.id,
+      })
+      .returning();
 
-  await db.insert(workspaceMember).values({
-    id: crypto.randomUUID(),
-    workspaceId: id,
-    userId: session.user.id,
-    role: "owner",
-  });
+    await db.insert(workspaceMember).values({
+      id: crypto.randomUUID(),
+      workspaceId: id,
+      userId: session.user.id,
+      role: "owner",
+    });
 
-  await logAction(
-    session.user.id,
-    "WORKSPACE_CREATE",
-    `Created workspace "${name}" (${slug})`,
-    request
-  );
+    await logAction(
+      session.user.id,
+      "WORKSPACE_CREATE",
+      `Created workspace "${name}" (${slug})`,
+      request
+    );
 
-  return NextResponse.json({ workspace: ws }, { status: 201 });
+    return NextResponse.json({ workspace: ws }, { status: 201 });
+  } catch (error) {
+    console.error("POST /api/workspaces error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

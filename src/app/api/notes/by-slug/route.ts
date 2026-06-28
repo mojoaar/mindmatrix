@@ -16,7 +16,7 @@ export async function GET(request: Request) {
 
   const found = await db.query.note.findFirst({
     where: and(eq(note.workspaceId, workspaceId), eq(note.slug, slug)),
-    columns: { id: true, title: true, slug: true, content: true, workspaceId: true, isPublic: true },
+    columns: { id: true, title: true, slug: true, content: true, workspaceId: true, isPublic: true, createdAt: true, updatedAt: true },
   });
 
   if (!found) {
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   }
 
   if (found.isPublic) {
-    return NextResponse.json({ note: { title: found.title, slug: found.slug, content: found.content } });
+    return NextResponse.json({ note: { id: found.id, title: found.title, content: found.content, slug: found.slug, isPublic: found.isPublic, createdAt: found.createdAt, updatedAt: found.updatedAt } });
   }
 
   if (!session?.user) {
@@ -39,5 +39,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  return NextResponse.json({ note: { title: found.title, slug: found.slug, content: found.content } });
+  return NextResponse.json({ note: { id: found.id, title: found.title, content: found.content, slug: found.slug, isPublic: found.isPublic, createdAt: found.createdAt, updatedAt: found.updatedAt } });
 }

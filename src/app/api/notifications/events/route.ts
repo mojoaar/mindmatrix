@@ -10,14 +10,29 @@ export async function GET(request: Request) {
 
   const channel = `user:${session.user.id}`;
   const eventBus = getEventBus();
+  const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
     start(controller) {
-      const cleanup = eventBus.subscribe(channel, (event: any) => {
-        controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(event)}\n\n`));
+      const unsubscribe = eventBus.subscribe(channel, (event: any) => {
+        const data = `data: ${JSON.stringify(event)}\n\n`;
+        controller.enqueue(encoder.encode(data));
       });
 
-      request.signal.addEventListener("abort", cleanup);
+      // Keep-alive ping every 15s
+      const keepAlive = setInterval(() => {
+        try {
+          controller.enqueue(encoder.encode(": keepalive\n\n"));
+        } catch {
+          clearInterval(keepAlive);
+        }
+      }, 15000);
+
+      request.signal.addEventListener("abort", () => {
+        clearInterval(keepAlive);
+        unsubscribe();
+        try { controller.close(); } catch { /* already closed */ }
+      });
     },
   });
 

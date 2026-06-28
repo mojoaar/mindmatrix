@@ -13,24 +13,29 @@ export async function GET(request: Request) {
   const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100);
   const page = Math.max(parseInt(searchParams.get("page") || "1"), 1);
 
-  const [totalResult] = await db
-    .select({ count: count() })
-    .from(notification)
-    .where(eq(notification.userId, session.user.id));
+  try {
+    const [totalResult] = await db
+      .select({ count: count() })
+      .from(notification)
+      .where(eq(notification.userId, session.user.id));
 
-  const items = await db.query.notification.findMany({
-    where: eq(notification.userId, session.user.id),
-    orderBy: [desc(notification.createdAt)],
-    limit,
-    offset: (page - 1) * limit,
-  });
+    const items = await db.query.notification.findMany({
+      where: eq(notification.userId, session.user.id),
+      orderBy: [desc(notification.createdAt)],
+      limit,
+      offset: (page - 1) * limit,
+    });
 
-  return NextResponse.json({
-    notifications: items,
-    total: totalResult.count,
-    unread: items.filter((n) => !n.isRead).length,
-    page,
-  });
+    return NextResponse.json({
+      notifications: items,
+      total: totalResult.count,
+      unread: items.filter((n) => !n.isRead).length,
+      page,
+    });
+  } catch (error) {
+    console.error("GET /api/notifications error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -45,19 +50,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
 
-  const [notif] = await db
-    .insert(notification)
-    .values({
-      id: crypto.randomUUID(),
-      userId: session.user.id,
-      type,
-      title,
-      message,
-      link: link || null,
-    })
-    .returning();
+  try {
+    const [notif] = await db
+      .insert(notification)
+      .values({
+        id: crypto.randomUUID(),
+        userId: session.user.id,
+        type,
+        title,
+        message,
+        link: link || null,
+      })
+      .returning();
 
-  return NextResponse.json({ notification: notif }, { status: 201 });
+    return NextResponse.json({ notification: notif }, { status: 201 });
+  } catch (error) {
+    console.error("POST /api/notifications error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function PATCH(request: Request) {
@@ -66,10 +76,15 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  await db
-    .update(notification)
-    .set({ isRead: true })
-    .where(eq(notification.userId, session.user.id));
+  try {
+    await db
+      .update(notification)
+      .set({ isRead: true })
+      .where(eq(notification.userId, session.user.id));
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("PATCH /api/notifications error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

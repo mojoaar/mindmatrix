@@ -83,7 +83,7 @@ export function AIAssistantPanel({
 
     let attempts = 3;
     let res: Response | null = null;
-    let lastError: any = null;
+    let lastError: unknown = null;
 
     for (let i = 0; i < attempts; i++) {
       try {
@@ -110,7 +110,7 @@ export function AIAssistantPanel({
           const errData = await res.json().catch(() => ({}));
           lastError = new Error(errData.error || `AI assist failed with status ${res.status}`);
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         lastError = e;
       }
 
@@ -119,7 +119,7 @@ export function AIAssistantPanel({
       }
     }
 
-    toastError(lastError?.message || "AI assist failed after 3 attempts");
+    toastError((lastError instanceof Error ? lastError.message : undefined) || "AI assist failed after 3 attempts");
     setLoading(false);
   }
 

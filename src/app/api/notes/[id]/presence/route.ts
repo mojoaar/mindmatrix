@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { db, note, workspaceMember } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import { getEventBus } from "@/lib/realtime/event-bus";
+import { NextResponse } from "next/server";
 
 const presence = new Map<string, Map<string, { userName: string; lastSeen: number }>>();
 
@@ -28,12 +29,12 @@ export async function POST(
   const { id } = await params;
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session?.user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const found = await db.query.note.findFirst({ where: eq(note.id, id) });
   if (!found) {
-    return Response.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   const member = await db.query.workspaceMember.findFirst({
@@ -43,7 +44,7 @@ export async function POST(
     ),
   });
   if (!member) {
-    return Response.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   if (!presence.has(id)) {
@@ -68,5 +69,5 @@ export async function POST(
     });
   }
 
-  return Response.json({ viewers });
+  return NextResponse.json({ viewers });
 }

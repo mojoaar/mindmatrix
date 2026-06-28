@@ -2,9 +2,13 @@ import type { Plugin } from "@/plugins/types";
 import { requirePluginAccess } from "@/plugins";
 import { db, note, folder } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
-import { execSync } from "child_process";
+import { toSlug } from "@/lib/slug" ;
+import { exec as execCb } from "child_process";
+import { promisify } from "util";
+const exec = promisify(execCb);
 import fs from "fs";
 import path from "path";
+import { NextResponse } from "next/server";
 
 function cleanString(str: string): string {
   return str.replace(/[^a-zA-Z0-9-_\s]/g, "").trim();
@@ -18,9 +22,9 @@ function getLocalRepoPath(workspaceId: string): string {
   return path.join(baseDir, workspaceId);
 }
 
-function prepareGitEnvAndUrl(config: any, workspaceId: string): { gitUrl: string; env: any; cleanup: () => void } {
+function prepareGitEnvAndUrl(config: Record<string, string>, workspaceId: string): { gitUrl: string; env: NodeJS.ProcessEnv; cleanup: () => void } {
   const { repoUrl, authType, username, password, privateKey } = config;
-  const env: any = { ...process.env };
+  const env: NodeJS.ProcessEnv = { ...process.env };
   let gitUrl = repoUrl;
   let cleanup = () => {};
 
@@ -67,7 +71,7 @@ export const gitSyncPlugin: Plugin = {
         const { repoUrl, branch = "main" } = config;
 
         if (!repoUrl) {
-          return Response.json({ error: "Repository URL is required" }, { status: 400 });
+          return NextResponse.json({ error: "Repository URL is required" }, { status: 400 });
         }
 
         const localPath = getLocalRepoPath(workspaceId);
@@ -77,10 +81,10 @@ export const gitSyncPlugin: Plugin = {
         // Initialize or open repository
         if (!fs.existsSync(localPath)) {
           fs.mkdirSync(localPath, { recursive: true });
-          execSync(`git clone -b ${branch} ${gitUrl} .`, { cwd: localPath, env, stdio: "ignore" });
+          await exec(`git clone -b ${branch} ${gitUrl} .`, { cwd: localPath, env });
         } else {
           try {
-            execSync(`git fetch origin ${branch} && git reset --hard origin/${branch}`, { cwd: localPath, env, stdio: "ignore" });
+            await exec(`git fetch origin ${branch} && git reset --hard origin/${branch}`, { cwd: localPath, env, timeout: 30000 });
           } catch {
             // If branch is new or empty, ignore hard reset error
           }
@@ -128,25 +132,25 @@ ${n.content}`;
         }
 
         // Commit and push
-        execSync(`git config user.name "MindMatrix" && git config user.email "bot@mindmatrix.local"`, { cwd: localPath, env, stdio: "ignore" });
-        execSync(`git add .`, { cwd: localPath, env, stdio: "ignore" });
+        await exec(`git config user.name "MindMatrix" && git config user.email "bot@mindmatrix.local"`, { cwd: localPath, env });
+        await exec(`git add .`, { cwd: localPath, env });
         
         let hasChanges = true;
         try {
-          execSync(`git commit -m "MindMatrix Sync: ${new Date().toISOString()}"`, { cwd: localPath, env, stdio: "ignore" });
+          await exec(`git commit -m "MindMatrix Sync: ${new Date().toISOString()}"`, { cwd: localPath, env });
         } catch {
           // git commit fails if there are no changes
           hasChanges = false;
         }
 
         if (hasChanges) {
-          execSync(`git push origin ${branch}`, { cwd: localPath, env, stdio: "ignore" });
+          await exec(`git push origin ${branch}`, { cwd: localPath, env, timeout: 30000 });
         }
 
-        return Response.json({ success: true, pushed: hasChanges });
-      } catch (err: any) {
+        return NextResponse.json({ success: true, pushed: hasChanges });
+      } catch (err: unknown) {
         console.error("Git Sync Push Failed:", err);
-        return Response.json({ error: err.message || "Push failed" }, { status: 500 });
+        return NextResponse.json({ error: err instanceof Error ? err.message : String(err) || "Push failed" }, { status: 500 });
       } finally {
         cleanupFn();
       }
@@ -163,7 +167,7 @@ ${n.content}`;
         const { repoUrl, branch = "main" } = config;
 
         if (!repoUrl) {
-          return Response.json({ error: "Repository URL is required" }, { status: 400 });
+          return NextResponse.json({ error: "Repository URL is required" }, { status: 400 });
         }
 
         const localPath = getLocalRepoPath(workspaceId);
@@ -173,9 +177,9 @@ ${n.content}`;
         // Clone or Pull
         if (!fs.existsSync(localPath)) {
           fs.mkdirSync(localPath, { recursive: true });
-          execSync(`git clone -b ${branch} ${gitUrl} .`, { cwd: localPath, env, stdio: "ignore" });
+          await exec(`git clone -b ${branch} ${gitUrl} .`, { cwd: localPath, env });
         } else {
-          execSync(`git fetch origin ${branch} && git reset --hard origin/${branch}`, { cwd: localPath, env, stdio: "ignore" });
+          await exec(`git fetch origin ${branch} && git reset --hard origin/${branch}`, { cwd: localPath, env, timeout: 30000 });
         }
 
         // Read files recursively
@@ -205,7 +209,7 @@ ${n.content}`;
 
           // Simple Frontmatter Parser
           let title = path.basename(filePath, ".md");
-          let slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          let slug = toSlug(title);
           let content = rawContent;
 
           const frontmatterMatch = rawContent.match(/^---\r?\n([\s\S]+?)\r?\n---\r?\n([\s\S]*)$/);
@@ -223,7 +227,7 @@ ${n.content}`;
           // Handle folders
           let folderId: string | null = null;
           if (dirName && dirName !== ".") {
-            const folderSlug = dirName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+            const folderSlug = toSlug(dirName);
             let existingFolder = await db.query.folder.findFirst({
               where: and(eq(folder.workspaceId, workspaceId), eq(folder.slug, folderSlug)),
             });
@@ -274,10 +278,10 @@ ${n.content}`;
           }
         }
 
-        return Response.json({ success: true, updatedCount: importedCount });
-      } catch (err: any) {
+        return NextResponse.json({ success: true, updatedCount: importedCount });
+      } catch (err: unknown) {
         console.error("Git Sync Pull Failed:", err);
-        return Response.json({ error: err.message || "Pull failed" }, { status: 500 });
+        return NextResponse.json({ error: err instanceof Error ? err.message : String(err) || "Pull failed" }, { status: 500 });
       } finally {
         cleanupFn();
       }

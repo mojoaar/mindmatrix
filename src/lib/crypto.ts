@@ -53,7 +53,7 @@ export function decrypt(encryptedText: string): string {
   }
 }
 
-export function encryptConfig(config: Record<string, any>): Record<string, any> {
+export function encryptConfig(config: Record<string, string>): Record<string, string> {
   const result = { ...config };
   for (const key of SENSITIVE_KEYS) {
     if (result[key] && typeof result[key] === "string" && result[key] !== "••••••••") {
@@ -63,7 +63,7 @@ export function encryptConfig(config: Record<string, any>): Record<string, any> 
   return result;
 }
 
-export function decryptConfig(config: Record<string, any>): Record<string, any> {
+export function decryptConfig(config: Record<string, string>): Record<string, string> {
   const result = { ...config };
   for (const key of SENSITIVE_KEYS) {
     if (result[key] && typeof result[key] === "string") {
@@ -73,7 +73,7 @@ export function decryptConfig(config: Record<string, any>): Record<string, any> 
   return result;
 }
 
-export function maskConfig(config: Record<string, any>): Record<string, any> {
+export function maskConfig(config: Record<string, string>): Record<string, string> {
   const result = { ...config };
   for (const key of SENSITIVE_KEYS) {
     if (result[key]) {

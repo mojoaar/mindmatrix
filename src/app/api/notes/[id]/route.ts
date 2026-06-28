@@ -8,42 +8,51 @@ import { triggerWebhooks } from "@/lib/webhooks";
 import { createNotification } from "@/lib/notifications";
 import { updateNoteSchema } from "@/lib/validations";
 import { rateLimit } from "@/lib/rate-limit";
+import { toSlug } from "@/lib/slug" ;
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await auth.api.getSession({ headers: request.headers });
 
-  const found = await db.query.note.findFirst({
-    where: eq(note.id, id),
-    with: {
-      noteTags: { with: { tag: true } },
-      creator: true,
-      updater: true,
-      folder: true,
-    },
-  });
+  try {
+    const found = await db.query.note.findFirst({
+      where: eq(note.id, id),
+      with: {
+        noteTags: { with: { tag: true } },
+        creator: true,
+        updater: true,
+        folder: true,
+      },
+    });
 
-  if (!found) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
+    if (!found) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
 
-  if (found.isPublic) {
+    if (found.isPublic) {
+      const { id, title, content, slug, isPublic, createdAt, updatedAt } = found;
+      return NextResponse.json({
+        note: { id, title, content, slug, isPublic, createdAt, updatedAt },
+      });
+    }
+
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const member = await db.query.workspaceMember.findFirst({
+      where: and(eq(workspaceMember.workspaceId, found.workspaceId), eq(workspaceMember.userId, session.user.id)),
+    });
+
+    if (!member) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     return NextResponse.json({ note: found });
+  } catch (error) {
+    console.error("GET /api/notes/[id] error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const member = await db.query.workspaceMember.findFirst({
-    where: and(eq(workspaceMember.workspaceId, found.workspaceId), eq(workspaceMember.userId, session.user.id)),
-  });
-
-  if (!member) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  return NextResponse.json({ note: found });
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -82,7 +91,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const update: Record<string, unknown> = { updatedById: session.user.id };
   if (title !== undefined) {
     update.title = title;
-    update.slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    update.slug = toSlug(title);
   }
   if (content !== undefined) update.content = content;
   if (folderId !== undefined) update.folderId = folderId || null;
@@ -197,37 +206,42 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const found = await db.query.note.findFirst({ where: eq(note.id, id) });
-  if (!found) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  try {
+    const found = await db.query.note.findFirst({ where: eq(note.id, id) });
+    if (!found) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    const member = await db.query.workspaceMember.findFirst({
+      where: and(eq(workspaceMember.workspaceId, found.workspaceId), eq(workspaceMember.userId, session.user.id)),
+    });
+
+    if (!member || member.role === "viewer") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    await logAction(
+      session.user.id,
+      "NOTE_DELETE",
+      `Deleted note "${found.title}" (${id})`,
+      request
+    );
+
+    await triggerWebhooks(
+      found.workspaceId,
+      "note.deleted",
+      {
+        id: found.id,
+        title: found.title,
+        slug: found.slug,
+      },
+      { id: session.user.id, name: session.user.name, email: session.user.email }
+    );
+
+    await db.delete(note).where(eq(note.id, id));
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("DELETE /api/notes/[id] error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  const member = await db.query.workspaceMember.findFirst({
-    where: and(eq(workspaceMember.workspaceId, found.workspaceId), eq(workspaceMember.userId, session.user.id)),
-  });
-
-  if (!member || member.role === "viewer") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  await logAction(
-    session.user.id,
-    "NOTE_DELETE",
-    `Deleted note "${found.title}" (${id})`,
-    request
-  );
-
-  await triggerWebhooks(
-    found.workspaceId,
-    "note.deleted",
-    {
-      id: found.id,
-      title: found.title,
-      slug: found.slug,
-    },
-    { id: session.user.id, name: session.user.name, email: session.user.email }
-  );
-
-  await db.delete(note).where(eq(note.id, id));
-  return NextResponse.json({ success: true });
 }

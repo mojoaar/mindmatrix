@@ -34,11 +34,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ enabled: false, config: {} });
   }
 
-  const decodedConfig = typeof config.config === "object" ? (config.config as Record<string, any>) : {};
+  const decodedConfig = typeof config.config === "object" ? (config.config as Record<string, string>) : {};
   return NextResponse.json({
     enabled: config.enabled,
     config: maskConfig(decodedConfig),
-    lastSync: (config.config as any)?.lastSync || null,
+    lastSync: (config.config as Record<string, string>)?.lastSync || null,
   });
 }
 
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
 
     // Merge with existing: preserve encrypted values when mask placeholder "••••••••" is sent
     if (existing) {
-      const existingConfig = typeof existing.config === "object" ? (existing.config as Record<string, any>) : {};
+      const existingConfig = typeof existing.config === "object" ? (existing.config as Record<string, string>) : {};
       for (const key of Object.keys(existingConfig)) {
         if (newConfig[key] === "••••••••") {
           newConfig[key] = decrypt(existingConfig[key]);

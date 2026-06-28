@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Plugin not configured" }, { status: 400 });
   }
 
-  const cfg = decryptConfig(config.config as Record<string, any>);
+  const cfg = decryptConfig(config.config as Record<string, string>);
   const clientId = cfg.clientId as string;
   const clientSecret = cfg.clientSecret as string;
 
@@ -68,7 +68,7 @@ export async function GET(request: Request) {
       grant_type: "authorization_code",
     }),
   });
-  const tokenData: any = await tokenRes.json();
+  const tokenData = await tokenRes.json() as { access_token?: string; refresh_token?: string; expires_in?: number };
 
   if (!tokenData.access_token) {
     const ws = await db.query.workspace.findFirst({ where: eq(workspace.id, workspaceId) });
@@ -76,12 +76,14 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL(`/dashboard/w/${slug}/settings`, request.url));
   }
 
-  const updatedConfig = {
+  const updatedConfig: Record<string, string> = {
     ...cfg,
     accessToken: tokenData.access_token,
-    refreshToken: tokenData.refresh_token,
-    expiresAt: Date.now() + (tokenData.expires_in || 3600) * 1000,
+    expiresAt: String(Date.now() + (tokenData.expires_in || 3600) * 1000),
   };
+  if (tokenData.refresh_token) {
+    updatedConfig.refreshToken = tokenData.refresh_token;
+  }
   const encrypted = encryptConfig(updatedConfig);
 
   await db

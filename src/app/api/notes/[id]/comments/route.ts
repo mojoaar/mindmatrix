@@ -24,6 +24,10 @@ export async function GET(
 
   const session = await auth.api.getSession({ headers: request.headers });
 
+
+  // Public notes expose commenter names and images intentionally:
+  // commenters chose to share publicly when posting on a public note.
+
   if (found.isPublic) {
     const comments = await db.query.noteComment.findMany({
       where: eq(noteComment.noteId, noteId),

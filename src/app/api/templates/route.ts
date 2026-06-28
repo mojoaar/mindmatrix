@@ -28,12 +28,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const templates = await db.query.noteTemplate.findMany({
-    where: eq(noteTemplate.workspaceId, workspaceId),
-    orderBy: (t) => [t.name],
-  });
+  try {
+    const templates = await db.query.noteTemplate.findMany({
+      where: eq(noteTemplate.workspaceId, workspaceId),
+      orderBy: (t) => [t.name],
+    });
 
-  return NextResponse.json({ templates });
+    return NextResponse.json({ templates });
+  } catch (error) {
+    console.error("GET /api/templates error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -61,18 +66,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const [tmpl] = await db
-    .insert(noteTemplate)
-    .values({
-      id: crypto.randomUUID(),
-      workspaceId,
-      name,
-      content: content || "",
-      createdById: session.user.id,
-    })
-    .returning();
+  try {
+    const [tmpl] = await db
+      .insert(noteTemplate)
+      .values({
+        id: crypto.randomUUID(),
+        workspaceId,
+        name,
+        content: content || "",
+        createdById: session.user.id,
+      })
+      .returning();
 
-  await logAction(session.user.id, "TEMPLATE_CREATE", `Created template "${name}"`, request);
+    await logAction(session.user.id, "TEMPLATE_CREATE", `Created template "${name}"`, request);
 
-  return NextResponse.json({ template: tmpl }, { status: 201 });
+    return NextResponse.json({ template: tmpl }, { status: 201 });
+  } catch (error) {
+    console.error("POST /api/templates error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

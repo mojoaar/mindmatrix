@@ -10,32 +10,37 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const found = await db.query.user.findFirst({
-    where: eq(user.id, session.user.id),
-    columns: {
-      id: true,
-      name: true,
-      email: true,
-      image: true,
-      timezone: true,
-      timeFormat: true,
-      role: true,
-      twoFactorEnabled: true,
-      theme: true,
-      font: true,
-      sidebarFolders: true,
-      sidebarTags: true,
-      editorLayout: true,
-      dateFormat: true,
-      createdAt: true,
-    },
-  });
+  try {
+    const found = await db.query.user.findFirst({
+      where: eq(user.id, session.user.id),
+      columns: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        timezone: true,
+        timeFormat: true,
+        role: true,
+        twoFactorEnabled: true,
+        theme: true,
+        font: true,
+        sidebarFolders: true,
+        sidebarTags: true,
+        editorLayout: true,
+        dateFormat: true,
+        createdAt: true,
+      },
+    });
 
-  if (!found) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (!found) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ profile: found });
+  } catch (error) {
+    console.error("GET /api/profile error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  return NextResponse.json({ profile: found });
 }
 
 export async function PATCH(request: Request) {
@@ -84,34 +89,39 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }
 
-  const [updated] = await db
-    .update(user)
-    .set(update)
-    .where(eq(user.id, session.user.id))
-    .returning({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      image: user.image,
-      timezone: user.timezone,
-      timeFormat: user.timeFormat,
-      role: user.role,
-      twoFactorEnabled: user.twoFactorEnabled,
-      theme: user.theme,
-      font: user.font,
-      sidebarFolders: user.sidebarFolders,
-      sidebarTags: user.sidebarTags,
-      editorLayout: user.editorLayout,
-      dateFormat: user.dateFormat,
-      createdAt: user.createdAt,
-    });
+  try {
+    const [updated] = await db
+      .update(user)
+      .set(update)
+      .where(eq(user.id, session.user.id))
+      .returning({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        image: user.image,
+        timezone: user.timezone,
+        timeFormat: user.timeFormat,
+        role: user.role,
+        twoFactorEnabled: user.twoFactorEnabled,
+        theme: user.theme,
+        font: user.font,
+        sidebarFolders: user.sidebarFolders,
+        sidebarTags: user.sidebarTags,
+        editorLayout: user.editorLayout,
+        dateFormat: user.dateFormat,
+        createdAt: user.createdAt,
+      });
 
-  if (update.email) {
-    await logAction(session.user.id, "USER_EMAIL_CHANGED", `Email changed to ${update.email}`, request);
-  } else if (Object.keys(update).length > 0) {
-    const fields = Object.keys(update).join(", ");
-    await logAction(session.user.id, "USER_PROFILE_UPDATED", `Updated: ${fields}`, request);
+    if (update.email) {
+      await logAction(session.user.id, "USER_EMAIL_CHANGED", `Email changed to ${update.email}`, request);
+    } else if (Object.keys(update).length > 0) {
+      const fields = Object.keys(update).join(", ");
+      await logAction(session.user.id, "USER_PROFILE_UPDATED", `Updated: ${fields}`, request);
+    }
+
+    return NextResponse.json({ profile: updated });
+  } catch (error) {
+    console.error("PATCH /api/profile error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-
-  return NextResponse.json({ profile: updated });
 }

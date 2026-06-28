@@ -1,6 +1,7 @@
 import type { Plugin } from "@/plugins/types";
 import { requirePluginAccess } from "@/plugins";
 import { isSafeUrl } from "@/lib/security";
+import { NextResponse } from "next/server";
 
 export const proxmoxInventoryPlugin: Plugin = {
   id: "proxmox-inventory",
@@ -19,15 +20,14 @@ export const proxmoxInventoryPlugin: Plugin = {
         const port = cfg?.port || 8006;
         const tokenId = cfg?.tokenId;
         const secret = cfg?.secret;
-        const verifySSL = cfg?.verifySSL !== false;
 
         if (!host || !tokenId || !secret) {
-          return Response.json({ error: "Host, tokenId, and secret required" }, { status: 400 });
+          return NextResponse.json({ error: "Host, tokenId, and secret required" }, { status: 400 });
         }
 
         const isAllowed = await isSafeUrl(`https://${host}`);
         if (!isAllowed) {
-          return Response.json({ error: "Proxmox host forbidden by system security policy" }, { status: 403 });
+          return NextResponse.json({ error: "Proxmox host forbidden by system security policy" }, { status: 403 });
         }
 
         const base = `https://${host}:${port}/api2/json`;
@@ -123,9 +123,9 @@ export const proxmoxInventoryPlugin: Plugin = {
           updatedById: access.userId,
         });
 
-        return Response.json({ noteId });
-      } catch (e: any) {
-        return Response.json({ error: e.message || "Scan failed" }, { status: 500 });
+        return NextResponse.json({ noteId });
+      } catch (e: unknown) {
+        return NextResponse.json({ error: e instanceof Error ? e.message : String(e) || "Scan failed" }, { status: 500 });
       }
     },
   },

@@ -30,7 +30,7 @@ export class OpenCodeClient {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error((err as any).error?.message || `OpenCode API error: ${res.status}`);
+      throw new Error((err as { error?: { message?: string } }).error?.message || `OpenCode API error: ${res.status}`);
     }
 
     const data = await res.json();
@@ -49,7 +49,7 @@ export class OpenCodeClient {
     const res = await fetch(`${GO_ENDPOINT}/models`);
     if (!res.ok) throw new Error("Failed to fetch models");
     const data = await res.json();
-    return (data.data || []).map((m: any) => ({ id: m.id, name: m.id }));
+    return (data.data || []).map((m: { id: string; name?: string }) => ({ id: m.id, name: m.id }));
   }
 
   getFallbackModels() {

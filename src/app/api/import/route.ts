@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { logAction } from "@/lib/audit";
 import { importNotesSchema } from "@/lib/validations";
 import { rateLimit } from "@/lib/rate-limit";
+import { toSlug } from "@/lib/slug" ;
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
     if (!item.title) continue;
 
     const id = crypto.randomUUID();
-    const slug = item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const slug = toSlug(item.title);
 
     await db.insert(note).values({
       id,

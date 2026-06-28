@@ -2,6 +2,7 @@ import type { Plugin } from "@/plugins/types";
 import { ZenSettings } from "./components/zen-settings";
 import { ZenClient } from "./zen-client";
 import { requirePluginAccess } from "@/plugins";
+import { NextResponse } from "next/server";
 
 const client = new ZenClient();
 
@@ -19,7 +20,7 @@ export const opencodeZenPlugin: Plugin = {
         if (access instanceof Response) return access;
 
         const apiKey = access.config?.apiKey;
-        if (!apiKey) return Response.json({ error: "API key not configured" }, { status: 400 });
+        if (!apiKey) return NextResponse.json({ error: "API key not configured" }, { status: 400 });
 
         let systemPrompt = access.config?.systemPrompt || "You are a helpful assistant.";
         if (noteContent) {
@@ -33,9 +34,9 @@ export const opencodeZenPlugin: Plugin = {
           messages: messages || [{ role: "user", content: noteContent || "Help me with this note." }],
         });
 
-        return Response.json(result);
-      } catch (e: any) {
-        return Response.json({ error: e.message || "Chat failed" }, { status: 500 });
+        return NextResponse.json(result);
+      } catch (e: unknown) {
+        return NextResponse.json({ error: e instanceof Error ? e.message : String(e) || "Chat failed" }, { status: 500 });
       }
     },
 
@@ -44,13 +45,13 @@ export const opencodeZenPlugin: Plugin = {
         const auth = await import("@/lib/auth");
         const session = await auth.auth.api.getSession({ headers: req.headers });
         if (!session?.user) {
-          return Response.json({ error: "Unauthorized" }, { status: 401 });
+          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const models = await client.getModels();
-        return Response.json({ models });
+        return NextResponse.json({ models });
       } catch {
-        return Response.json({ models: client.getFallbackModels() });
+        return NextResponse.json({ models: client.getFallbackModels() });
       }
     },
   },

@@ -31,7 +31,7 @@ export class ZenClient {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error((err as any).error?.message || `Zen API error: ${res.status}`);
+      throw new Error((err as { error?: { message?: string } }).error?.message || `Zen API error: ${res.status}`);
     }
 
     const data = await res.json();
@@ -50,7 +50,7 @@ export class ZenClient {
     const res = await fetch("https://opencode.ai/zen/v1/models");
     if (!res.ok) throw new Error("Failed to fetch models");
     const data = await res.json();
-    return (data.data || []).map((m: any) => ({
+    return (data.data || []).map((m: { id: string; display_name?: string; name?: string }) => ({
       id: m.id,
       name: m.display_name || m.id,
     }));

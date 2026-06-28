@@ -1,5 +1,6 @@
 import type { Plugin } from "@/plugins/types";
 import { requirePluginAccess } from "@/plugins";
+import { NextResponse } from "next/server";
 
 const GOOGLE_AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN = "https://oauth2.googleapis.com/token";
@@ -12,9 +13,9 @@ async function getAccessToken(
   const access = await requirePluginAccess(req, workspaceId, "sync-google-drive");
   if (access instanceof Response) return access;
   const cfg = access.config;
-  if (!cfg?.accessToken) return Response.json({ error: "Not connected" }, { status: 400 });
+  if (!cfg?.accessToken) return NextResponse.json({ error: "Not connected" }, { status: 400 });
 
-  if (cfg.expiresAt && Date.now() > cfg.expiresAt) {
+  if (cfg.expiresAt && Date.now() > Number(cfg.expiresAt)) {
     const refreshRes = await fetch(GOOGLE_TOKEN, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -25,10 +26,10 @@ async function getAccessToken(
         grant_type: "refresh_token",
       }),
     });
-    const refreshData: any = await refreshRes.json();
+    const refreshData = await refreshRes.json() as { access_token?: string; expires_in?: number };
     if (refreshData.access_token) {
       cfg.accessToken = refreshData.access_token;
-      cfg.expiresAt = Date.now() + (refreshData.expires_in || 3600) * 1000;
+      cfg.expiresAt = String(Date.now() + (refreshData.expires_in || 3600) * 1000);
     }
   }
   return cfg.accessToken || "not_connected";
@@ -39,16 +40,17 @@ async function findOrCreateFolder(token: string): Promise<string> {
     `${DRIVE_API}/files?q=name='MindMatrix' and mimeType='application/vnd.google-apps.folder'`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
-  const searchData: any = await searchRes.json();
-  if (searchData.files?.length > 0) return searchData.files[0].id;
+  const searchData = await searchRes.json() as { files?: { id: string }[] };
+  const searchFiles = searchData.files;
+  if (searchFiles && searchFiles.length > 0) return searchFiles[0].id;
 
   const createRes = await fetch(`${DRIVE_API}/files`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({ name: "MindMatrix", mimeType: "application/vnd.google-apps.folder" }),
   });
-  const createData: any = await createRes.json();
-  return createData.id;
+  const createData = await createRes.json() as { id?: string };
+  return createData.id ?? "";
 }
 
 export const syncGoogleDrivePlugin: Plugin = {
@@ -58,7 +60,7 @@ export const syncGoogleDrivePlugin: Plugin = {
   version: "0.1.0",
   apiRoutes: {
     "GET /api/plugins/sync-google-drive/auth": async () => {
-      return Response.json({ url: GOOGLE_AUTH });
+      return NextResponse.json({ url: GOOGLE_AUTH });
     },
 
     "GET /api/plugins/sync-google-drive/callback": async (req) => {
@@ -69,7 +71,7 @@ export const syncGoogleDrivePlugin: Plugin = {
       const workspaceId = url.searchParams.get("workspaceId");
       const redirectUri = url.searchParams.get("redirectUri");
       if (!code || !clientId || !clientSecret || !workspaceId) {
-        return Response.json({ error: "Missing params" }, { status: 400 });
+        return NextResponse.json({ error: "Missing params" }, { status: 400 });
       }
 
       const access = await requirePluginAccess(req, workspaceId, "sync-google-drive");
@@ -86,17 +88,17 @@ export const syncGoogleDrivePlugin: Plugin = {
           grant_type: "authorization_code",
         }),
       });
-      const data: any = await tokenRes.json();
+      const data = await tokenRes.json() as { access_token?: string; refresh_token?: string; expires_in?: number };
 
       if (data.access_token) {
-        return Response.json({
+        return NextResponse.json({
           connected: true,
           accessToken: data.access_token,
           refreshToken: data.refresh_token,
           expiresAt: Date.now() + (data.expires_in || 3600) * 1000,
         });
       }
-      return Response.json({ error: "Token exchange failed" }, { status: 400 });
+      return NextResponse.json({ error: "Token exchange failed" }, { status: 400 });
     },
 
     "POST /api/plugins/sync-google-drive/sync": async (req) => {
@@ -104,7 +106,7 @@ export const syncGoogleDrivePlugin: Plugin = {
       const tokenOrResp = await getAccessToken(req, workspaceId);
       if (tokenOrResp instanceof Response) return tokenOrResp;
       if (typeof tokenOrResp !== "string") {
-        return Response.json({ error: "Token not available" }, { status: 400 });
+        return NextResponse.json({ error: "Token not available" }, { status: 400 });
       }
       const token = tokenOrResp;
 
@@ -134,16 +136,16 @@ export const syncGoogleDrivePlugin: Plugin = {
         } catch { /* skip */ }
       }
 
-      return Response.json({ synced });
+      return NextResponse.json({ synced });
     },
 
     "GET /api/plugins/sync-google-drive/status": async (req) => {
       const { searchParams } = new URL(req.url);
       const workspaceId = searchParams.get("workspaceId");
-      if (!workspaceId) return Response.json({ connected: false });
+      if (!workspaceId) return NextResponse.json({ connected: false });
       const access = await requirePluginAccess(req, workspaceId, "sync-google-drive");
       if (access instanceof Response) return access;
-      return Response.json({ connected: !!access.config?.accessToken });
+      return NextResponse.json({ connected: !!access.config?.accessToken });
     },
   },
 };

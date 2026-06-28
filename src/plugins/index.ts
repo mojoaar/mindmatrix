@@ -9,6 +9,7 @@ import { gitSyncPlugin } from "./git-sync";
 import { db, workspaceMember, pluginConfig } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import { decryptConfig } from "@/lib/crypto";
+import { NextResponse } from "next/server";
 
 export const plugins: Plugin[] = [
   syncPcloudPlugin,
@@ -28,29 +29,29 @@ export async function requirePluginAccess(
   req: Request,
   workspaceId: string,
   pluginId: string
-): Promise<{ userId: string; config: Record<string, any> } | Response> {
+): Promise<{ userId: string; config: Record<string, string> } | Response> {
   const auth = await import("@/lib/auth");
   const session = await auth.auth.api.getSession({ headers: req.headers });
   if (!session?.user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const member = await db.query.workspaceMember.findFirst({
     where: and(eq(workspaceMember.workspaceId, workspaceId), eq(workspaceMember.userId, session.user.id)),
   });
   if (!member) {
-    return Response.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const config = await db.query.pluginConfig.findFirst({
     where: and(eq(pluginConfig.workspaceId, workspaceId), eq(pluginConfig.pluginId, pluginId)),
   });
   if (!config?.enabled) {
-    return Response.json({ error: "Plugin not enabled" }, { status: 400 });
+    return NextResponse.json({ error: "Plugin not enabled" }, { status: 400 });
   }
 
   return {
     userId: session.user.id,
-    config: config.config ? decryptConfig(config.config as Record<string, any>) : {},
+    config: config.config ? decryptConfig(config.config as Record<string, string>) : {},
   };
 }

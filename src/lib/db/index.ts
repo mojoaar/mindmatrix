@@ -2,9 +2,10 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  "postgres://mindmatrix:CHANGE_ME_DB_PASSWORD@localhost:5434/mindmatrix";
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error("DATABASE_URL environment variable is required");
+}
 
 const globalForDb = globalThis as unknown as {
   conn: postgres.Sql | undefined;

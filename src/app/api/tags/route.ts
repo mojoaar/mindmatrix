@@ -28,12 +28,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const tags = await db.query.tag.findMany({
-    where: eq(tag.workspaceId, workspaceId),
-    orderBy: (t) => [t.name],
-  });
+  try {
+    const tags = await db.query.tag.findMany({
+      where: eq(tag.workspaceId, workspaceId),
+      orderBy: (t) => [t.name],
+    });
 
-  return NextResponse.json({ tags });
+    return NextResponse.json({ tags });
+  } catch (error) {
+    console.error("GET /api/tags error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -62,34 +67,39 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const [newTag] = await db
-    .insert(tag)
-    .values({
-      id: crypto.randomUUID(),
+  try {
+    const [newTag] = await db
+      .insert(tag)
+      .values({
+        id: crypto.randomUUID(),
+        workspaceId,
+        name,
+        color: color || "#88c0d0",
+        createdById: session.user.id,
+      })
+      .returning();
+
+    await logAction(
+      session.user.id,
+      "TAG_CREATE",
+      `Created tag "${name}" (${newTag.id}) in workspace ${workspaceId}`,
+      request
+    );
+
+    await triggerWebhooks(
       workspaceId,
-      name,
-      color: color || "#88c0d0",
-      createdById: session.user.id,
-    })
-    .returning();
+      "tag.created",
+      {
+        id: newTag.id,
+        name: newTag.name,
+        color: newTag.color,
+      },
+      { id: session.user.id, name: session.user.name, email: session.user.email }
+    );
 
-  await logAction(
-    session.user.id,
-    "TAG_CREATE",
-    `Created tag "${name}" (${newTag.id}) in workspace ${workspaceId}`,
-    request
-  );
-
-  await triggerWebhooks(
-    workspaceId,
-    "tag.created",
-    {
-      id: newTag.id,
-      name: newTag.name,
-      color: newTag.color,
-    },
-    { id: session.user.id, name: session.user.name, email: session.user.email }
-  );
-
-  return NextResponse.json({ tag: newTag }, { status: 201 });
+    return NextResponse.json({ tag: newTag }, { status: 201 });
+  } catch (error) {
+    console.error("POST /api/tags error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

@@ -1,15 +1,10 @@
 import type { Plugin } from "@/plugins/types";
 import { requirePluginAccess } from "@/plugins";
+import { NextResponse } from "next/server";
 
 const PCLOUD_AUTH = "https://e.pcloud.com/oauth2/authorize";
 const PCLOUD_TOKEN = "https://api.pcloud.com/oauth2_token";
 const PCLOUD_API = "https://api.pcloud.com";
-
-async function getAccessToken(req: Request, workspaceId: string): Promise<string | Response> {
-  const access = await requirePluginAccess(req, workspaceId, "sync-pcloud");
-  if (access instanceof Response) return access;
-  return access.config?.accessToken || "not_connected";
-}
 
 export const syncPcloudPlugin: Plugin = {
   id: "sync-pcloud",
@@ -18,7 +13,7 @@ export const syncPcloudPlugin: Plugin = {
   version: "0.1.0",
   apiRoutes: {
     "GET /api/plugins/sync-pcloud/auth": async () => {
-      return Response.json({ url: PCLOUD_AUTH });
+      return NextResponse.json({ url: PCLOUD_AUTH });
     },
 
     "GET /api/plugins/sync-pcloud/callback": async (req) => {
@@ -28,7 +23,7 @@ export const syncPcloudPlugin: Plugin = {
       const clientSecret = url.searchParams.get("clientSecret");
       const workspaceId = url.searchParams.get("workspaceId");
       if (!code || !clientId || !clientSecret || !workspaceId) {
-        return Response.json({ error: "Missing params" }, { status: 400 });
+        return NextResponse.json({ error: "Missing params" }, { status: 400 });
       }
 
       // Verify workspace membership before exchanging tokens
@@ -40,9 +35,9 @@ export const syncPcloudPlugin: Plugin = {
       const data = await res.json();
 
       if (data.access_token) {
-        return Response.json({ connected: true, accessToken: data.access_token });
+        return NextResponse.json({ connected: true, accessToken: data.access_token });
       }
-      return Response.json({ error: "Token exchange failed" }, { status: 400 });
+      return NextResponse.json({ error: "Token exchange failed" }, { status: 400 });
     },
 
     "POST /api/plugins/sync-pcloud/sync": async (req) => {
@@ -51,7 +46,7 @@ export const syncPcloudPlugin: Plugin = {
       if (access instanceof Response) return access;
 
       const token = access.config?.accessToken;
-      if (!token) return Response.json({ error: "Not connected" }, { status: 400 });
+      if (!token) return NextResponse.json({ error: "Not connected" }, { status: 400 });
 
       const db = await import("@/lib/db");
       const { eq } = await import("drizzle-orm");
@@ -70,16 +65,16 @@ export const syncPcloudPlugin: Plugin = {
         } catch { /* skip */ }
       }
 
-      return Response.json({ synced });
+      return NextResponse.json({ synced });
     },
 
     "GET /api/plugins/sync-pcloud/status": async (req) => {
       const { searchParams } = new URL(req.url);
       const workspaceId = searchParams.get("workspaceId");
-      if (!workspaceId) return Response.json({ connected: false });
+      if (!workspaceId) return NextResponse.json({ connected: false });
       const access = await requirePluginAccess(req, workspaceId, "sync-pcloud");
       if (access instanceof Response) return access;
-      return Response.json({ connected: !!access.config?.accessToken });
+      return NextResponse.json({ connected: !!access.config?.accessToken });
     },
   },
 };

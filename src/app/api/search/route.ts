@@ -33,36 +33,41 @@ export async function GET(request: Request) {
     }
   }
 
-  const userWorkspaces = await db.query.workspaceMember.findMany({
-    where: eq(workspaceMember.userId, session.user.id),
-    columns: { workspaceId: true },
-  });
+  try {
+    const userWorkspaces = await db.query.workspaceMember.findMany({
+      where: eq(workspaceMember.userId, session.user.id),
+      columns: { workspaceId: true },
+    });
 
-  const workspaceIds = userWorkspaces.map((m) => m.workspaceId);
+    const workspaceIds = userWorkspaces.map((m) => m.workspaceId);
 
-  const notes = await db.query.note.findMany({
-    where: and(
-      or(ilike(note.title, `%${q}%`), ilike(note.content, `%${q}%`)),
-      workspaceIds.length > 0 ? inArray(note.workspaceId, workspaceIds) : undefined,
-    ),
-    with: {
-      workspace: { columns: { name: true, slug: true } },
-      folder: { columns: { name: true } },
-    },
-    limit: 20,
-  });
+    const notes = await db.query.note.findMany({
+      where: and(
+        or(ilike(note.title, `%${q}%`), ilike(note.content, `%${q}%`)),
+        workspaceIds.length > 0 ? inArray(note.workspaceId, workspaceIds) : undefined,
+      ),
+      with: {
+        workspace: { columns: { name: true, slug: true } },
+        folder: { columns: { name: true } },
+      },
+      limit: 20,
+    });
 
-  return NextResponse.json({
-    notes: notes.map((n) => ({
-      id: n.id,
-      title: n.title,
-      slug: n.slug,
-      workspaceId: n.workspaceId,
-      workspaceName: n.workspace?.name,
-      workspaceSlug: n.workspace?.slug,
-      folderName: n.folder?.name,
-      snippet: n.content.slice(0, 150),
-      updatedAt: n.updatedAt,
-    })),
-  });
+    return NextResponse.json({
+      notes: notes.map((n) => ({
+        id: n.id,
+        title: n.title,
+        slug: n.slug,
+        workspaceId: n.workspaceId,
+        workspaceName: n.workspace?.name,
+        workspaceSlug: n.workspace?.slug,
+        folderName: n.folder?.name,
+        snippet: n.content.slice(0, 150),
+        updatedAt: n.updatedAt,
+      })),
+    });
+  } catch (error) {
+    console.error("GET /api/search error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

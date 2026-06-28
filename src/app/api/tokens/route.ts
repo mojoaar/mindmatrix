@@ -11,21 +11,26 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const tokens = await db.query.apiToken.findMany({
-    where: eq(apiToken.userId, session.user.id),
-    orderBy: (t, { desc }) => [desc(t.createdAt)],
-  });
+  try {
+    const tokens = await db.query.apiToken.findMany({
+      where: eq(apiToken.userId, session.user.id),
+      orderBy: (t, { desc }) => [desc(t.createdAt)],
+    });
 
-  return NextResponse.json({
-    tokens: tokens.map((t) => ({
-      id: t.id,
-      name: t.name,
-      token: t.token.slice(0, 8) + "••••••••" + t.token.slice(-4),
-      lastUsedAt: t.lastUsedAt,
-      expiresAt: t.expiresAt,
-      createdAt: t.createdAt,
-    })),
-  });
+    return NextResponse.json({
+      tokens: tokens.map((t) => ({
+        id: t.id,
+        name: t.name,
+        token: t.token.slice(0, 8) + "••••••••" + t.token.slice(-4),
+        lastUsedAt: t.lastUsedAt,
+        expiresAt: t.expiresAt,
+        createdAt: t.createdAt,
+      })),
+    });
+  } catch (error) {
+    console.error("GET /api/tokens error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -45,17 +50,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Name is required" }, { status: 400 });
   }
 
-  const token = "mm_" + crypto.randomBytes(32).toString("hex");
+  try {
+    const token = "mm_" + crypto.randomBytes(32).toString("hex");
 
-  const [created] = await db
-    .insert(apiToken)
-    .values({
-      id: crypto.randomUUID(),
-      userId: session.user.id,
-      name,
-      token,
-    })
-    .returning();
+    const [created] = await db
+      .insert(apiToken)
+      .values({
+        id: crypto.randomUUID(),
+        userId: session.user.id,
+        name,
+        token,
+      })
+      .returning();
 
-  return NextResponse.json({ token: created }, { status: 201 });
+    return NextResponse.json({ token: created }, { status: 201 });
+  } catch (error) {
+    console.error("POST /api/tokens error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

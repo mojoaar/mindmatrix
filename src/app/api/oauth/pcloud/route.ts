@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Plugin not configured" }, { status: 400 });
   }
 
-  const cfg = decryptConfig(config.config as Record<string, any>);
+  const cfg = decryptConfig(config.config as Record<string, string>);
   const clientId = cfg.clientId as string;
   const clientSecret = cfg.clientSecret as string;
 
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
 
   const tokenUrl = `${PCLOUD_TOKEN}?client_id=${clientId}&client_secret=${clientSecret}&code=${code}`;
   const tokenRes = await fetch(tokenUrl);
-  const tokenData: any = await tokenRes.json();
+  const tokenData = await tokenRes.json() as { access_token?: string };
 
   if (!tokenData.access_token) {
     const ws = await db.query.workspace.findFirst({ where: eq(workspace.id, workspaceId) });
