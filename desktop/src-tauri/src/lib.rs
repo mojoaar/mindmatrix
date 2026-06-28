@@ -1,5 +1,6 @@
 use tauri::Manager;
-use tauri::menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder};
+use tauri::Emitter;
+use tauri::menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder, PredefinedMenuItem};
 use tauri::tray::{TrayIconBuilder, MouseButton, MouseButtonState, TrayIconEvent};
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_fs::FsExt;
@@ -55,29 +56,6 @@ async fn export_note_file(app: tauri::AppHandle, content: String, default_name: 
     }
 }
 
-#[tauri::command]
-fn handle_menu_event(app: tauri::AppHandle, event: String) {
-    let window = app.get_webview_window("main");
-    match event.as_str() {
-        "new_note" => {
-            if let Some(w) = window {
-                let _ = w.eval("document.dispatchEvent(new CustomEvent('mindmatrix:new-note'))");
-            }
-        }
-        "settings" => {
-            if let Some(w) = window {
-                let _ = w.eval("window.location.href = '/dashboard/settings'");
-            }
-        }
-        "reload" => {
-            if let Some(w) = window {
-                let _ = w.eval("location.reload()");
-            }
-        }
-        _ => {}
-    }
-}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -90,44 +68,53 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             import_markdown_files,
             export_note_file,
-            handle_menu_event,
         ])
         .setup(|app| {
-            // Menu bar
-            let file_menu = SubmenuBuilder::new(app, "File")
-                .item(&MenuItemBuilder::with_id("new_note", "New Note").accelerator("CmdOrCtrl+N").build(app)?)
-                .item(&MenuItemBuilder::with_id("import_md", "Import Markdown…").accelerator("CmdOrCtrl+O").build(app)?)
-                .item(&MenuItemBuilder::with_id("export_note", "Export Current Note…").accelerator("CmdOrCtrl+Shift+S").build(app)?)
+            // App menu (macOS — first menu, named after the app)
+            let app_menu = SubmenuBuilder::new(app, "MindMatrix Desktop")
+                .item(&MenuItemBuilder::with_id("about", "About MindMatrix Desktop").build(app)?)
                 .separator()
-                .item(&MenuItemBuilder::with_id("settings", "Settings").accelerator("CmdOrCtrl+,").build(app)?)
+                .item(&MenuItemBuilder::with_id("settings", "Preferences\u{2026}").accelerator("CmdOrCtrl+,").build(app)?)
                 .separator()
-                .item(&MenuItemBuilder::with_id("close", "Close Window").accelerator("CmdOrCtrl+W").build(app)?)
+                .quit()
                 .build()?;
 
+            // File menu
+            let file_menu = SubmenuBuilder::new(app, "File")
+                .item(&MenuItemBuilder::with_id("new_note", "New Note").accelerator("CmdOrCtrl+N").build(app)?)
+                .item(&MenuItemBuilder::with_id("import_md", "Import Markdown\u{2026}").accelerator("CmdOrCtrl+O").build(app)?)
+                .item(&MenuItemBuilder::with_id("export_note", "Export Current Note\u{2026}").accelerator("CmdOrCtrl+Shift+S").build(app)?)
+                .separator()
+                .item(&PredefinedMenuItem::close_window(app, Some("Close Window"))?)
+                .build()?;
+
+            // Edit menu
             let edit_menu = SubmenuBuilder::new(app, "Edit")
                 .undo().redo().separator().cut().copy().paste().select_all()
                 .build()?;
 
+            // View menu
             let view_menu = SubmenuBuilder::new(app, "View")
                 .item(&MenuItemBuilder::with_id("reload", "Reload").accelerator("CmdOrCtrl+R").build(app)?)
                 .build()?;
 
+            // Help menu
             let help_menu = SubmenuBuilder::new(app, "Help")
                 .item(&MenuItemBuilder::with_id("about", "About MindMatrix Desktop").build(app)?)
-                .item(&MenuItemBuilder::with_id("check_updates", "Check for Updates").build(app)?)
                 .build()?;
 
             let menu = MenuBuilder::new(app)
-                .item(&file_menu).item(&edit_menu).item(&view_menu).item(&help_menu)
+                .item(&app_menu)
+                .item(&file_menu)
+                .item(&edit_menu)
+                .item(&view_menu)
+                .item(&help_menu)
                 .build()?;
             app.set_menu(menu)?;
 
-            // Tray
+            // System tray — click to show/focus window
             let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
-                .on_menu_event(|app, event| {
-                    let _ = handle_menu_event(app.clone(), event.id().0.clone());
-                })
                 .on_tray_icon_event(|tray, event| {
                     if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
                         if let Some(w) = tray.app_handle().get_webview_window("main") {
@@ -141,7 +128,37 @@ pub fn run() {
             Ok(())
         })
         .on_menu_event(|app, event| {
-            let _ = handle_menu_event(app.clone(), event.id().0.clone());
+            let id = event.id().0.as_str();
+            match id {
+                "new_note" => {
+                    if let Some(w) = app.get_webview_window("main") {
+                        let _ = w.eval("document.dispatchEvent(new CustomEvent('mindmatrix:new-note'))");
+                    }
+                }
+                "import_md" => {
+                    let handle = app.clone();
+                    tauri::async_runtime::spawn(async move {
+                        match import_markdown_files(handle).await {
+                            Ok(_) => {}
+                            Err(e) => eprintln!("Import failed: {}", e),
+                        }
+                    });
+                }
+                "export_note" => {
+                    let _ = app.emit("request-export-content", ());
+                }
+                "settings" => {
+                    if let Some(w) = app.get_webview_window("main") {
+                        let _ = w.eval("window.location.href = '/dashboard/settings'");
+                    }
+                }
+                "reload" => {
+                    if let Some(w) = app.get_webview_window("main") {
+                        let _ = w.eval("location.reload()");
+                    }
+                }
+                _ => {}
+            }
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
