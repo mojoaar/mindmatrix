@@ -8,9 +8,8 @@
 <body>
 <script>
 (function() {
-  var url = "http://localhost:3000";
-  try { var s = localStorage.getItem("mindmatrix-desktop-url"); if (s) url = s; } catch(e) {}
-  window.location.replace(url + "/connect?_t=" + Date.now());
+  var url = "https://mindmatrix.johansen.foo";
+  window.location.replace(url + "/connect?" + Date.now());
 })();
 </script>
 </body>
