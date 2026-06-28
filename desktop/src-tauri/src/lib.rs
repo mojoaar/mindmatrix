@@ -140,6 +140,8 @@ pub fn run() {
             // View menu
             let view_menu = SubmenuBuilder::new(app, "View")
                 .item(&MenuItemBuilder::with_id("reload", "Reload").accelerator("CmdOrCtrl+R").build(app)?)
+                .item(&MenuItemBuilder::with_id("toggle_devtools", "Toggle Developer Tools")
+                    .accelerator("CmdOrCtrl+Shift+I").build(app)?)
                 .build()?;
 
             // Help menu
@@ -199,6 +201,11 @@ pub fn run() {
                 "reload" => {
                     if let Some(w) = app.get_webview_window("main") {
                         let _ = w.eval("location.reload()");
+                    }
+                }
+                "toggle_devtools" => {
+                    if let Some(w) = app.get_webview_window("main") {
+                        w.open_devtools();
                     }
                 }
                 _ => {}
