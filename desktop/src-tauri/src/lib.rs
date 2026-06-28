@@ -68,6 +68,7 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
             import_markdown_files,
             export_note_file,
@@ -144,20 +145,19 @@ pub fn run() {
             match id {
                 "new_note" => {
                     if let Some(w) = app.get_webview_window("main") {
-                        let _ = w.eval("document.dispatchEvent(new CustomEvent('mindmatrix:new-note'))");
+                        let _ = w.eval("window.location.href = '/dashboard'");
                     }
                 }
-                "import_md" => {
-                    let handle = app.clone();
-                    tauri::async_runtime::spawn(async move {
-                        match import_markdown_files(handle).await {
-                            Ok(_) => {}
-                            Err(e) => eprintln!("Import failed: {}", e),
-                        }
-                    });
-                }
                 "export_note" => {
-                    let _ = app.emit("request-export-content", ());
+                    if let Some(w) = app.get_webview_window("main") {
+                        let _ = w.eval("window.location.href = '/dashboard'");
+                    }
+                }
+                "about" => {
+                    app.dialog()
+                        .message("MindMatrix Desktop v0.6.1\n\nMarkdown-first, self-hosted knowledge hub.\nBuilt by mojoaar.\nAGPL-3.0 License")
+                        .title("About MindMatrix Desktop")
+                        .blocking_show();
                 }
                 "settings" => {
                     if let Some(w) = app.get_webview_window("main") {
