@@ -37,3 +37,6 @@ next-env.d.ts
 public/uploads/avatars/*
 public/uploads/notes/*
 public/exports/*
+
+# deploy scripts (local only)
+/scripts/deploy.sh
