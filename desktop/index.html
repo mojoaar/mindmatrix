@@ -100,9 +100,17 @@
     (function() {
       try {
         var u=localStorage.getItem("mindmatrix-desktop-url");
-        if(u) { document.getElementById("sv").value=u;var t=localStorage.getItem("mindmatrix-desktop-authToken");
-          if(t) window.__TAURI__.invoke("auth_verify_token",{url:u,token:t}).then(function(r){if(r.ok)window.location.replace(u+"/dashboard")}).catch(function(){}) }
+        if(u) {
+          document.getElementById("sv").value=u;
+          var t=localStorage.getItem("mindmatrix-desktop-authToken");
+          if(t) {
+            document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#81a1c1;font-family:-apple-system,sans-serif;font-size:0.9rem;background:#2e3440"><span class="spin"></span> Checking saved session…</div>';
+            window.__TAURI__.invoke("auth_verify_token",{url:u,token:t}).then(function(r){if(r.ok)window.location.replace(u+"/dashboard")}).catch(function(){window.location.reload()});
+            return;
+          }
+        }
       } catch(e) {}
+      sw("signin");
     })();
   </script>
 </body>
