@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0" /><title>MindMatrix Desktop</title></head><body><script type="module">
+import { load } from "@tauri-apps/plugin-store";
+(async () => {
+  try {
+    const store = await load("mindmatrix-config.json", { autoSave: true });
+    const serverUrl = await store.get("serverUrl");
+    if (serverUrl) {
+      window.location.replace(serverUrl + "/dashboard");
+    } else {
+      const fallback = "http://localhost:3000";
+      window.location.replace(fallback + "/connect");
+    }
+  } catch {
+    window.location.replace("http://localhost:3000/connect");
+  }
+})();
+</script></body></html>

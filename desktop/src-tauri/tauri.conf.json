@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-config-schema/schema.json",
+  "productName": "MindMatrix Desktop",
+  "version": "0.6.1",
+  "identifier": "ai.mindmatrix.desktop",
+  "build": {
+    "frontendDist": "./dist",
+    "devUrl": "http://localhost:3000/connect",
+    "beforeDevCommand": "",
+    "beforeBuildCommand": ""
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "MindMatrix Desktop",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "center": true,
+        "dragDropEnabled": true
+      }
+    ],
+    "security": { "csp": null }
+  },
+  "bundle": {
+    "active": true,
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "targets": ["dmg"],
+    "macOS": { "minimumSystemVersion": "13.0" }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": ["https://github.com/mojoaar/mindmatrix/releases/latest/download/latest.json"],
+      "pubkey": "PLACEHOLDER"
+    }
+  }
+}

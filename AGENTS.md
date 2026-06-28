@@ -55,6 +55,10 @@ src/
 │   ├── search/                      # SearchOverlay (Cmd+K)
 │   ├── editor/                      # BacklinksPanel, VersionPanel, PresenceAvatars
 │   └── ui/                          # Avatar, Toast, IconPicker, PluginCard, NotificationBell, CommentSection, etc.
+├── desktop/                          # Tauri v2 desktop client (v0.6.1)
+│   ├── src-tauri/                    # Rust backend + native shell
+│   ├── index.html                    # Webview entry point
+│   └── package.json                  # Tauri CLI + plugin deps
 ├── plugins/
 │   ├── metadata.ts                  # Client-safe plugin registry (names, IDs)
 │   ├── index.ts                     # Server-side plugin registry

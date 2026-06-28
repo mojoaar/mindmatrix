@@ -439,14 +439,16 @@ Build Tauri desktop and PWA Android clients. MindMatrix stays as the self-hosted
 | Delta sync endpoint | `src/app/api/sync/notes/route.ts` | `GET /api/sync/notes?workspaceId=X&since=ISO8601` returns changed notes + cursor. Auth via session or Bearer token | ✅ |
 | PWA icons | `public/icon-192.png`, `public/icon-512.png` | PNG exports of the SVG ribbon logo generated via sips at 192x192 and 512x512 | ✅ |
 
-### 3. Phase 2: Tauri Desktop Shell (2-3 days)
+### 3. Phase 2: Tauri Desktop Shell (Completed ✅ — v0.6.1)
 - **Framework**: Tauri v2 (Rust backend + webview)
 - **Approach**: Remote webview — loads user's self-hosted instance URL
-- **`/connect` route**: Dedicated Next.js page for first-launch server URL + API token entry
-- **Native features**: OS menu bar, system tray, OS notifications via Tauri API
-- **Desktop icon**: Reuses existing SVG ribbon logo
-- **Auto-updater**: Tauri updater plugin
-- **Config storage**: `tauri-plugin-store` for persisting server URL + token
+- **`/connect` route**: Dedicated Next.js page for first-launch server URL + API token entry (supports both email/password sign-in and Bearer token auth)
+- **Native features**: OS menu bar (File/Edit/View/Help with shortcuts), system tray, OS notifications via Tauri API
+- **File system**: Import .md from disk (Cmd+O), export notes as .md (Cmd+Shift+S), drag-and-drop .md files into window
+- **Desktop icon**: Uses SVG ribbon logo converted to .icns/.ico/.png
+- **Auto-updater**: Tauri updater plugin pointing to GitHub Releases
+- **Config storage**: `tauri-plugin-store` for persisting server URL + credentials
+- **CI**: GitHub Actions builds macOS (.dmg), Windows (.msi), Linux (.deb) on tag push
 
 ### 4. Phase 3: Offline Mode (future — not critical for initial release)
 - Tauri-side SQLite via `tauri-plugin-sql`

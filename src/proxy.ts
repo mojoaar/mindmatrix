@@ -6,6 +6,7 @@ export default function middleware(request: NextRequest) {
     request.cookies.get("better-auth.session_token")?.value;
 
   const isHomePage = request.nextUrl.pathname === "/";
+  const isConnectPage = request.nextUrl.pathname.startsWith("/connect");
   const isAuthenticatedPage = request.nextUrl.pathname.startsWith("/dashboard");
   const isAuthPage =
     request.nextUrl.pathname.startsWith("/login") ||
@@ -13,6 +14,9 @@ export default function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/forgot-password") ||
     request.nextUrl.pathname.startsWith("/reset-password") ||
     request.nextUrl.pathname.startsWith("/verify-totp");
+
+  // /connect is a public route (desktop client first-launch auth) — no auth required, no redirects
+  if (isConnectPage) return NextResponse.next();
 
   if (isHomePage && sessionCookie) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
@@ -32,5 +36,5 @@ export default function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/dashboard/:path*", "/login", "/register", "/forgot-password"],
+  matcher: ["/", "/dashboard/:path*", "/login", "/register", "/forgot-password", "/connect"],
 };
