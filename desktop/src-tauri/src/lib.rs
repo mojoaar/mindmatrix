@@ -20,12 +20,15 @@ async fn auth_signin(url: String, email: String, password: String) -> Result<Aut
         .timeout(std::time::Duration::from_secs(15))
         .build()
         .map_err(|e| format!("{}", e))?;
+    let url_signed = format!("{}/api/auth/sign-in/email", url.trim_end_matches('/'));
+    eprintln!("[auth_signin] POST {}", url_signed);
     let res = client
-        .post(format!("{}/api/auth/sign-in/email", url.trim_end_matches('/')))
+        .post(&url_signed)
         .json(&serde_json::json!({"email": email, "password": password}))
         .send()
         .await
-        .map_err(|e| format!("{}", e))?;
+        .map_err(|e| { eprintln!("[auth_signin] ERR: {}", e); format!("{}", e) })?;
+    eprintln!("[auth_signin] STATUS {}", res.status());
     let ok = res.status().is_success();
     let set_cookie = res.headers().get("set-cookie").and_then(|v| v.to_str().ok()).map(|s| s.to_string());
     Ok(AuthResult { ok, set_cookie, error: if !ok { Some("Invalid email or password.".into()) } else { None } })
@@ -38,23 +41,30 @@ async fn auth_verify_token(url: String, token: String) -> Result<AuthResult, Str
         .timeout(std::time::Duration::from_secs(15))
         .build()
         .map_err(|e| format!("{}", e))?;
+
+    let verify_url = format!("{}/api/profile", url.trim_end_matches('/'));
+    eprintln!("[auth_verify] GET {}", verify_url);
     let res = client
-        .get(format!("{}/api/profile", url.trim_end_matches('/')))
+        .get(&verify_url)
         .header("Authorization", format!("Bearer {}", token))
         .send()
         .await
-        .map_err(|e| format!("{}", e))?;
+        .map_err(|e| { eprintln!("[auth_verify] ERR: {}", e); format!("{}", e) })?;
+    eprintln!("[auth_verify] PROFILE {}", res.status());
     let ok = res.status().is_success();
     if !ok {
         return Ok(AuthResult { ok: false, set_cookie: None, error: Some("Invalid API token.".into()) });
     }
 
+    let session_url = format!("{}/api/auth/session-from-token", url.trim_end_matches('/'));
+    eprintln!("[auth_verify] POST {}", session_url);
     let session_res = client
-        .post(format!("{}/api/auth/session-from-token", url.trim_end_matches('/')))
+        .post(&session_url)
         .json(&serde_json::json!({ "token": token }))
         .send()
         .await
-        .map_err(|e| format!("{}", e))?;
+        .map_err(|e| { eprintln!("[auth_verify] SESSION ERR: {}", e); format!("{}", e) })?;
+    eprintln!("[auth_verify] SESSION {}", session_res.status());
 
     let set_cookie = session_res.headers()
         .get("set-cookie")
