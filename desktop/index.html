@@ -125,9 +125,14 @@
         if(u) {
           $("sv").value=u;
           var tk=localStorage.getItem("mindmatrix-desktop-authToken");
-          if(tk && window.__TAURI__?.core?.invoke) {
-            document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#81a1c1;font-family:-apple-system,sans-serif;font-size:0.9rem;background:#2e3440"><span class="spin"></span> Checking saved session\u2026</div>';
-            window.__TAURI__.core.invoke("auth_verify_token",{url:u,token:tk}).then(function(r){if(r.ok)window.location.replace(u+"/dashboard")}).catch(function(){window.location.reload()});
+          if(tk) {
+            $("tk").value=tk;
+            sw("token");
+            return;
+          }
+          var m=localStorage.getItem("mindmatrix-desktop-authMethod");
+          if(m==="session") {
+            sw("signin");
             return;
           }
         }
