@@ -1,24 +1,325 @@
 <!DOCTYPE html>
-<html><head>
+<html lang="en">
+<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>MindMatrix Desktop</title>
-</head><body>
-<script>
-  (function() {
-    var serverUrl = "http://localhost:3000";
-    try {
-      var saved = localStorage.getItem("mindmatrix-desktop-url");
-      if (saved) serverUrl = saved;
-    } catch (e) {}
-    try {
-      var token = localStorage.getItem("mindmatrix-desktop-authToken");
-      if (token) {
-        window.location.replace(serverUrl + "/dashboard");
-        return;
+  <style>
+    :root {
+      --bg: #2e3440;
+      --bg-card: #3b4252;
+      --fg: #eceff4;
+      --fg-muted: #81a1c1;
+      --accent: #5e81ac;
+      --accent-hover: #81a1c1;
+      --border: #4c566a;
+      --danger: #bf616a;
+      --danger-bg: rgba(191, 97, 106, 0.1);
+      --input-bg: #434c5e;
+      --radius: 8px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2.5rem 2rem;
+      width: 440px;
+      max-width: 100%;
+      text-align: center;
+    }
+    .logo { margin-bottom: 0.5rem; }
+    h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .subtitle { font-size: 0.85rem; color: var(--fg-muted); margin-bottom: 1.5rem; }
+    label {
+      display: block;
+      text-align: left;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--fg-muted);
+      margin-bottom: 0.3rem;
+    }
+    input {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.9rem;
+      color: var(--fg);
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus { border-color: var(--accent); }
+    .field { margin-bottom: 1rem; }
+    .tabs {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+    }
+    .tab {
+      flex: 1;
+      padding: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: var(--bg);
+      color: var(--fg-muted);
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab.active { background: var(--accent); color: #fff; }
+    .tab:not(.active):hover { background: var(--input-bg); }
+    .btn {
+      width: 100%;
+      padding: 0.65rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      margin-top: 0.25rem;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: var(--accent-hover); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .error {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger);
+      border-radius: var(--radius);
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      color: var(--danger);
+      margin-top: 1rem;
+      display: none;
+      text-align: left;
+    }
+    .error.visible { display: block; }
+    .hint {
+      margin-top: 1.5rem;
+      font-size: 0.75rem;
+      color: var(--fg-muted);
+      line-height: 1.6;
+    }
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 0.3rem;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <!-- Logo -->
+    <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="48" height="48">
+      <defs>
+        <linearGradient id="r1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#bf616a"/><stop offset="100%" stop-color="#b48ead"/></linearGradient>
+        <linearGradient id="r2" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#88c0d0"/><stop offset="100%" stop-color="#5e81ac"/></linearGradient>
+        <linearGradient id="r3" x1="100%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#a3be8c"/><stop offset="100%" stop-color="#ebcb8b"/></linearGradient>
+      </defs>
+      <rect width="512" height="512" rx="112" fill="#2e3440"/>
+      <path d="M 100,380 L 160,150 L 220,150 L 160,380 Z" fill="url(#r1)"/>
+      <path d="M 160,150 L 256,280 L 290,260 L 220,150 Z" fill="url(#r2)" opacity="0.95"/>
+      <path d="M 256,280 L 352,150 L 392,165 L 290,260 Z" fill="url(#r3)" opacity="0.9"/>
+      <path d="M 352,150 L 412,380 L 352,380 L 306,210 Z" fill="url(#r1)" opacity="0.85"/>
+      <path d="M 160,380 L 256,310 L 352,380 L 256,340 Z" fill="url(#r2)" style="mix-blend-mode:overlay"/>
+    </svg>
+
+    <h1>MindMatrix Desktop</h1>
+    <p class="subtitle">Connect to your self-hosted server</p>
+
+    <!-- Server URL -->
+    <div class="field">
+      <label for="serverUrl">Server URL</label>
+      <input id="serverUrl" type="url" placeholder="http://192.168.1.26:3000" autofocus />
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" id="tabSignin" onclick="switchTab('signin')">Sign In</button>
+      <button class="tab" id="tabToken" onclick="switchTab('token')">API Token</button>
+    </div>
+
+    <!-- Sign In Form -->
+    <div id="formSignin">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" />
+      </div>
+      <button class="btn" id="btnSignin" onclick="handleSignIn()">Sign In</button>
+    </div>
+
+    <!-- API Token Form -->
+    <div id="formToken" style="display:none">
+      <div class="field">
+        <label for="apiToken">API Token</label>
+        <input id="apiToken" type="password" placeholder="mm_xxxxxxxx..." />
+      </div>
+      <button class="btn" id="btnToken" onclick="handleTokenAuth()">Connect</button>
+    </div>
+
+    <!-- Error -->
+    <div class="error" id="error"></div>
+
+    <!-- Hint -->
+    <p class="hint" id="hintSignin">
+      Find your API token in <strong>Settings → API Tokens</strong> on the server.
+    </p>
+    <p class="hint" id="hintToken" style="display:none">
+      Create an API token on your server, then paste it above.
+    </p>
+  </div>
+
+  <script>
+    var currentTab = "signin";
+
+    function showError(msg) {
+      var el = document.getElementById("error");
+      el.textContent = msg;
+      el.classList.add("visible");
+    }
+    function clearError() {
+      var el = document.getElementById("error");
+      el.classList.remove("visible");
+    }
+    function setLoading(loading) {
+      var btns = document.querySelectorAll(".btn");
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].disabled = loading;
+        if (loading) {
+          btns[i].dataset.originalText = btns[i].textContent;
+          btns[i].innerHTML = '<span class="spinner"></span>Connecting...';
+        } else {
+          btns[i].textContent = btns[i].dataset.originalText || btns[i].textContent;
+        }
       }
-    } catch (e) {}
-    window.location.replace(serverUrl + "/connect");
-  })();
-</script>
-</body></html>
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.getElementById("tabSignin").classList.toggle("active", tab === "signin");
+      document.getElementById("tabToken").classList.toggle("active", tab === "token");
+      document.getElementById("formSignin").style.display = tab === "signin" ? "" : "none";
+      document.getElementById("formToken").style.display = tab === "token" ? "" : "none";
+      document.getElementById("hintSignin").style.display = tab === "signin" ? "" : "none";
+      document.getElementById("hintToken").style.display = tab === "token" ? "" : "none";
+      clearError();
+    }
+
+    function getServerUrl() {
+      var raw = document.getElementById("serverUrl").value.trim();
+      if (!raw) return "";
+      return raw.replace(/\/+$/, "");
+    }
+
+    async function handleSignIn() {
+      clearError();
+      var url = getServerUrl();
+      if (!url) return showError("Enter your server URL.");
+      var email = document.getElementById("email").value.trim();
+      var password = document.getElementById("password").value;
+      if (!email || !password) return showError("Enter your email and password.");
+
+      setLoading(true);
+      try {
+        var res = await fetch(url + "/api/auth/sign-in/email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email, password: password }),
+        });
+        if (!res.ok) {
+          if (res.status === 401) return showError("Invalid email or password.");
+          return showError("Server error (" + res.status + "). Please try again.");
+        }
+        saveAndRedirect(url, { authMethod: "session" });
+      } catch (e) {
+        showError("Could not reach server. Check the URL and your connection.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function handleTokenAuth() {
+      clearError();
+      var url = getServerUrl();
+      if (!url) return showError("Enter your server URL.");
+      var token = document.getElementById("apiToken").value.trim();
+      if (!token) return showError("Enter your API token.");
+
+      setLoading(true);
+      try {
+        var res = await fetch(url + "/api/profile", {
+          headers: { Authorization: "Bearer " + token },
+        });
+        if (!res.ok) {
+          if (res.status === 401) return showError("Invalid API token.");
+          return showError("Server error (" + res.status + "). Please try again.");
+        }
+        saveAndRedirect(url, { authToken: token, authMethod: "token" });
+      } catch (e) {
+        showError("Could not reach server. Check the URL and your connection.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function saveAndRedirect(serverUrl, authData) {
+      try {
+        localStorage.setItem("mindmatrix-desktop-url", serverUrl);
+        for (var key in authData) {
+          localStorage.setItem("mindmatrix-desktop-" + key, authData[key]);
+        }
+      } catch (e) {}
+      window.location.replace(serverUrl + "/dashboard");
+    }
+
+    // Auto-login on page load
+    (function init() {
+      try {
+        var savedUrl = localStorage.getItem("mindmatrix-desktop-url");
+        if (savedUrl) {
+          document.getElementById("serverUrl").value = savedUrl;
+          var token = localStorage.getItem("mindmatrix-desktop-authToken");
+          if (token) {
+            // Quick validation — if it fails, show the form
+            fetch(savedUrl + "/api/profile", {
+              headers: { Authorization: "Bearer " + token }
+            }).then(function(res) {
+              if (res.ok) {
+                window.location.replace(savedUrl + "/dashboard");
+              } else {
+                localStorage.removeItem("mindmatrix-desktop-authToken");
+                localStorage.removeItem("mindmatrix-desktop-authMethod");
+              }
+            }).catch(function() {});
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
+</body>
+</html>
