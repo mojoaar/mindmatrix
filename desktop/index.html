@@ -10,16 +10,7 @@
 (function() {
   var url = "http://localhost:3000";
   try { var s = localStorage.getItem("mindmatrix-desktop-url"); if (s) url = s; } catch(e) {}
-
-  if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
-    navigator.serviceWorker.getRegistrations().then(function(regs) {
-      return Promise.all(regs.map(function(r) { return r.unregister(); }));
-    }).finally(function() {
-      window.location.replace(url + "/connect");
-    });
-  } else {
-    window.location.replace(url + "/connect");
-  }
+  window.location.replace(url + "/connect");
 })();
 </script>
 </body>
