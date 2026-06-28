@@ -40,3 +40,6 @@ public/exports/*
 
 # deploy scripts (local only)
 /scripts/deploy.sh
+
+# screenshot sources (WebP versions are tracked)
+public/screenshots/*.png

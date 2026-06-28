@@ -22,7 +22,7 @@
       <td width="33%" align="center" valign="top">
         <h4>1. Public Landing Page</h4>
         <p><em>The Gateway to Your Hub</em></p>
-        <img src="public/screenshots/landing-page.png" alt="Landing Page" width="100%" height="160"/>
+        <img src="public/screenshots/landing-page.webp" alt="Landing Page" width="100%" height="160"/>
         <br/><br/>
         <p align="left" style="font-size: 0.85em; color: gray;">
           An elegant, responsive landing page featuring an interactive split-view workspace mockup, script-copying quick helpers, and a dynamic Theme Preset Quick Switcher.
@@ -32,7 +32,7 @@
       <td width="33%" align="center" valign="top">
         <h4>2. 2-Column AI Workspace</h4>
         <p><em>Context-Aware AI Prompting</em></p>
-        <img src="public/screenshots/editor-ai.png" alt="2-Column AI Editor" width="100%" height="160"/>
+        <img src="public/screenshots/editor-ai.webp" alt="2-Column AI Editor" width="100%" height="160"/>
         <br/><br/>
         <p align="left" style="font-size: 0.85em; color: gray;">
           A premium split-screen layout that lets you edit CodeMirror Markdown on the left while holding context-aware AI conversations with active profile avatars and 3-attempt exponential backoff on the right.
@@ -42,7 +42,7 @@
       <td width="33%" align="center" valign="top">
         <h4>3. Workspace Dashboard</h4>
         <p><em>Centralized Knowledge Control</em></p>
-        <img src="public/screenshots/dashboard.png" alt="Workspace Dashboard" width="100%" height="160"/>
+        <img src="public/screenshots/dashboard.webp" alt="Workspace Dashboard" width="100%" height="160"/>
         <br/><br/>
         <p align="left" style="font-size: 0.85em; color: gray;">
           A robust, multi-tenant workspace dashboard showing dynamic color-coded tags, sidebar folder filtering, realtime member presence, and responsive notes table column-sorting.
@@ -54,7 +54,7 @@
       <td width="33%" align="center" valign="top">
         <h4>4. Categorized Plugins</h4>
         <p><em>Modular Extension Hub</em></p>
-        <img src="public/screenshots/settings-plugins.png" alt="Categorized Settings" width="100%" height="160"/>
+        <img src="public/screenshots/settings-plugins.webp" alt="Categorized Settings" width="100%" height="160"/>
         <br/><br/>
         <p align="left" style="font-size: 0.85em; color: gray;">
           A beautiful workspace settings panel organized into categorized grids (AI Assistants, Sync tools, and Infrastructure Scanners) secured with AES-256-GCM credentials encryption.
@@ -64,7 +64,7 @@
       <td width="33%" align="center" valign="top">
         <h4>5. In-App Documentation</h4>
         <p><em>Comprehensive Guides & APIs</em></p>
-        <img src="public/screenshots/docs.png" alt="In-App Docs" width="100%" height="160"/>
+        <img src="public/screenshots/docs.webp" alt="In-App Docs" width="100%" height="160"/>
         <br/><br/>
         <p align="left" style="font-size: 0.85em; color: gray;">
           Interactive in-app documentation featuring quick global search, language-specific integration snippets (cURL, Python, JS), and your new dedicated v0.5.0 release history log.
@@ -74,7 +74,7 @@
       <td width="33%" align="center" valign="top">
         <h4>6. Super Admin Panel</h4>
         <p><em>Global Instance Orchestration</em></p>
-        <img src="public/screenshots/admin-panel.png" alt="Super Admin Dashboard" width="100%" height="160"/>
+        <img src="public/screenshots/admin-panel.webp" alt="Super Admin Dashboard" width="100%" height="160"/>
         <br/><br/>
         <p align="left" style="font-size: 0.85em; color: gray;">
           An advanced gated control console mapping system-wide usage statistics, global workspaces, dynamic upload configurations, SMTP setups, and searchable operational audit logging.
