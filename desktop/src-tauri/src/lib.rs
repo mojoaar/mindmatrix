@@ -19,7 +19,12 @@ fn la(msg: &str) {
 }
 
 #[tauri::command]
-async fn auth_signin(url: String, email: String, password: String) -> Result<AuthResult, String> {
+fn read_cookie() -> String {
+    std::fs::read_to_string("/tmp/tauri-cookie.txt").unwrap_or_default()
+}
+
+#[tauri::command]
+async fn auth_signin(url: String, email: String, password: String) -> Result<bool, String> {
     la("SIGNIN");
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
@@ -41,19 +46,18 @@ async fn auth_signin(url: String, email: String, password: String) -> Result<Aut
         .and_then(|v| v.to_str().ok())
         .unwrap_or("")
         .to_string();
+    if !cookie.is_empty() {
+        let _ = std::fs::write("/tmp/tauri-cookie.txt", &cookie);
+    }
     let body = res.text().await.unwrap_or_default();
     la(&format!("BODY {}", &body[..body.len().min(200)]));
     la(&format!("COOKIE {}", &cookie[..cookie.len().min(200)]));
-    if ok {
-        Ok(AuthResult { ok: true, set_cookie: cookie, error: String::new() })
-    } else {
-        let err_msg = body[..body.len().min(200)].to_string();
-        Ok(AuthResult { ok: false, set_cookie: String::new(), error: if err_msg.is_empty() { "Invalid email or password.".into() } else { err_msg } })
-    }
+    la(&format!("RETURN {}", ok));
+    Ok(ok)
 }
 
 #[tauri::command]
-async fn auth_verify_token(url: String, token: String) -> Result<AuthResult, String> {
+async fn auth_verify_token(url: String, token: String) -> Result<bool, String> {
     la("VERIFY");
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
@@ -71,7 +75,7 @@ async fn auth_verify_token(url: String, token: String) -> Result<AuthResult, Str
         .map_err(|e| { la(&format!("ERR {}", e)); format!("{}", e) })?;
     la(&format!("PROFILE {}", res.status()));
     if !res.status().is_success() {
-        return Ok(AuthResult { ok: false, set_cookie: String::new(), error: "Invalid API token.".into() });
+        return Ok(false);
     }
 
     let session_url = format!("{}/api/auth/session-from-token", url.trim_end_matches('/'));
@@ -87,11 +91,16 @@ async fn auth_verify_token(url: String, token: String) -> Result<AuthResult, Str
     let cookie = session_res.headers()
         .get("set-cookie")
         .and_then(|v| v.to_str().ok())
-        .unwrap_or("");
+        .unwrap_or("")
+        .to_string();
+    if !cookie.is_empty() {
+        let _ = std::fs::write("/tmp/tauri-cookie.txt", &cookie);
+    }
     la(&format!("COOKIE {}", &cookie[..cookie.len().min(200)]));
 
     let ok = session_res.status().is_success();
-    Ok(AuthResult { ok, set_cookie: cookie.to_string(), error: if !ok { "Failed to create session.".into() } else { String::new() } })
+    la(&format!("RETURN {}", ok));
+    Ok(ok)
 }
 
 #[derive(Serialize, Clone)]
@@ -154,6 +163,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
+            read_cookie,
             auth_signin,
             auth_verify_token,
             import_markdown_files,

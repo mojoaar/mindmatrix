@@ -95,9 +95,9 @@
 
         sc(true);
         try {
-          var r=await window.__TAURI__.core.invoke("auth_signin",{url:u,email:e,password:p});
-          if(!r.ok)return sh(r.error||"Invalid credentials.");
-          if(r.set_cookie)document.cookie=r.set_cookie;
+          var ok = await window.__TAURI__.core.invoke("auth_signin",{url:u,email:e,password:p});
+          if (!ok) return sh("Invalid email or password.");
+          try { var ck = await window.__TAURI__.core.invoke("read_cookie"); if (ck) document.cookie = ck; } catch(e) {}
           sr(u,{authMethod:"session"});
         } catch(x) { sh(String(x)) } finally { sc(false) }
       });
@@ -113,8 +113,9 @@
 
         sc(true);
         try {
-          var r=await window.__TAURI__.core.invoke("auth_verify_token",{url:u,token:tk});
-          if(!r.ok)return sh(r.error||"Invalid token.");
+          var tok = await window.__TAURI__.core.invoke("auth_verify_token",{url:u,token:tk});
+          if (!tok) return sh("Invalid API token.");
+          try { var ck2 = await window.__TAURI__.core.invoke("read_cookie"); if (ck2) document.cookie = ck2; } catch(e) {}
           sr(u,{authToken:tk,authMethod:"token"});
         } catch(x) { sh(String(x)) } finally { sc(false) }
       });
