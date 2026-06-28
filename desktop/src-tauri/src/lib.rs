@@ -9,8 +9,8 @@ use serde::Serialize;
 #[derive(Serialize)]
 struct AuthResult {
     ok: bool,
-    set_cookie: Option<String>,
-    error: Option<String>,
+    set_cookie: String,
+    error: String,
 }
 
 fn la(msg: &str) {
@@ -34,15 +34,27 @@ async fn auth_signin(url: String, email: String, password: String) -> Result<Aut
         .send()
         .await
         .map_err(|e| { la(&format!("FETCH_ERR {}", e)); format!("{}", e) })?;
-    la(&format!("STATUS {}", res.status()));
-    let ok = res.status().is_success();
-    let set_cookie = res.headers().get("set-cookie").and_then(|v| v.to_str().ok()).map(|s| s.to_string());
-    la(&format!("RETURN ok={}", ok));
-    Ok(AuthResult { ok, set_cookie, error: if !ok { Some("Invalid email or password.".into()) } else { None } })
+    let status = res.status();
+    la(&format!("STATUS {}", status));
+    let ok = status.is_success();
+    let cookie = res.headers().get("set-cookie")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("")
+        .to_string();
+    let body = res.text().await.unwrap_or_default();
+    la(&format!("BODY {}", &body[..body.len().min(200)]));
+    la(&format!("COOKIE {}", &cookie[..cookie.len().min(200)]));
+    if ok {
+        Ok(AuthResult { ok: true, set_cookie: cookie, error: String::new() })
+    } else {
+        let err_msg = body[..body.len().min(200)].to_string();
+        Ok(AuthResult { ok: false, set_cookie: String::new(), error: if err_msg.is_empty() { "Invalid email or password.".into() } else { err_msg } })
+    }
 }
 
 #[tauri::command]
 async fn auth_verify_token(url: String, token: String) -> Result<AuthResult, String> {
+    la("VERIFY");
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .timeout(std::time::Duration::from_secs(15))
@@ -50,36 +62,36 @@ async fn auth_verify_token(url: String, token: String) -> Result<AuthResult, Str
         .map_err(|e| format!("{}", e))?;
 
     let verify_url = format!("{}/api/profile", url.trim_end_matches('/'));
-    eprintln!("[auth_verify] GET {}", verify_url);
+    la(&format!("GET {}", verify_url));
     let res = client
         .get(&verify_url)
         .header("Authorization", format!("Bearer {}", token))
         .send()
         .await
-        .map_err(|e| { eprintln!("[auth_verify] ERR: {}", e); format!("{}", e) })?;
-    eprintln!("[auth_verify] PROFILE {}", res.status());
-    let ok = res.status().is_success();
-    if !ok {
-        return Ok(AuthResult { ok: false, set_cookie: None, error: Some("Invalid API token.".into()) });
+        .map_err(|e| { la(&format!("ERR {}", e)); format!("{}", e) })?;
+    la(&format!("PROFILE {}", res.status()));
+    if !res.status().is_success() {
+        return Ok(AuthResult { ok: false, set_cookie: String::new(), error: "Invalid API token.".into() });
     }
 
     let session_url = format!("{}/api/auth/session-from-token", url.trim_end_matches('/'));
-    eprintln!("[auth_verify] POST {}", session_url);
+    la(&format!("POST {}", session_url));
     let session_res = client
         .post(&session_url)
         .json(&serde_json::json!({ "token": token }))
         .send()
         .await
-        .map_err(|e| { eprintln!("[auth_verify] SESSION ERR: {}", e); format!("{}", e) })?;
-    eprintln!("[auth_verify] SESSION {}", session_res.status());
+        .map_err(|e| { la(&format!("SESSION_ERR {}", e)); format!("{}", e) })?;
+    la(&format!("SESSION {}", session_res.status()));
 
-    let set_cookie = session_res.headers()
+    let cookie = session_res.headers()
         .get("set-cookie")
         .and_then(|v| v.to_str().ok())
-        .map(|s| s.to_string());
+        .unwrap_or("");
+    la(&format!("COOKIE {}", &cookie[..cookie.len().min(200)]));
 
-    let session_ok = session_res.status().is_success();
-    Ok(AuthResult { ok: session_ok, set_cookie, error: if !session_ok { Some("Failed to create session.".into()) } else { None } })
+    let ok = session_res.status().is_success();
+    Ok(AuthResult { ok, set_cookie: cookie.to_string(), error: if !ok { "Failed to create session.".into() } else { String::new() } })
 }
 
 #[derive(Serialize, Clone)]
