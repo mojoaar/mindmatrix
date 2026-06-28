@@ -39,9 +39,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { userId, type, title, message, link } = await request.json();
+  const { type, title, message, link } = await request.json();
 
-  if (!userId || !type || !title || !message) {
+  if (!type || !title || !message) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
 
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     .insert(notification)
     .values({
       id: crypto.randomUUID(),
-      userId,
+      userId: session.user.id,
       type,
       title,
       message,

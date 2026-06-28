@@ -381,8 +381,10 @@ export default function NoteEditorPage() {
   }, []);
 
   const uploadImageFile = useCallback(async (file: File) => {
+    if (!note) return;
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("workspaceId", note.workspaceId);
 
     try {
       const res = await fetch("/api/notes/upload", {

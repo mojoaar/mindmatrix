@@ -93,7 +93,7 @@ src/
 │   ├── use-realtime-note.ts         # SSE + presence heartbeat hook
 │   ├── use-prism.ts                 # PrismJS autoloader syntax highlighting
 │   └── use-mermaid.ts               # Mermaid.js CDN diagram renderer
-├── middleware.ts                    # Route protection via cookie check
+├── proxy.ts                        # Route protection via cookie check
 └── __tests__/                       # Vitest tests
 ```
 

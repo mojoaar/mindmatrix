@@ -5,6 +5,8 @@ import { workspace, workspaceMember } from "@/lib/db";
 import { inArray, eq } from "drizzle-orm";
 import { toSlug, ensureUniqueSlug } from "@/lib/slug";
 import { logAction } from "@/lib/audit";
+import { createWorkspaceSchema } from "@/lib/validations";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({
@@ -54,10 +56,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { name, description, icon } = await request.json();
-  if (!name || typeof name !== "string") {
-    return NextResponse.json({ error: "Name is required" }, { status: 400 });
+  const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
+  if (!(await rateLimit(`workspaces:${ip}`, 10, 60000))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
+
+  const body = await request.json();
+  const parsed = createWorkspaceSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+  const { name, description, icon } = parsed.data;
 
   const id = crypto.randomUUID();
   const baseSlug = toSlug(name);

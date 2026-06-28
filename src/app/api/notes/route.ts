@@ -4,6 +4,8 @@ import { auth } from "@/lib/auth";
 import { eq, and, or, ilike } from "drizzle-orm";
 import { logAction } from "@/lib/audit";
 import { triggerWebhooks } from "@/lib/webhooks";
+import { createNoteSchema } from "@/lib/validations";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -64,10 +66,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { workspaceId, folderId, title, content, tagIds } = await request.json();
-  if (!title || !workspaceId) {
-    return NextResponse.json({ error: "Title and workspaceId are required" }, { status: 400 });
+  const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
+  if (!(await rateLimit(`notes:${ip}`, 30, 60000))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
+
+  const body = await request.json();
+  const parsed = createNoteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+  const { workspaceId, folderId, title, content, tagIds } = parsed.data;
 
   const member = await db.query.workspaceMember.findFirst({
     where: and(eq(workspaceMember.workspaceId, workspaceId), eq(workspaceMember.userId, session.user.id)),

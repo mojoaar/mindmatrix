@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { db, systemConfig as systemConfigTable } from "@/lib/db";
+import { db, systemConfig as systemConfigTable, workspaceMember } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { logAction } from "@/lib/audit";
 import crypto from "crypto";
+import { eq, and } from "drizzle-orm";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "notes");
 const DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
@@ -40,6 +41,19 @@ export async function POST(request: Request) {
 
     if (!file || !(file instanceof File)) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    }
+
+    const workspaceId = formData.get("workspaceId") as string | null;
+    if (workspaceId) {
+      const member = await db.query.workspaceMember.findFirst({
+        where: and(
+          eq(workspaceMember.workspaceId, workspaceId),
+          eq(workspaceMember.userId, session.user.id),
+        ),
+      });
+      if (!member || member.role === "viewer") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
     }
 
     const configRow = await db.query.systemConfig.findMany();

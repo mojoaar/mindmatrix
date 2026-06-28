@@ -3,6 +3,7 @@ import { z } from "zod";
 export const createWorkspaceSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
+  icon: z.string().optional(),
 });
 
 export const updateWorkspaceSchema = z.object({
@@ -28,12 +29,14 @@ export const updateNoteSchema = z.object({
   content: z.string().optional(),
   folderId: z.string().uuid().nullable().optional(),
   tagIds: z.array(z.string().uuid()).optional(),
+  isPublic: z.boolean().optional(),
 });
 
 export const createFolderSchema = z.object({
   workspaceId: z.string().uuid(),
   parentId: z.string().uuid().nullable().optional(),
   name: z.string().min(1).max(200),
+  icon: z.string().optional(),
 });
 
 export const updateFolderSchema = z.object({

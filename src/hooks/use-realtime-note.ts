@@ -89,10 +89,27 @@ export function useRealtimeNote(
     const ydoc = ydocRef.current;
     const ytext = ytextRef.current;
 
+    const uint8ArrayToBase64 = (bytes: Uint8Array): string => {
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary);
+    };
+
+    const base64ToUint8Array = (b64: string): Uint8Array => {
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes;
+    };
+
     // Handle local updates and POST to server
     const handleLocalUpdate = (update: Uint8Array, origin: any) => {
       if (origin === "local") {
-        const base64Update = Buffer.from(update).toString("base64");
+        const base64Update = uint8ArrayToBase64(update);
         fetch(`/api/notes/${noteId}/delta`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -125,7 +142,7 @@ export function useRealtimeNote(
           if (ydoc && yjsData.clientID !== ydoc.clientID && ytext) {
             suppressUpdateRef.current = true;
             try {
-              const updateBinary = new Uint8Array(Buffer.from(yjsData.update, "base64"));
+              const updateBinary = base64ToUint8Array(yjsData.update);
               Y.applyUpdate(ydoc, updateBinary, "remote");
               if (onRemoteUpdate) {
                 onRemoteUpdate(ytext.toString());

@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
 import { getPlugin } from "@/plugins";
+import { auth } from "@/lib/auth";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ plugin: string[] }> }
 ) {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { plugin } = await params;
   const [pluginId, ...rest] = plugin;
   const route = rest.join("/") || "";
@@ -26,6 +32,11 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ plugin: string[] }> }
 ) {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { plugin } = await params;
   const [pluginId, ...rest] = plugin;
   const route = rest.join("/") || "";

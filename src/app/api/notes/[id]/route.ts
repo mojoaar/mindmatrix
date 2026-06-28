@@ -6,6 +6,8 @@ import { getEventBus } from "@/lib/realtime/event-bus";
 import { logAction } from "@/lib/audit";
 import { triggerWebhooks } from "@/lib/webhooks";
 import { createNotification } from "@/lib/notifications";
+import { updateNoteSchema } from "@/lib/validations";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -66,7 +68,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { title, content, folderId, tagIds, isPublic } = await request.json();
+  const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
+  if (!(await rateLimit(`notes:update:${ip}`, 30, 60000))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  const body = await request.json();
+  const parsed = updateNoteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+  const { title, content, folderId, tagIds, isPublic } = parsed.data;
   const update: Record<string, unknown> = { updatedById: session.user.id };
   if (title !== undefined) {
     update.title = title;

@@ -2,11 +2,17 @@ import { NextResponse } from "next/server";
 import { db, note, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and, or, ilike, inArray } from "drizzle-orm";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
+  if (!(await rateLimit(`search:${ip}`, 60, 60000))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
   const { searchParams } = new URL(request.url);

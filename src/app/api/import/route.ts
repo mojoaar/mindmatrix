@@ -3,6 +3,8 @@ import { db, note, workspaceMember } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and } from "drizzle-orm";
 import { logAction } from "@/lib/audit";
+import { importNotesSchema } from "@/lib/validations";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -10,11 +12,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { workspaceId, notes: importedNotes } = await request.json();
-
-  if (!workspaceId || !importedNotes || !Array.isArray(importedNotes)) {
-    return NextResponse.json({ error: "workspaceId and notes[] are required" }, { status: 400 });
+  const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
+  if (!(await rateLimit(`import:${ip}`, 5, 120000))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
+
+  const body = await request.json();
+  const parsed = importNotesSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+  const { workspaceId, notes: importedNotes } = parsed.data;
 
   const member = await db.query.workspaceMember.findFirst({
     where: and(eq(workspaceMember.workspaceId, workspaceId), eq(workspaceMember.userId, session.user.id)),
