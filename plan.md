@@ -429,15 +429,15 @@ Stored in `localStorage` key `mindmatrix-theme` and `mindmatrix-font`. Applied v
 ### 1. Overview
 Build Tauri desktop and PWA Android clients. MindMatrix stays as the self-hosted backend (Docker, full REST API). Clients talk via existing REST API + SSE.
 
-### 2. Phase 1: PWA + CORS + Delta Sync (1-2 days)
+### 2. Phase 1: PWA + CORS + Delta Sync (Completed ✅ — v0.6.1)
 
-| Task | File | Description |
-| ---- | ---- | ----------- |
-| Upgrade manifest icons | `src/app/manifest.ts` | Add 192x192 and 512x512 PNG icons with `"purpose": "any maskable"` |
-| Service Worker | `public/sw.js` | Cache-first for static assets, network-first for API. Registered via inline `<script>` in root layout |
-| CORS middleware | `src/middleware.ts` | Global CORS headers via `ALLOWED_ORIGINS` env var. Handle OPTIONS preflight |
-| Delta sync endpoint | `src/app/api/sync/notes/route.ts` | `GET /api/sync/notes?workspaceId=X&since=ISO8601` returns changed notes + cursor |
-| PWA icons | `public/icon-192.png`, `public/icon-512.png` | PNG exports of the SVG ribbon logo at 192x192 and 512x512 |
+| Task | File | Description | Status |
+| ---- | ---- | ----------- | ------ |
+| Upgrade manifest icons | `src/app/manifest.ts` | Added 192x192 and 512x512 PNG icons with `"purpose": "maskable"`, categories, updated start_url to `/dashboard` | ✅ |
+| Service Worker | `public/sw.js` | Cache-first for static assets, network-first for API. Registered via inline `<Script>` in root layout | ✅ |
+| CORS configuration | `next.config.ts` | Global CORS headers via `ALLOWED_ORIGINS` → `NEXT_PUBLIC_APP_URL` → `localhost:3000` fallback chain. OPTIONS preflight handled by Next.js `headers()` config | ✅ |
+| Delta sync endpoint | `src/app/api/sync/notes/route.ts` | `GET /api/sync/notes?workspaceId=X&since=ISO8601` returns changed notes + cursor. Auth via session or Bearer token | ✅ |
+| PWA icons | `public/icon-192.png`, `public/icon-512.png` | PNG exports of the SVG ribbon logo generated via sips at 192x192 and 512x512 | ✅ |
 
 ### 3. Phase 2: Tauri Desktop Shell (2-3 days)
 - **Framework**: Tauri v2 (Rust backend + webview)

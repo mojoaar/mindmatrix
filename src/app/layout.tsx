@@ -157,6 +157,13 @@ export default function RootLayout({
         <ThemeProvider>
           <ToastProvider>{children}</ToastProvider>
         </ThemeProvider>
+        <Script id="sw-register" strategy="afterInteractive">
+          {`if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+              .then(function(reg) { console.log('SW registered:', reg.scope); })
+              .catch(function() {});
+          }`}
+        </Script>
       </body>
     </html>
   );
