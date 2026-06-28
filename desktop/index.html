@@ -246,15 +246,10 @@
 
       setLoading(true);
       try {
-        var res = await fetch(url + "/api/auth/sign-in/email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email, password: password }),
+        var ok = await window.__TAURI__.core.invoke("auth_signin", {
+          url: url, email: email, password: password,
         });
-        if (!res.ok) {
-          if (res.status === 401) return showError("Invalid email or password.");
-          return showError("Server error (" + res.status + "). Please try again.");
-        }
+        if (!ok) return showError("Invalid email or password.");
         saveAndRedirect(url, { authMethod: "session" });
       } catch (e) {
         showError("Could not reach server. Check the URL and your connection.");
@@ -272,13 +267,10 @@
 
       setLoading(true);
       try {
-        var res = await fetch(url + "/api/profile", {
-          headers: { Authorization: "Bearer " + token },
+        var ok = await window.__TAURI__.core.invoke("auth_verify_token", {
+          url: url, token: token,
         });
-        if (!res.ok) {
-          if (res.status === 401) return showError("Invalid API token.");
-          return showError("Server error (" + res.status + "). Please try again.");
-        }
+        if (!ok) return showError("Invalid API token.");
         saveAndRedirect(url, { authToken: token, authMethod: "token" });
       } catch (e) {
         showError("Could not reach server. Check the URL and your connection.");
@@ -305,11 +297,10 @@
           document.getElementById("serverUrl").value = savedUrl;
           var token = localStorage.getItem("mindmatrix-desktop-authToken");
           if (token) {
-            // Quick validation — if it fails, show the form
-            fetch(savedUrl + "/api/profile", {
-              headers: { Authorization: "Bearer " + token }
-            }).then(function(res) {
-              if (res.ok) {
+            window.__TAURI__.core.invoke("auth_verify_token", {
+              url: savedUrl, token: token,
+            }).then(function(ok) {
+              if (ok) {
                 window.location.replace(savedUrl + "/dashboard");
               } else {
                 localStorage.removeItem("mindmatrix-desktop-authToken");

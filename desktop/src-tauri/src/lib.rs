@@ -6,6 +6,30 @@ use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_fs::FsExt;
 use serde::Serialize;
 
+#[tauri::command]
+async fn auth_signin(url: String, email: String, password: String) -> Result<bool, String> {
+    let client = reqwest::Client::new();
+    let res = client
+        .post(format!("{}/api/auth/sign-in/email", url))
+        .json(&serde_json::json!({ "email": email, "password": password }))
+        .send()
+        .await
+        .map_err(|e| format!("Connection failed: {}", e))?;
+    Ok(res.status().is_success())
+}
+
+#[tauri::command]
+async fn auth_verify_token(url: String, token: String) -> Result<bool, String> {
+    let client = reqwest::Client::new();
+    let res = client
+        .get(format!("{}/api/profile", url))
+        .header("Authorization", format!("Bearer {}", token))
+        .send()
+        .await
+        .map_err(|e| format!("Connection failed: {}", e))?;
+    Ok(res.status().is_success())
+}
+
 #[derive(Serialize, Clone)]
 struct ImportNote {
     title: String,
@@ -66,6 +90,8 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
+            auth_signin,
+            auth_verify_token,
             import_markdown_files,
             export_note_file,
         ])
