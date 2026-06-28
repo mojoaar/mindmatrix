@@ -67,10 +67,8 @@ export default function ConnectPage() {
   async function saveAndRedirect(serverUrl: string, authData: Record<string, string>) {
     if (typeof window !== "undefined" && window.__TAURI__) {
       try {
-        // Dynamic import — only resolves in Tauri desktop builds
-        // @ts-expect-error - @tauri-apps/plugin-store is a Tauri-only dependency
         const { load } = await import("@tauri-apps/plugin-store");
-        const store = await load("mindmatrix-config.json", { autoSave: true });
+        const store = await load("mindmatrix-config.json", { autoSave: true } as any);
         await store.set("serverUrl", serverUrl);
         for (const [key, value] of Object.entries(authData)) {
           await store.set(key, value);

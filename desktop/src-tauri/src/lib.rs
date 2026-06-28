@@ -45,7 +45,24 @@ async fn auth_verify_token(url: String, token: String) -> Result<AuthResult, Str
         .await
         .map_err(|e| format!("{}", e))?;
     let ok = res.status().is_success();
-    Ok(AuthResult { ok, set_cookie: None, error: if !ok { Some("Invalid API token.".into()) } else { None } })
+    if !ok {
+        return Ok(AuthResult { ok: false, set_cookie: None, error: Some("Invalid API token.".into()) });
+    }
+
+    let session_res = client
+        .post(format!("{}/api/auth/session-from-token", url.trim_end_matches('/')))
+        .json(&serde_json::json!({ "token": token }))
+        .send()
+        .await
+        .map_err(|e| format!("{}", e))?;
+
+    let set_cookie = session_res.headers()
+        .get("set-cookie")
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string());
+
+    let session_ok = session_res.status().is_success();
+    Ok(AuthResult { ok: session_ok, set_cookie, error: if !session_ok { Some("Failed to create session.".into()) } else { None } })
 }
 
 #[derive(Serialize, Clone)]
