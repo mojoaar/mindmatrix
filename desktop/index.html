@@ -47,73 +47,88 @@
     <div id="fmS">
       <div class="field"><label for="em">Email</label><input id="em" type="email" placeholder="you@example.com" /></div>
       <div class="field"><label for="pw">Password</label><input id="pw" type="password" placeholder="••••••••" /></div>
-      <button class="btn" id="btS" onclick="doSignin()">Sign In</button>
+      <button type="button" class="btn" id="btS">Sign In</button>
     </div>
     <div id="fmT" style="display:none">
       <div class="field"><label for="tk">API Token</label><input id="tk" type="password" placeholder="mm_xxxxxxxx..." /></div>
-      <button class="btn" id="btT" onclick="doToken()">Connect</button>
+      <button type="button" class="btn" id="btT">Connect</button>
     </div>
     <div class="err" id="er"></div>
     <p class="hint" id="hiS">Find your API token in <strong>Settings → API Tokens</strong> on the server.</p>
     <p class="hint" id="hiT" style="display:none">Create an API token on your server, then paste it above.</p>
   </div>
   <script>
-    var ct = "signin";
     function sh(m) { var e=document.getElementById("er");e.textContent=m;e.classList.add("visible") }
     function cl() { document.getElementById("er").classList.remove("visible") }
-    function ld(v) {
+    function gs() { var r=document.getElementById("sv").value.trim();return r?r.replace(/\/+$/,""):"" }
+    function sr(url,ad) {
+      try { localStorage.setItem("mindmatrix-desktop-url",url);for(var k in ad) localStorage.setItem("mindmatrix-desktop-"+k,ad[k]) } catch(e) {}
+      window.location.replace(url+"/dashboard");
+    }
+    function ta() {
+      if(typeof window.__TAURI__==="undefined"||!window.__TAURI__.invoke) { sh("Tauri API not ready. Restart the app.");return null }
+      return window.__TAURI__;
+    }
+    function sc(v) {
       var bs=document.querySelectorAll(".btn");
       for(var i=0;i<bs.length;i++) { bs[i].disabled=v;bs[i].innerHTML=v?'<span class="spin"></span>Connecting...':bs[i].dataset.t||bs[i].textContent }
       if(!v) for(var j=0;j<bs.length;j++) { var b=bs[j];if(!b.dataset.t)b.dataset.t=b.textContent }
     }
-    function sw(t) { ct=t;document.getElementById("tbS").classList.toggle("active",t==="signin");document.getElementById("tbT").classList.toggle("active",t==="token");document.getElementById("fmS").style.display=t==="signin"?"":"none";document.getElementById("fmT").style.display=t==="token"?"":"none";document.getElementById("hiS").style.display=t==="signin"?"":"none";document.getElementById("hiT").style.display=t==="token"?"":"none";cl() }
-    function gs() { var r=document.getElementById("sv").value.trim();return r?r.replace(/\/+$/,""):"" }
-    async function doSignin() {
-      cl();var u=gs();if(!u)return sh("Enter your server URL.");
-      var e=document.getElementById("em").value.trim(),p=document.getElementById("pw").value;
-      if(!e||!p)return sh("Enter your email and password.");
-      ld(true);
-      try {
-        var r=await window.__TAURI__.invoke("auth_signin",{url:u,email:e,password:p});
-        if(!r.ok)return sh(r.error||"Invalid credentials.");
-        if(r.set_cookie)document.cookie=r.set_cookie;
-        sr(u,{authMethod:"session"});
-      } catch(x) { sh(String(x)) } finally { ld(false) }
+    function sw(t) {
+      document.getElementById("tbS").classList.toggle("active",t==="signin");
+      document.getElementById("tbT").classList.toggle("active",t==="token");
+      document.getElementById("fmS").style.display=t==="signin"?"":"none";
+      document.getElementById("fmT").style.display=t==="token"?"":"none";
+      document.getElementById("hiS").style.display=t==="signin"?"":"none";
+      document.getElementById("hiT").style.display=t==="token"?"":"none";
+      cl();
     }
-    async function doToken() {
-      cl();var u=gs();if(!u)return sh("Enter your server URL.");
-      var t=document.getElementById("tk").value.trim();if(!t)return sh("Enter your API token.");
-      ld(true);
-      try {
-        var r=await window.__TAURI__.invoke("auth_verify_token",{url:u,token:t});
-        if(!r.ok)return sh(r.error||"Invalid token.");
-        sr(u,{authToken:t,authMethod:"token"});
-      } catch(x) { sh(String(x)) } finally { ld(false) }
-    }
-    function sr(url,ad) {
-      try {
-        localStorage.setItem("mindmatrix-desktop-url",url);
-        for(var k in ad) localStorage.setItem("mindmatrix-desktop-"+k,ad[k]);
-      } catch(e) {}
-      window.location.replace(url+"/dashboard");
-    }
-    (function() {
+
+    document.addEventListener("DOMContentLoaded",function() {
       document.getElementById("tbS").addEventListener("click",function(){sw("signin")});
       document.getElementById("tbT").addEventListener("click",function(){sw("token")});
+
+      document.getElementById("btS").addEventListener("click",async function() {
+        cl();var u=gs();if(!u)return sh("Enter your server URL.");
+        var e=document.getElementById("em").value.trim(),p=document.getElementById("pw").value;
+        if(!e||!p)return sh("Enter your email and password.");
+        var t=ta();if(!t)return;
+        sc(true);
+        try {
+          var r=await t.invoke("auth_signin",{url:u,email:e,password:p});
+          if(!r.ok)return sh(r.error||"Invalid credentials.");
+          if(r.set_cookie)document.cookie=r.set_cookie;
+          sr(u,{authMethod:"session"});
+        } catch(x) { sh(String(x)) } finally { sc(false) }
+      });
+
+      document.getElementById("btT").addEventListener("click",async function() {
+        cl();var u=gs();if(!u)return sh("Enter your server URL.");
+        var tk=document.getElementById("tk").value.trim();if(!tk)return sh("Enter your API token.");
+        var t=ta();if(!t)return;
+        sc(true);
+        try {
+          var r=await t.invoke("auth_verify_token",{url:u,token:tk});
+          if(!r.ok)return sh(r.error||"Invalid token.");
+          sr(u,{authToken:tk,authMethod:"token"});
+        } catch(x) { sh(String(x)) } finally { sc(false) }
+      });
+
       try {
         var u=localStorage.getItem("mindmatrix-desktop-url");
         if(u) {
           document.getElementById("sv").value=u;
-          var t=localStorage.getItem("mindmatrix-desktop-authToken");
-          if(t) {
+          var tk=localStorage.getItem("mindmatrix-desktop-authToken");
+          if(tk) {
             document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#81a1c1;font-family:-apple-system,sans-serif;font-size:0.9rem;background:#2e3440"><span class="spin"></span> Checking saved session…</div>';
-            window.__TAURI__.invoke("auth_verify_token",{url:u,token:t}).then(function(r){if(r.ok)window.location.replace(u+"/dashboard")}).catch(function(){window.location.reload()});
+            var t=ta();
+            if(t) t.invoke("auth_verify_token",{url:u,token:tk}).then(function(r){if(r.ok)window.location.replace(u+"/dashboard")}).catch(function(){window.location.reload()});
             return;
           }
         }
       } catch(e) {}
       sw("signin");
-    })();
+    });
   </script>
 </body>
 </html>
