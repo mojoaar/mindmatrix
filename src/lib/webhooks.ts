@@ -1,8 +1,15 @@
-import { db, webhook } from "@/lib/db";
+import { db, webhook, webhookDeliveryLog } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
 import { decrypt } from "@/lib/crypto";
 import { isSafeUrl, getSafeResolvedUrl } from "@/lib/security";
+
+export const WEBHOOK_EVENTS = [
+  "note.created", "note.updated", "note.deleted",
+  "folder.created", "folder.updated", "folder.deleted",
+  "tag.created", "tag.updated", "tag.deleted",
+] as const;
+export type WebhookEvent = typeof WEBHOOK_EVENTS[number];
 
 export interface WebhookOperator {
   id: string;
@@ -10,9 +17,53 @@ export interface WebhookOperator {
   email: string;
 }
 
+async function dispatchWithRetry(
+  url: string,
+  headers: Record<string, string>,
+  body: string,
+  wh: typeof webhook.$inferSelect,
+  event: string,
+  maxAttempts = 3
+) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers,
+        body,
+        signal: AbortSignal.timeout(5000),
+      });
+
+      await db.insert(webhookDeliveryLog).values({
+        id: crypto.randomUUID(),
+        webhookId: wh.id,
+        event,
+        statusCode: res.status,
+        success: res.ok,
+        attempt,
+      });
+
+      if (res.ok) return;
+    } catch (err) {
+      await db.insert(webhookDeliveryLog).values({
+        id: crypto.randomUUID(),
+        webhookId: wh.id,
+        event,
+        success: false,
+        error: String(err),
+        attempt,
+      });
+    }
+
+    if (attempt < maxAttempts) {
+      await new Promise((r) => setTimeout(r, Math.pow(2, attempt) * 1000));
+    }
+  }
+}
+
 export async function triggerWebhooks(
   workspaceId: string,
-  event: string,
+  event: WebhookEvent,
   data: Record<string, any>,
   operator?: WebhookOperator | null
 ) {
@@ -49,14 +100,16 @@ export async function triggerWebhooks(
           try {
             const resolved = await getSafeResolvedUrl(wh.url);
             if (!resolved) {
-              console.warn(`SSRF Prevention: Aborted webhook dispatch to internal/private target URL: ${wh.url}`);
+              console.warn(
+                `SSRF Prevention: Aborted webhook dispatch to internal/private target URL: ${wh.url}`
+              );
               return;
             }
 
             const headers: Record<string, string> = {
               "Content-Type": "application/json",
               "User-Agent": "MindMatrix-Webhook-Engine/0.5.0",
-              "Host": resolved.host,
+              Host: resolved.host,
             };
 
             if (wh.secret) {
@@ -70,18 +123,12 @@ export async function triggerWebhooks(
               }
             }
 
-            const response = await fetch(resolved.url, {
-              method: "POST",
-              headers,
-              body,
-              signal: AbortSignal.timeout(5000), // Timeout after 5 seconds to prevent hanging
-            });
-
-            if (!response.ok) {
-              console.error(`Webhook target ${wh.url} returned status ${response.status}`);
-            }
+            await dispatchWithRetry(resolved.url, headers, body, wh, event);
           } catch (err: any) {
-            console.error(`Failed to dispatch webhook to ${wh.url}:`, err.message || err);
+            console.error(
+              `Failed to dispatch webhook to ${wh.url}:`,
+              err.message || err
+            );
           }
         })
       );

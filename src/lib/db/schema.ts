@@ -369,6 +369,17 @@ export const webhook = pgTable(
   })
 );
 
+export const webhookDeliveryLog = pgTable("webhook_delivery_log", {
+  id: text("id").primaryKey(),
+  webhookId: text("webhook_id").notNull(),
+  event: text("event").notNull(),
+  statusCode: integer("status_code"),
+  success: boolean("success").notNull().default(false),
+  error: text("error"),
+  attempt: integer("attempt").notNull().default(1),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // ---- Relations ----
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -599,6 +610,13 @@ export const webhookRelations = relations(webhook, ({ one }) => ({
   workspace: one(workspace, {
     fields: [webhook.workspaceId],
     references: [workspace.id],
+  }),
+}));
+
+export const webhookDeliveryLogRelations = relations(webhookDeliveryLog, ({ one }) => ({
+  webhook: one(webhook, {
+    fields: [webhookDeliveryLog.webhookId],
+    references: [webhook.id],
   }),
 }));
 
