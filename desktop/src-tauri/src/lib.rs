@@ -6,103 +6,6 @@ use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_fs::FsExt;
 use serde::Serialize;
 
-#[derive(Serialize)]
-struct AuthResult {
-    ok: bool,
-    set_cookie: String,
-    error: String,
-}
-
-fn la(msg: &str) {
-    let prev = std::fs::read_to_string("/tmp/tauri-auth.log").unwrap_or_default();
-    let _ = std::fs::write("/tmp/tauri-auth.log", format!("{}{}\n", prev, msg));
-}
-
-#[tauri::command]
-fn read_cookie() -> String {
-    std::fs::read_to_string("/tmp/tauri-cookie.txt").unwrap_or_default()
-}
-
-#[tauri::command]
-async fn auth_signin(url: String, email: String, password: String) -> Result<bool, String> {
-    la("SIGNIN");
-    let client = reqwest::Client::builder()
-        .danger_accept_invalid_certs(true)
-        .timeout(std::time::Duration::from_secs(15))
-        .build()
-        .map_err(|e| { la(&format!("CLIENT_ERR {}", e)); format!("{}", e) })?;
-    la("CLIENT_OK");
-    let url_signed = format!("{}/api/auth/sign-in/email", url.trim_end_matches('/'));
-    let res = client
-        .post(&url_signed)
-        .json(&serde_json::json!({"email": email, "password": password}))
-        .send()
-        .await
-        .map_err(|e| { la(&format!("FETCH_ERR {}", e)); format!("{}", e) })?;
-    let status = res.status();
-    la(&format!("STATUS {}", status));
-    let ok = status.is_success();
-    let cookie = res.headers().get("set-cookie")
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("")
-        .to_string();
-    if !cookie.is_empty() {
-        let _ = std::fs::write("/tmp/tauri-cookie.txt", &cookie);
-    }
-    let body = res.text().await.unwrap_or_default();
-    la(&format!("BODY {}", &body[..body.len().min(200)]));
-    la(&format!("COOKIE {}", &cookie[..cookie.len().min(200)]));
-    la(&format!("RETURN {}", ok));
-    Ok(ok)
-}
-
-#[tauri::command]
-async fn auth_verify_token(url: String, token: String) -> Result<bool, String> {
-    la("VERIFY");
-    let client = reqwest::Client::builder()
-        .danger_accept_invalid_certs(true)
-        .timeout(std::time::Duration::from_secs(15))
-        .build()
-        .map_err(|e| format!("{}", e))?;
-
-    let verify_url = format!("{}/api/profile", url.trim_end_matches('/'));
-    la(&format!("GET {}", verify_url));
-    let res = client
-        .get(&verify_url)
-        .header("Authorization", format!("Bearer {}", token))
-        .send()
-        .await
-        .map_err(|e| { la(&format!("ERR {}", e)); format!("{}", e) })?;
-    la(&format!("PROFILE {}", res.status()));
-    if !res.status().is_success() {
-        return Ok(false);
-    }
-
-    let session_url = format!("{}/api/auth/session-from-token", url.trim_end_matches('/'));
-    la(&format!("POST {}", session_url));
-    let session_res = client
-        .post(&session_url)
-        .json(&serde_json::json!({ "token": token }))
-        .send()
-        .await
-        .map_err(|e| { la(&format!("SESSION_ERR {}", e)); format!("{}", e) })?;
-    la(&format!("SESSION {}", session_res.status()));
-
-    let cookie = session_res.headers()
-        .get("set-cookie")
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("")
-        .to_string();
-    if !cookie.is_empty() {
-        let _ = std::fs::write("/tmp/tauri-cookie.txt", &cookie);
-    }
-    la(&format!("COOKIE {}", &cookie[..cookie.len().min(200)]));
-
-    let ok = session_res.status().is_success();
-    la(&format!("RETURN {}", ok));
-    Ok(ok)
-}
-
 #[derive(Serialize, Clone)]
 struct ImportNote {
     title: String,
@@ -163,9 +66,6 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
-            read_cookie,
-            auth_signin,
-            auth_verify_token,
             import_markdown_files,
             export_note_file,
         ])
