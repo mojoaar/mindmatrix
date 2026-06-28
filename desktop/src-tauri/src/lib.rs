@@ -6,6 +6,9 @@ use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_fs::FsExt;
 use serde::Serialize;
 
+#[cfg(target_os = "macos")]
+use objc::{msg_send, sel, sel_impl};
+
 #[derive(Serialize, Clone)]
 struct ImportNote {
     title: String,
@@ -70,6 +73,13 @@ pub fn run() {
             export_note_file,
         ])
         .setup(|app| {
+            // Clear NSURLCache on macOS — prevents stale Next.js chunks
+            #[cfg(target_os = "macos")]
+            unsafe {
+                let cache: *mut objc::runtime::Object = objc::msg_send![objc::class!(NSURLCache), sharedURLCache];
+                let _: () = objc::msg_send![cache, removeAllCachedResponses];
+            }
+
             // App menu (macOS — first menu, named after the app)
             let app_menu = SubmenuBuilder::new(app, "MindMatrix Desktop")
                 .item(&MenuItemBuilder::with_id("about", "About MindMatrix Desktop").build(app)?)
