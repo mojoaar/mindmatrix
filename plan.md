@@ -438,3 +438,41 @@ As MindMatrix transitions from single-note prompting to workspace-wide context, 
 - **Database vector support** — Introduce `pgvector` extension to our PostgreSQL container schema to store high-dimensional semantic vectors for note blocks.
 - **Incremental Asynchronous Auditor** — Implement an asynchronous background queue (using pg-boss or lightweight Postgres LISTEN/NOTIFY workers) that process note updates incrementally, rather than running expensive LLM scans on active page loads.
 - **Centralized AI Copilot Console** — A new Workspace settings tab grouping audit logs into categorized filter tabs (**[Taxonomy Gaps]**, **[Link Discoveries]**, and **[Title Fixes]**) with direct database bulk updates.
+
+---
+
+## v0.6.0 — Desktop & Mobile Clients Plan
+
+### 1. Overview
+Build Tauri desktop and PWA Android clients. MindMatrix stays as the self-hosted backend (Docker, full REST API). Clients talk via existing REST API + SSE.
+
+### 2. Phase 1: PWA + CORS + Delta Sync (1-2 days)
+
+| Task | File | Description |
+| ---- | ---- | ----------- |
+| Upgrade manifest icons | `src/app/manifest.ts` | Add 192x192 and 512x512 PNG icons with `"purpose": "any maskable"` |
+| Service Worker | `public/sw.js` | Cache-first for static assets, network-first for API. Registered via inline `<script>` in root layout |
+| CORS middleware | `src/middleware.ts` | Global CORS headers via `ALLOWED_ORIGINS` env var. Handle OPTIONS preflight |
+| Delta sync endpoint | `src/app/api/sync/notes/route.ts` | `GET /api/sync/notes?workspaceId=X&since=ISO8601` returns changed notes + cursor |
+| PWA icons | `public/icon-192.png`, `public/icon-512.png` | PNG exports of the SVG ribbon logo at 192x192 and 512x512 |
+
+### 3. Phase 2: Tauri Desktop Shell (2-3 days)
+- **Framework**: Tauri v2 (Rust backend + webview)
+- **Approach**: Remote webview — loads user's self-hosted instance URL
+- **`/connect` route**: Dedicated Next.js page for first-launch server URL + API token entry
+- **Native features**: OS menu bar, system tray, OS notifications via Tauri API
+- **Desktop icon**: Reuses existing SVG ribbon logo
+- **Auto-updater**: Tauri updater plugin
+- **Config storage**: `tauri-plugin-store` for persisting server URL + token
+
+### 4. Phase 3: Offline Mode (future — not critical for initial release)
+- Tauri-side SQLite via `tauri-plugin-sql`
+- Sync notes via delta endpoint into local SQLite
+- Queue edits locally, push on reconnect
+- File system watcher monitors local folder, auto-imports `.md` files
+
+### 5. Phase 4: Native Android (future — PWA-first for now)
+- Build on Phase 1's CORS + token auth + delta sync
+- Kotlin + Jetpack Compose
+- SQLite/Room for local cache
+- Share sheet integration, local notifications, biometric lock
