@@ -3,6 +3,7 @@ import { db, user } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq, and, ne } from "drizzle-orm";
 import { logAction } from "@/lib/audit";
+import { validThemeSchema, validFontSchema } from "@/lib/validations";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -57,8 +58,14 @@ export async function PATCH(request: Request) {
   }
   if (timezone !== undefined) update.timezone = timezone;
   if (timeFormat !== undefined) update.timeFormat = timeFormat;
-  if (theme !== undefined && typeof theme === "string") update.theme = theme;
-  if (font !== undefined && typeof font === "string") update.font = font;
+  if (theme !== undefined) {
+    const p = validThemeSchema.safeParse(theme);
+    if (p.success) update.theme = p.data;
+  }
+  if (font !== undefined) {
+    const p = validFontSchema.safeParse(font);
+    if (p.success) update.font = p.data;
+  }
   if (sidebarFolders !== undefined && typeof sidebarFolders === "boolean") update.sidebarFolders = sidebarFolders;
   if (sidebarTags !== undefined && typeof sidebarTags === "boolean") update.sidebarTags = sidebarTags;
   if (editorLayout !== undefined && typeof editorLayout === "string") update.editorLayout = editorLayout;

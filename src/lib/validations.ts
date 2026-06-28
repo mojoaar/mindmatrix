@@ -70,3 +70,23 @@ export const syncConnectionSchema = z.object({
   expiresAt: z.string().optional(),
   config: z.string().optional(),
 });
+
+export const validThemeSchema = z.enum([
+  "nord-dark", "nord-light",
+  "dracula-dark", "dracula-light",
+  "github-dark", "github-light", 
+  "catppuccin-dark", "catppuccin-light",
+  "cyberpunk-dark", "cyberpunk-light",
+  "one-dark", "one-light",
+]);
+
+export const validFontSchema = z.enum([
+  "jetbrains-mono", "fira-code", "source-code-pro",
+  "ibm-plex-mono", "ubuntu-mono", "inconsolata",
+  "roboto-mono", "dm-mono",
+]);
+
+export const createCommentSchema = z.object({
+  body: z.string().min(1).max(10000),
+  parentId: z.string().uuid().nullable().optional(),
+});

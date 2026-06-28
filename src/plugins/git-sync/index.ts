@@ -9,6 +9,7 @@ const exec = promisify(execCb);
 import fs from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 function cleanString(str: string): string {
   return str.replace(/[^a-zA-Z0-9-_\s]/g, "").trim();
@@ -149,7 +150,7 @@ ${n.content}`;
 
         return NextResponse.json({ success: true, pushed: hasChanges });
       } catch (err: unknown) {
-        console.error("Git Sync Push Failed:", err);
+        logger.error("Git Sync Push Failed", { error: err instanceof Error ? err.message : String(err) });
         return NextResponse.json({ error: err instanceof Error ? err.message : String(err) || "Push failed" }, { status: 500 });
       } finally {
         cleanupFn();
@@ -280,7 +281,7 @@ ${n.content}`;
 
         return NextResponse.json({ success: true, updatedCount: importedCount });
       } catch (err: unknown) {
-        console.error("Git Sync Pull Failed:", err);
+        logger.error("Git Sync Pull Failed", { error: err instanceof Error ? err.message : String(err) });
         return NextResponse.json({ error: err instanceof Error ? err.message : String(err) || "Pull failed" }, { status: 500 });
       } finally {
         cleanupFn();

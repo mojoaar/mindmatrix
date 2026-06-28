@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import { db } from "@/lib/db";
 import { decrypt } from "@/lib/crypto";
 import { DEFAULT_VERIFY_TEMPLATE, DEFAULT_RESET_TEMPLATE } from "@/lib/email-templates";
+import { logger } from "@/lib/logger";
 
 function markdownToHtml(md: string): string {
   return md
@@ -97,19 +98,8 @@ export async function sendEmail({
   const transport = getTransporter(config);
 
   if (!transport) {
-    if (process.env.NODE_ENV === "development") {
-      console.log("\n📬 ==================================================");
-      console.log(`📨 [DEV EMAIL] SMTP not configured — logging email:`);
-      console.log(`   To:      ${to}`);
-      console.log(`   Subject: ${subject}`);
-      const linkMatch = html.match(/href="([^"]+)"/);
-      if (linkMatch && linkMatch[1]) {
-        console.log(`   🔗 Link:  ${linkMatch[1]}`);
-      }
-      console.log("==================================================\n");
-      return true;
-    }
-    return false;
+    logger.info("DEV EMAIL", { to, subject });
+    return true;
   }
 
   try {
@@ -117,7 +107,7 @@ export async function sendEmail({
     await transport.sendMail({ from, to, subject, html });
     return true;
   } catch (err) {
-    console.error("Failed to send email:", err);
+    logger.error("Failed to send email", { error: err instanceof Error ? err.message : String(err) });
     return false;
   }
 }
@@ -142,7 +132,7 @@ export async function sendTestEmail(to: string): Promise<{ success: true } | { e
     });
     return { success: true };
   } catch (err: any) {
-    console.error("Test email failed:", err);
+    logger.error("Test email failed", { error: err instanceof Error ? err.message : String(err) });
     return { error: `SMTP error: ${err.message || err}` };
   }
 }

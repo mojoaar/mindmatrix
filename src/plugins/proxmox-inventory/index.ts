@@ -2,6 +2,7 @@ import type { Plugin } from "@/plugins/types";
 import { requirePluginAccess } from "@/plugins";
 import { isSafeUrl } from "@/lib/security";
 import { NextResponse } from "next/server";
+import { db, note } from "@/lib/db";
 
 export const proxmoxInventoryPlugin: Plugin = {
   id: "proxmox-inventory",
@@ -110,10 +111,9 @@ export const proxmoxInventoryPlugin: Plugin = {
           } catch { /* skip */ }
         }
 
-        const db = await import("@/lib/db");
         const noteId = crypto.randomUUID();
         const now = new Date();
-        await db.db.insert(db.note).values({
+        await db.insert(note).values({
           id: noteId,
           workspaceId,
           title: `Proxmox Inventory — ${now.toISOString().slice(0, 10)}`,

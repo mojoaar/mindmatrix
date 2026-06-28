@@ -1,6 +1,8 @@
 import type { Plugin } from "@/plugins/types";
 import { requirePluginAccess } from "@/plugins";
 import { NextResponse } from "next/server";
+import { db, note } from "@/lib/db";
+import { eq } from "drizzle-orm";
 
 const GOOGLE_AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN = "https://oauth2.googleapis.com/token";
@@ -110,9 +112,7 @@ export const syncGoogleDrivePlugin: Plugin = {
       }
       const token = tokenOrResp;
 
-      const db = await import("@/lib/db");
-      const { eq } = await import("drizzle-orm");
-      const notes = await db.db.query.note.findMany({ where: eq(db.note.workspaceId, workspaceId) });
+      const notes = await db.query.note.findMany({ where: eq(note.workspaceId, workspaceId) });
 
       const folderId = await findOrCreateFolder(token);
       let synced = 0;

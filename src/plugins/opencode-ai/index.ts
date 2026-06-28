@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 
 const client = new OpenCodeClient();
 
-export const opencodeAiPlugin: Plugin = {
+export const opencodeAIPlugin: Plugin = {
   id: "opencode-ai",
   name: "OpenCode Go",
   description: "AI-powered note assistance via OpenCode Go",

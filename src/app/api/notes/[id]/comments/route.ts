@@ -6,6 +6,7 @@ import { getEventBus } from "@/lib/realtime/event-bus";
 import { resolveMentions } from "@/lib/mentions";
 import { createNotification } from "@/lib/notifications";
 import { rateLimit } from "@/lib/rate-limit";
+import { createCommentSchema } from "@/lib/validations";
 
 export async function GET(
   request: Request,
@@ -87,10 +88,12 @@ export async function POST(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { body, parentId } = await request.json();
-  if (!body || typeof body !== "string" || !body.trim()) {
-    return NextResponse.json({ error: "Comment body required" }, { status: 400 });
+  const raw = await request.json();
+  const parsed = createCommentSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
+  const { body, parentId } = parsed.data;
 
   const commentId = crypto.randomUUID();
 

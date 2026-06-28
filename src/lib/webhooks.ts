@@ -2,6 +2,7 @@ import { db, webhook, webhookDeliveryLog } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
 import { decrypt } from "@/lib/crypto";
+import { logger } from "@/lib/logger";
 import { isSafeUrl, getSafeResolvedUrl } from "@/lib/security";
 
 export const WEBHOOK_EVENTS = [
@@ -100,9 +101,7 @@ export async function triggerWebhooks(
           try {
             const resolved = await getSafeResolvedUrl(wh.url);
             if (!resolved) {
-              console.warn(
-                `SSRF Prevention: Aborted webhook dispatch to internal/private target URL: ${wh.url}`
-              );
+              logger.warn("SSRF Prevention: Aborted webhook dispatch", { url: wh.url });
               return;
             }
 
@@ -125,15 +124,12 @@ export async function triggerWebhooks(
 
             await dispatchWithRetry(resolved.url, headers, body, wh, event);
           } catch (err: any) {
-            console.error(
-              `Failed to dispatch webhook to ${wh.url}:`,
-              err.message || err
-            );
+            logger.error("Failed to dispatch webhook", { url: wh.url, error: err.message });
           }
         })
       );
     } catch (err) {
-      console.error("Error in triggerWebhooks execution:", err);
+      logger.error("triggerWebhooks execution error", { error: err instanceof Error ? err.message : String(err) });
     }
   })();
 }

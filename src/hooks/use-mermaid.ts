@@ -10,7 +10,7 @@ async function loadMermaid(): Promise<void> {
     const script = document.createElement("script");
     script.src = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js";
     script.onload = () => {
-      (window as any).mermaid.initialize({ startOnLoad: false, theme: "neutral", securityLevel: "loose" });
+      (window as any).mermaid.initialize({ startOnLoad: false, theme: "neutral", securityLevel: "strict" });
       initialized = true;
       resolve();
     };

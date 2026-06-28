@@ -1,6 +1,8 @@
 import type { Plugin } from "@/plugins/types";
 import { requirePluginAccess } from "@/plugins";
 import { NextResponse } from "next/server";
+import { db, note } from "@/lib/db";
+import { eq } from "drizzle-orm";
 
 const PCLOUD_AUTH = "https://e.pcloud.com/oauth2/authorize";
 const PCLOUD_TOKEN = "https://api.pcloud.com/oauth2_token";
@@ -48,9 +50,7 @@ export const syncPcloudPlugin: Plugin = {
       const token = access.config?.accessToken;
       if (!token) return NextResponse.json({ error: "Not connected" }, { status: 400 });
 
-      const db = await import("@/lib/db");
-      const { eq } = await import("drizzle-orm");
-      const notes = await db.db.query.note.findMany({ where: eq(db.note.workspaceId, workspaceId) });
+      const notes = await db.query.note.findMany({ where: eq(note.workspaceId, workspaceId) });
 
       const folderPath = "/MindMatrix";
       let synced = 0;

@@ -205,6 +205,7 @@ BETTER_AUTH_SECRET=<32+ char secret>
 BETTER_AUTH_URL=http://localhost:3000
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NODE_ENV=development
+ALLOWED_ORIGINS=*
 ```
 
 ## Key Conventions

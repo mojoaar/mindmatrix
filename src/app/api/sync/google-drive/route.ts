@@ -3,6 +3,8 @@ import { db, syncConnection } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
+// Note: These routes manage per-user OAuth connections. Workspace-level permission checks happen in the plugin handler via requirePluginAccess().
+
 export async function GET(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session?.user) {
