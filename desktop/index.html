@@ -252,7 +252,7 @@
         if (!ok) return showError("Invalid email or password.");
         saveAndRedirect(url, { authMethod: "session" });
       } catch (e) {
-        showError("Could not reach server. Check the URL and your connection.");
+        showError(String(e));
       } finally {
         setLoading(false);
       }
@@ -273,7 +273,7 @@
         if (!ok) return showError("Invalid API token.");
         saveAndRedirect(url, { authToken: token, authMethod: "token" });
       } catch (e) {
-        showError("Could not reach server. Check the URL and your connection.");
+        showError(String(e));
       } finally {
         setLoading(false);
       }

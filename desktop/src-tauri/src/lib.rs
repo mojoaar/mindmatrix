@@ -8,25 +8,33 @@ use serde::Serialize;
 
 #[tauri::command]
 async fn auth_signin(url: String, email: String, password: String) -> Result<bool, String> {
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .map_err(|e| format!("TLS init: {}", e))?;
     let res = client
-        .post(format!("{}/api/auth/sign-in/email", url))
+        .post(format!("{}/api/auth/sign-in/email", url.trim_end_matches('/')))
         .json(&serde_json::json!({ "email": email, "password": password }))
         .send()
         .await
-        .map_err(|e| format!("Connection failed: {}", e))?;
+        .map_err(|e| format!("{} (url: {})", e, url))?;
     Ok(res.status().is_success())
 }
 
 #[tauri::command]
 async fn auth_verify_token(url: String, token: String) -> Result<bool, String> {
-    let client = reqwest::Client::new();
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .map_err(|e| format!("TLS init: {}", e))?;
     let res = client
-        .get(format!("{}/api/profile", url))
+        .get(format!("{}/api/profile", url.trim_end_matches('/')))
         .header("Authorization", format!("Bearer {}", token))
         .send()
         .await
-        .map_err(|e| format!("Connection failed: {}", e))?;
+        .map_err(|e| format!("{} (url: {})", e, url))?;
     Ok(res.status().is_success())
 }
 
